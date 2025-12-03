@@ -1,5 +1,7 @@
 %option noyywrap
 
+%x MCOMMENT
+
 %{
 #include <iostream>
 #include "ast.hpp"
@@ -10,6 +12,15 @@
 %}
 
 %%
+"@"[^\n]* {}
+"@*" { BEGIN(MCOMMENT) }
+<MCOMMENT>"*@" { BEGIN(INITIAL); }
+<MCOMMENT>\n   {}
+<MCOMMENT>.    {}
+<MCOMMENT><<EOF>> {
+    /* optional: report error */
+    BEGIN(INITIAL);
+}
 
 [ \n\t]+ {}
 = { return yy::parser::make_ASSGN(); }
@@ -46,9 +57,6 @@ func {return yy::parser::make_FUNC(); }
 \) {return yy::parser::make_RBRA(); }
 \[ {return y::parser::make_SQ_LBRA(); }
 \] {return y::parser::make_SQ_RBRA(); }
-@ {return yy::parser::make_COM_SING(); }
-@\* {return yy::parser::make_COM_LMUL(); }
-\*@ {return yy::parser::make_COM_RMUL(); }
 lamb {return yy::parser::make_LAMB(); }
 bool {return yy::parser::make_T_BOOL(); }
 char {return yy::parser::make_T_CHAR(); }
@@ -60,10 +68,12 @@ struct {return yy::parser::make_STRUCT(); }
 enum {return yy::parser::make_ENUM(); }
 true {return yy::parser::make_TRUE(); }
 false {return yy::parser::make_FALSE(); }
-. {return yy::parser::make_DOT(); }
+\. {return yy::parser::make_DOT(); }
 , {return yy::parser::make_COMMA(); }
 ' {return yy::parser::make_QUOTE(); }
-[0-9]+ { return yy::parser::make_INT(atoi(yytext)); }
+[0-9]+ { return yy::parser::make_INT(atol(yytext)); }
+[0-9]*\.[0-9]+ { return yy::parser::make_FLOAT(atof(yytext)); }
 [a-zA-Z_][a-zA-Z0-9_]* { return yy::parser::make_LABEL(std::string(yytext)); }
+
 
 %%

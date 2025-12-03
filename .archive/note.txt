@@ -1,0 +1,1 @@
+was gonna originally write this in haskell but i just cbf to relearn it and simultaneously learn compiling so we go cpp now.
