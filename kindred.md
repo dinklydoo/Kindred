@@ -18,7 +18,7 @@ Declarations are also used in linking, only declared functions are visible to fu
 ~~~
 @ Defined as a function taking three parameters returning a value of type T
 
-func foo:T(x1 : T1, x2 : T2, x3: T3):
+func foo(x1 : T1, x2 : T2, x3: T3):T
     
     ..body..
 
@@ -150,3 +150,21 @@ enum foo (
     foo1, foo2, foo3, foo4
 )
 ~~~
+
+### I/O Operations
+~~~
+@ Will print to stdout variable contained within, for structs (records) it will print all internal values recursively to primitives (labelled)
+print()
+
+@ Reads a single PRIMITIVE value from input (buffered)
+read()
+~~~
+
+### Control Flow
+~~~
+@ Executable files contain a main function which can only be defined once as such
+
+func main(): int
+    @ main body
+~~~
+

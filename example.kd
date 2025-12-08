@@ -1,0 +1,12 @@
+@ Factorial Example Code in Kindred
+
+func factorial(n: int): int
+    case (n > 1) of:
+        true => return n * factorial(n-1)
+        false => return 1
+    return -1 @ kind of disgusting but require a return in outer-scope of function (not nested)
+
+func main:int():
+    int n = read()
+    print(factorial n)
+    return 1
