@@ -1,12 +1,23 @@
 @ Factorial Example Code in Kindred
 
 func factorial(n: int): int
-    case (n > 1) of:
-        true => return n * factorial(n-1)
-        false => return 1
-    return -1 @ kind of disgusting but require a return in outer-scope of function (not nested)
+    mark n of:
+        | (n > 1) => return n * factorial(n-1),
+        | else => return 1
+    ;
 
-func main:int():
-    int n = read()
-    print(factorial n)
+func atoi(r: [char], n: int): int
+    case r of:
+        [] => return n,
+        r:rs =>
+            case r of:
+                '-' => return -atoi(rs, n),
+                default => return atoi(rs, (r - '0') + 10*n)
+            ;
+        ;
+
+func main(): int
+    r:[char] = read()
+    n:int = atoi(r)
+    print(factorial(n))
     return 1

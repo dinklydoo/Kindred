@@ -1,34 +1,57 @@
 # Kindred Toy Functional Language
-### Program Linking
-~~~
-#include foo.kd
-~~~
-linking includes all declarations in the file specified by the include path (as follows)
-### Program Declarations (Function definitions and Globals)
-Declarations are also used in linking, only declared functions are visible to functions that include the file
-~~~
-@ declare a function before definition
-#declare func foo:T(x1: T1, x2: T2)
-
-@ declare a global variable name
-#declare BAR 1
-~~~
 
 ### Function Definitions
 ~~~
 @ Defined as a function taking three parameters returning a value of type T
 
-func foo(x1 : T1, x2 : T2, x3: T3):T
+func foo(x1 : T1, x2 : T2, x3: T3):T (
     
     ..body..
 
     return V
+)
 
 @ No declaration of void functions as we have no store (duh)
 ~~~
+#### Functions as arguments (Typing):
+~~~
+func foo( bar:(T1) -> T, x:T1):T (
+    return bar(x)
+)
+~~~
+### Functions as return types:
+~~~
+func foo(b: bool): (T1, T2, T1) -> T1 (
+
+    bar1: (x1:T1, x2:T2, x3:T1) -> T1 (
+        return x1
+    )
+    bar2: (x1:T1, x2:T2, x3:T1) -> T1 (
+        return x1 - foo2(x2) + x3*x3
+    )
+    case b of:
+        true => return bar1
+        false => return bar2
+)
+~~~
+alternatively
+~~~
+func foo(): (T1, T2, T3) -> T4
+    return (lamb x : T =>
+
+    )
+~~~
+### Variable Declaration
+Variables are immutable containers for expressions within functions
+~~~
+func foo(x: int): int (
+    y: int = (x + 4)
+    return y
+)
+~~~
 
 ### Conditionals
-Guarded Statements (haskell like):
+Pattern Matching
 ~~~
 case X of:
     X_1 => E_1,
@@ -36,6 +59,16 @@ case X of:
     X_3 => E_3,
     ...
     default => E_d
+;
+~~~
+Guarded Statements
+~~~
+mark X:
+    | foo(X) => E_1,
+    | X == Z =>
+        E_2,
+    | default => E_3
+;
 ~~~
 
 To use guarded as an if block just denote X as a boolean and pattern match with true and default (default as else expression)
@@ -73,20 +106,29 @@ int - 4B
 long - 8B
 float - 4B
 double - 8B
-
-@ for numeric types (int, long, float, double) we can prepend unsigned, chars will be unsigned by default
 ~~~
 
 ### Lists
 ~~~
+
+@ list initialization
+list : [int] = [1,2,3,4];
+
 [] @ empty list
 [Type]
 @ defined as a list of elements with the typing Type
 
-@ Pattern matching will be of two cases empty list and elsewise
+@ Pattern matching on number of list elements
+@ [] - 0 elements (empty)
+@ l:ls - at least one element l
+@ l:ls:lt - at least two elements l, ls
+@ etc - default case
+
 case list of:
     [] => E_1;
-    default => E_2;
+    l:ls => E_2;
+    l:ls:lt => E_3
+    default => E_4;
 ~~~
 
 ### Operations (Numeric)
@@ -153,10 +195,10 @@ enum foo (
 
 ### I/O Operations
 ~~~
-@ Will print to stdout variable contained within, for structs (records) it will print all internal values recursively to primitives (labelled)
+@ Will print primitive values and lists of primitive values (strings as [char])
 print()
 
-@ Reads a single PRIMITIVE value from input (buffered)
+@ Reads a value of primitive type (including strings) from input
 read()
 ~~~
 

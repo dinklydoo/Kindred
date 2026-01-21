@@ -1,48 +1,49 @@
-#pragma once
-#include <string>
-#include <variant>
+// #pragma once
 
-enum class TokenType{
-    ASSGN,
-    ADD, MUL, DIV, MOD, FLR, POW,
-    LAND, LOR, LXOR, LNOT, LNEG, LSR, LSL, 
-    CGT, CGEQ, CLEQ, CEQ, CNEQ, 
-    CONCAT, CASE, OF, ARROW, NIL, EMPTY,
-    MAIN,
-    DEFAULT, DECLARE, INCLUDE,
-    FUNC, TSEP, 
-    LBRA, RBRA, SQ_LBRA, SQ_RBRA,
-    LAMB, 
-    T_BOOL, T_CHAR, 
-    T_INT, T_LONG, 
-    T_FLOAT, T_DOUBLE, 
-    INT, FLOAT, STRING,
-    STRUCT, ENUM,
-    READ, PRINT
-    TRUE, FALSE, 
-    DOT, COMMA,
-    LABEL, 
-    EOF
-};
+// #include <string>
+// #include <variant>
 
-using TokenValue = std::variant<
-    std::monostate, long, double, bool, std::string, char>;
+// enum class TokenType{
+//     ASSGN,
+//     ADD, SUB, MUL, DIV, MOD, FLR, POW,
+//     LAND, BAR, LXOR, LNOT, LNEG, LSR, LSL, // LOR as BAR for guards
+//     CGT, CLT, CGEQ, CLEQ, CEQ, CNEQ,
+//     CONCAT, CASE, OF, ARROW, NIL, EMPTY, MARK,
+//     MAIN,
+//     DEFAULT,
+//     FUNC, TSEP,
+//     LBRA, RBRA, SQ_LBRA, SQ_RBRA,
+//     LAMB,
+//     T_BOOL, T_CHAR,
+//     T_INT, T_LONG,
+//     T_FLOAT, T_DOUBLE,
+//     INT, FLOAT, STRING,
+//     STRUCT, ENUM,
+//     READ, PRINT,
+//     TRUE, FALSE, 
+//     DOT, COMMA,
+//     LABEL,
+//     KEOF
+// };
 
-struct Token {
-    TokenType type;
-    TokenValue value;
-};
+// using TokenValue = std::variant<
+//     std::monostate, long, double, bool, std::string, char>;
 
-// make a token with non value association
-Token make_token(TokenType type){
-    return Token {
-        type, std::monostate{}
-    }
-};
+// struct Token {
+//     TokenType type;
+//     TokenValue value;
+// };
 
-// overload : make a token with a value association
-Token make_token(TokenType type, TokenValue value){
-    return Token {
-        type, value
-    };
-}
+// // make a token with non value association
+// Token make_token(TokenType type){
+//     return Token {
+//         type, std::monostate{}
+//     };
+// };
+
+// // overload : make a token with a value association
+// Token make_token(TokenType type, TokenValue value){
+//     return Token {
+//         type, value
+//     };
+// }
