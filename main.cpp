@@ -1,7 +1,7 @@
 #include "parser.hpp"
 #include <string>
 
-void yy::parser::error(const std::string& msg) {
+void yy::parser::error(const yy::location& loc,const std::string& msg) {
     std::cout << "An error occured: " << msg << std::endl;
 }
 

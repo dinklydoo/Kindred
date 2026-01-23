@@ -16,7 +16,7 @@ struct Type {
 
 using type_ptr = std::shared_ptr<const Type>;
 using w_type_ptr = std::weak_ptr<const Type>;
-using field = std::pair<std::string, type_ptr>;
+struct Field;
 
 // Primitives
 struct BoolType   : Type { BoolType()   : Type(Kind::Bool) {} };
@@ -42,7 +42,7 @@ struct FuncType : Type {
 // Nominal types
 struct NominalType : Type {
     std::string name;
-    std::vector<field> fields;
+    std::vector<Field> fields;
     bool defined = false;
     explicit NominalType(Kind k, std::string name) : Type(k), name(name) {}
 };
@@ -99,7 +99,7 @@ struct TypeSystem {
         return nt;
     }
 
-    type_ptr declare_struct(const std::string& name, std::vector<field>& fields){
+    type_ptr declare_struct(const std::string& name, std::vector<Field>& fields){
         nominal_ptr t = nominal_type(name); // forward declare regardless
         if (t->defined){
             // defined -> error

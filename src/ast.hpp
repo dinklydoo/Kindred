@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+struct Visitor;
+
 struct Source {
     int line;
     int col;
@@ -11,50 +13,92 @@ struct Source {
 
 struct ASTNode{
     Source location;
-    public: virtual ~ASTNode() = default;
+    public: 
+        virtual ~ASTNode() = default;
+        virtual void accept(Visitor& v) = 0;
 };
 
-struct ExpNode : ASTNode{ };
+struct ExpNode : ASTNode{
+    type_ptr resolved_type;
+};
 
-using expr_ptr = std::unique_ptr<ExpNode>;
-
+ 
 struct LiteralNode : ExpNode{
     public: virtual ~LiteralNode() = default;
 };
-
+    
+struct DeclNode : ASTNode {
+    public : virtual ~DeclNode() = default;
+};
+    
+using decl_ptr = std::unique_ptr<DeclNode>;
+using node_ptr = std::unique_ptr<ASTNode>;
+using expr_ptr = std::unique_ptr<ExpNode>;
 using literal_ptr = std::unique_ptr<LiteralNode>;
 
-struct IntLit : LiteralNode{ int32_t value; };
-struct LongLit : LiteralNode{ int64_t value; };
-struct FloatLit : LiteralNode{ float value; };
-struct DoubleLit : LiteralNode{ double value; };
-struct BoolLit : LiteralNode{ bool value; };
-struct CharLit : LiteralNode{ char value; };
-struct ListLit : LiteralNode { std::vector<literal_ptr> elems; };
-struct ListPatternLit : LiteralNode { std::vector<std::string> patterns; };
-struct NilLit : LiteralNode{ };
-struct DefaultLit : LiteralNode{ };
-struct EnumLit : LiteralNode{ std::string elem; };
+struct IntLit : LiteralNode{ 
+    int64_t value; 
+    public: virtual void accept(Visitor& v) override;
+};
+struct FloatLit : LiteralNode{
+    double value; 
+    public: virtual void accept(Visitor& v) override;
+};
+struct BoolLit : LiteralNode{ 
+    bool value; 
+    public: virtual void accept(Visitor& v) override;
+};
+struct CharLit : LiteralNode{ 
+    char value; 
+    public: virtual void accept(Visitor& v) override;
+};
+struct ListLit : LiteralNode { 
+    std::vector<literal_ptr> elems; 
+    public: virtual void accept(Visitor& v) override;
+};
+struct ListPatternLit : LiteralNode { 
+    std::vector<std::string> patterns; 
+    public: virtual void accept(Visitor& v) override;
+};
+struct NilLit : LiteralNode{
+    public: virtual void accept(Visitor& v) override;
+};
+struct DefaultLit : LiteralNode{ 
+    public: virtual void accept(Visitor& v) override;
+};
+struct EnumLit : LiteralNode{ 
+    std::string elem; 
+    public: virtual void accept(Visitor& v) override;
+};
 
-enum UnaryOp {
-    MINUS, LNEG, BNOT
-    // unary minus, logical negation, boolean not
+
+enum NominalKind {
+    NOMINAL, ENUM_VAL, VAR_REF
 };
 
 // during parsing, cant tell if a value is an enum or a variable name,
 // post type checking need to fix these nodes
 struct NominalNode : ExpNode {
     std::string label;
+    NominalKind kind = NOMINAL;
+    public: virtual void accept(Visitor& v) override;
 };
 
 // field label for struct access
 struct FieldNode : ExpNode {
     std::string field;
+    public: virtual void accept(Visitor& v) override;
+};
+
+enum UnaryOp {
+    MINUS, LNEG, BNOT
+    // unary minus, logical negation, boolean not
 };
 
 struct UnaryNode : ExpNode{
     UnaryOp op;
     expr_ptr exp;
+    public: virtual void accept(Visitor& v) override;
 };
 
 enum BinaryOp {
@@ -71,6 +115,7 @@ struct BinaryNode : ExpNode{
     BinaryOp op;
     expr_ptr l_exp;
     expr_ptr r_exp;
+    public: virtual void accept(Visitor& v) override;
 };
 
 /* Node for structs/function calls that can share syntax */
@@ -84,31 +129,41 @@ struct BinaryNode : ExpNode{
     Both tokenized as LABEL LBRA expr_list RBRA
     Specialize node types later in semantic/type checking
 */
+enum ParamKind {
+    PARAM, FUNC_CALL, STRUCT_CONS
+};
+
 struct ParamNode : ExpNode{
     std::string label;
     std::vector<expr_ptr> params;
+    ParamKind kind = PARAM;
+    public: virtual void accept(Visitor& v) override;
 };
 
-struct FunCallNode : ExpNode{
-    std::string func;
-    std::vector<expr_ptr> args;
-};
 
 struct Param {
     std::string name;
     type_ptr type;
 };
 
-struct LambNode : ExpNode {
-    std::vector<Param> params;
-    type_ptr ret;
-    expr_ptr body;
-    //explicit LambNode(std::vector<Param> params, type_ptr type, expr_ptr body): params(std::move(params)), type(type), body(std::move(body)) {}
-};
+// struct LambNode : ExpNode {
+//     std::vector<Param> params;
+//     type_ptr ret;
+//     expr_ptr body;
+//     public: virtual void accept(Visitor& v) override;
+// };
 
-struct CaseBranchNode {
-    literal_ptr pattern;
+struct ProgramNode : ExpNode {
+    std::vector<decl_ptr> decl;
     expr_ptr body;
+    public: virtual void accept(Visitor& v) override;
+};
+using prog_ptr = std::unique_ptr<ProgramNode>;
+
+struct CaseBranchNode : ExpNode {
+    literal_ptr pattern;
+    prog_ptr body;
+    public: virtual void accept(Visitor& v) override;
 };
 
 using c_branch_ptr = std::unique_ptr<CaseBranchNode>;
@@ -116,38 +171,25 @@ using c_branch_ptr = std::unique_ptr<CaseBranchNode>;
 struct CaseNode : ExpNode {
     expr_ptr target;
     std::vector<c_branch_ptr> patterns;
+    public: virtual void accept(Visitor& v) override;
 };
 
-struct GuardBranchNode {
+struct GuardBranchNode : ExpNode {
     expr_ptr match;
-    expr_ptr body;
+    prog_ptr body;
+    public: virtual void accept(Visitor& v) override;
 };
 
 using g_branch_ptr = std::unique_ptr<GuardBranchNode>;
 
 struct GuardNode : ExpNode {
-    expr_ptr target;
     std::vector<g_branch_ptr> branches;
+    public: virtual void accept(Visitor& v) override;
 };
 
 struct ListNode : ExpNode {
     std::vector<expr_ptr> elems;
-};
-
-struct StructNode : ExpNode {
-    std::string name;
-    std::vector<expr_ptr> fields;
-};
-
-struct DeclNode : ASTNode {
-    public : virtual ~DeclNode() = default;
-};
-
-using decl_ptr = std::unique_ptr<DeclNode>;
-
-struct VarNode : ExpNode{
-    std::string label;
-    type_ptr type; // unsure if needed if type checking done prior
+    public: virtual void accept(Visitor& v) override;
 };
 
 struct Field {
@@ -158,32 +200,32 @@ struct Field {
 struct StructDecl : DeclNode{
     std::string name;
     std::vector<Field> fields;
+    public: virtual void accept(Visitor& v) override;
 };
 
 struct EnumDecl : DeclNode{
     std::string name;
     std::vector<std::string> evar;
+    public: virtual void accept(Visitor& v) override;
 };
 
-struct PrintNode : ExpNode {
+struct PrintNode : DeclNode {
     expr_ptr msg;
+    public: virtual void accept(Visitor& v) override;
 };
 
-struct ReadNode : ExpNode {
-    expr_ptr var;
-};
-
-struct ProgramNode : ExpNode {
-    std::vector<expr_ptr> program;
-    expr_ptr ret;
+struct ReadNode : DeclNode {
+    std::string name;
+    type_ptr type;
+    public: virtual void accept(Visitor& v) override;
 };
 
 struct ModuleNode : ASTNode {
     std::vector<decl_ptr> decl;
+    public: virtual void accept(Visitor& v) override;
 };
 
 using module_ptr = std::unique_ptr<ModuleNode>;
-using prog_ptr = std::unique_ptr<ProgramNode>;
 using guard_ptr = std::unique_ptr<GuardNode>;
 using case_ptr = std::unique_ptr<CaseNode>;
 using struct_decl_ptr = std::unique_ptr<StructDecl>;
@@ -194,10 +236,18 @@ struct FuncDecl : DeclNode{
     std::vector<Param> params;
     type_ptr ret;
     prog_ptr body;
+    public: virtual void accept(Visitor& v) override;
 };
 
+struct VarDecl : DeclNode {
+    std::string name;
+    type_ptr type;
+    node_ptr r_val; 
+    public: virtual void accept(Visitor& v) override;
+};
+
+using var_decl_ptr = std::unique_ptr<VarDecl>;
 using list_ptr = std::unique_ptr<ListNode>;
-using var_ptr = std::unique_ptr<VarNode>;
 using func_decl_ptr = std::unique_ptr<FuncDecl>;
 using read_ptr = std::unique_ptr<ReadNode>;
 using print_ptr = std::unique_ptr<PrintNode>;

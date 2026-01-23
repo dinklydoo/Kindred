@@ -1,25 +1,39 @@
 %option noyywrap
+%option yylineno
 
 %{
-#include <iostream>
-#include <string>
-#include <stdexcept>
-#include "parser.hpp"
+    #include <iostream>
+    #include <string>
+    #include <stdexcept>
+    #include "parser.hpp"
 
-void error(const std::string &msg) {
-    std::string text_snippet(yytext, yyleng);
-    throw std::runtime_error(
-        "Lexical error at line " + std::to_string(yylineno) +
-        ": " + msg + " (near \"" + text_snippet + "\")"
-    );
-}
+    void error(const std::string &msg) {
+        std::string text_snippet(yytext, yyleng);
+        throw std::runtime_error(
+            "Lexical error at line " + std::to_string(yylineno) +
+            ": " + msg + " (near \"" + text_snippet + "\")"
+        );
+    }
 
-std::string strbuf;
-char charbuf;
+    std::string strbuf;
+    char charbuf;
 
-#undef YY_DECL
-#define YY_DECL yy::parser::symbol_type yylex()
+    int yycolno = 1;
 
+    #undef YY_DECL
+    #define YY_DECL yy::parser::symbol_type yylex()
+
+    yy::location make_location(int length){
+        yy::location loc;
+
+        yy::position beg(YY_NULLPTR, yylineno, yycolno);
+        yycolno += length;
+        yy::position end(YY_NULLPTR, yylineno, yycolno);
+
+        loc.begin = beg;
+        loc.end = end;
+        return loc;
+    }
 %}
 
 %x MCOMMENT SCOMMENT STRING CHAR CHAR_END
@@ -39,64 +53,65 @@ ESCAPE \\([\\'"?tn]|HEX)
 <SCOMMENT>. { }
 <SCOMMENT>\n { BEGIN(INITIAL); }
 
-[ \t\n]+        { }
+[ \t]+          { }
+\n              { yycolno = 1; }
 
-"//"            { return yy::parser::make_FLR(); }
-"**"            { return yy::parser::make_POW(); }
-">="            { return yy::parser::make_CGEQ(); }
-"<="            { return yy::parser::make_CLEQ(); }
-"=="            { return yy::parser::make_CEQ(); }
-"!="            { return yy::parser::make_CNEQ(); }
-"<<"            { return yy::parser::make_LSL(); }
-">>"            { return yy::parser::make_LSR(); }
-"=>"            { return yy::parser::make_ARROW(); }
-"->"            { return yy::parser::make_PROD(); }
-"++"            { return yy::parser::make_CONCAT(); }
-"&&"             { return yy::parser::make_BAND(); }
-"||"             { return yy::parser::make_BOR(); }
+"//"            { return yy::parser::make_FLR(make_location(yyleng)); }
+"**"            { return yy::parser::make_POW(make_location(yyleng)); }
+">="            { return yy::parser::make_CGEQ(make_location(yyleng)); }
+"<="            { return yy::parser::make_CLEQ(make_location(yyleng)); }
+"=="            { return yy::parser::make_CEQ(make_location(yyleng)); }
+"!="            { return yy::parser::make_CNEQ(make_location(yyleng)); }
+"<<"            { return yy::parser::make_LSL(make_location(yyleng)); }
+">>"            { return yy::parser::make_LSR(make_location(yyleng)); }
+"=>"            { return yy::parser::make_ARROW(make_location(yyleng)); }
+"->"            { return yy::parser::make_PROD(make_location(yyleng)); }
+"++"            { return yy::parser::make_CONCAT(make_location(yyleng)); }
+"&&"             { return yy::parser::make_BAND(make_location(yyleng)); }
+"||"             { return yy::parser::make_BOR(make_location(yyleng)); }
 
-"="             { return yy::parser::make_ASSGN(); }
-"+"             { return yy::parser::make_ADD(); }
-"-"             { return yy::parser::make_SUB(); }
-"*"             { return yy::parser::make_MUL(); }
-"/"             { return yy::parser::make_DIV(); }
-"%"             { return yy::parser::make_MOD(); }
-"&"             { return yy::parser::make_LAND(); }
-"|"             { return yy::parser::make_BAR(); }
-"^"             { return yy::parser::make_LXOR(); }
-"!"             { return yy::parser::make_BNOT(); }
-"~"             { return yy::parser::make_LNEG(); }
-">"             { return yy::parser::make_CGT(); }
-"<"             { return yy::parser::make_CLT(); }
+"="             { return yy::parser::make_ASSGN(make_location(yyleng)); }
+"+"             { return yy::parser::make_ADD(make_location(yyleng)); }
+"-"             { return yy::parser::make_SUB(make_location(yyleng)); }
+"*"             { return yy::parser::make_MUL(make_location(yyleng)); }
+"/"             { return yy::parser::make_DIV(make_location(yyleng)); }
+"%"             { return yy::parser::make_MOD(make_location(yyleng)); }
+"&"             { return yy::parser::make_LAND(make_location(yyleng)); }
+"|"             { return yy::parser::make_BAR(make_location(yyleng)); }
+"^"             { return yy::parser::make_LXOR(make_location(yyleng)); }
+"!"             { return yy::parser::make_BNOT(make_location(yyleng)); }
+"~"             { return yy::parser::make_LNEG(make_location(yyleng)); }
+">"             { return yy::parser::make_CGT(make_location(yyleng)); }
+"<"             { return yy::parser::make_CLT(make_location(yyleng)); }
 
-";"             { return yy::parser::make_PEND(); }
-":"             { return yy::parser::make_TSEP(); }
-"("             { return yy::parser::make_LBRA(); }
-")"             { return yy::parser::make_RBRA(); }
-"["             { return yy::parser::make_SQ_LBRA(); }
-"]"             { return yy::parser::make_SQ_RBRA(); }
-","             { return yy::parser::make_COMMA(); }
-"."             { return yy::parser::make_DOT(); }
+";"             { return yy::parser::make_PEND(make_location(yyleng)); }
+":"             { return yy::parser::make_TSEP(make_location(yyleng)); }
+"("             { return yy::parser::make_LBRA(make_location(yyleng)); }
+")"             { return yy::parser::make_RBRA(make_location(yyleng)); }
+"["             { return yy::parser::make_SQ_LBRA(make_location(yyleng)); }
+"]"             { return yy::parser::make_SQ_RBRA(make_location(yyleng)); }
+","             { return yy::parser::make_COMMA(make_location(yyleng)); }
+"."             { return yy::parser::make_DOT(make_location(yyleng)); }
 
-"case"        { return yy::parser::make_CASE(); }
-"mark"        { return yy::parser::make_MARK(); }
-"of"          { return yy::parser::make_OF(); }
-"default"     { return yy::parser::make_DEFAULT(); }
-"else"        { return yy::parser::make_ELSE(); }
-"func"        { return yy::parser::make_FUNC(); }
-"struct"      { return yy::parser::make_STRUCT(); }
-"enum"        { return yy::parser::make_ENUM(); }
-"true"        { return yy::parser::make_TRUE(); }
-"false"       { return yy::parser::make_FALSE(); }
-"return"       { return yy::parser::make_RETURN(); }
-"read"       { return yy::parser::make_READ(); }
-"print"       { return yy::parser::make_PRINT(); }
+"case"        { return yy::parser::make_CASE(make_location(yyleng)); }
+"mark"        { return yy::parser::make_MARK(make_location(yyleng)); }
+"of"          { return yy::parser::make_OF(make_location(yyleng)); }
+"default"     { return yy::parser::make_DEFAULT(make_location(yyleng)); }
+"else"        { return yy::parser::make_ELSE(make_location(yyleng)); }
+"func"        { return yy::parser::make_FUNC(make_location(yyleng)); }
+"struct"      { return yy::parser::make_STRUCT(make_location(yyleng)); }
+"enum"        { return yy::parser::make_ENUM(make_location(yyleng)); }
+"true"        { return yy::parser::make_TRUE(make_location(yyleng)); }
+"false"       { return yy::parser::make_FALSE(make_location(yyleng)); }
+"return"       { return yy::parser::make_RETURN(make_location(yyleng)); }
+"read"       { return yy::parser::make_READ(make_location(yyleng)); }
+"print"       { return yy::parser::make_PRINT(make_location(yyleng)); }
 
-[0-9]+\.[0-9]+  { return yy::parser::make_FLOAT(std::stod(yytext)); }
-[0-9]+          { return yy::parser::make_INT(std::stol(yytext)); }
+[0-9]+\.[0-9]+  { return yy::parser::make_FLOAT(std::stod(yytext), make_location(yyleng)); }
+[0-9]+          { return yy::parser::make_INT(std::stol(yytext), make_location(yyleng)); }
 
 [a-zA-Z_][a-zA-Z0-9_]* {
-    return yy::parser::make_LABEL(yytext);
+    return yy::parser::make_LABEL(yytext, make_location(yyleng));
 }
 
 \" { strbuf.clear(); BEGIN(STRING); }
@@ -104,7 +119,7 @@ ESCAPE \\([\\'"?tn]|HEX)
 
 
 <STRING>{
-    \" { BEGIN(INITIAL); return yy::parser::make_STRING(strbuf); }
+    \" { BEGIN(INITIAL); return yy::parser::make_STRING(strbuf, make_location(yyleng)); }
     \\n { strbuf += '\n'; }
     \\t { strbuf += '\t'; }
     \\' { strbuf += '\''; }
@@ -142,8 +157,10 @@ ESCAPE \\([\\'"?tn]|HEX)
 }
 
 <CHAR_END>{
-    \' { BEGIN(INITIAL); return yy::parser::make_CHAR(charbuf); }
+    \' { BEGIN(INITIAL); return yy::parser::make_CHAR(charbuf, make_location(yyleng)); }
     . { error("expected char closing quotation"); }
 }
+
+<<EOF>> { return yy::parser::make_KEOF(make_location(yyleng)); }
 
 %%

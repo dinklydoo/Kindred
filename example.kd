@@ -1,16 +1,16 @@
 @ Factorial Example Code in Kindred
 
 func factorial(n: int): int
-    mark n of:
+    case of:
         | (n > 1) => return n * factorial(n-1),
         | else => return 1
     ;
 
 func atoi(r: [char], n: int): int
-    case r of:
+    mark r of:
         [] => return n,
         r:rs =>
-            case r of:
+            mark r of:
                 '-' => return -atoi(rs, n),
                 default => return atoi(rs, (r - '0') + 10*n)
             ;

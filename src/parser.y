@@ -31,6 +31,7 @@
 %define api.token.constructor
 %define api.namespace {yy}
 %define api.parser.class {parser}
+%locations
 
 /* literals / identifiers */
 %token <uint64_t> INT
@@ -51,7 +52,7 @@
 %token LBRA RBRA SQ_LBRA SQ_RBRA
 %token COMMA DOT TSEP
 %token EMPTY
-%token KEOF
+%token KEOF 0
 %token PEND
 
 /* operators */
@@ -102,11 +103,11 @@
 %type <enum_decl_ptr> enum_def
 
 /* Control Flow Expressions */
-%type <std::vector<expr_ptr>> helpers;
-%type <expr_ptr> helper_expr;
+%type <std::vector<decl_ptr>> helpers;
+%type <decl_ptr> helper_expr;
 %type <print_ptr> print_expr;
 %type <read_ptr> read_expr;
-%type <bin_ptr> assign_expr;
+%type <var_decl_ptr> assign_expr;
 
 %type <expr_ptr> branch_expr;
 
@@ -124,7 +125,6 @@
 %type <g_branch_ptr> guard
 
 %type <expr_ptr> return_expr;
-%type <var_ptr> var_decl;
 
 /* Literal Expressions */
 %type <literal_ptr> int_lit;
@@ -170,7 +170,7 @@
 %%
 
 module
-    : definitions
+    : definitions KEOF
         { 
             $$ = std::make_unique<ModuleNode>();
             $$->decl = std::move($1);
@@ -318,8 +318,8 @@ program
     : helpers branch_expr
         {
             $$ = std::make_unique<ProgramNode>();
-            $$->program = std::move($1);
-            $$->ret = std::move($2);
+            $$->decl = std::move($1);
+            $$->body = std::move($2);
         }   
     ;
 
@@ -330,16 +330,15 @@ branch_expr
     ;
 
 guard_expr
-    : MARK value_expr OF TSEP guards PEND
+    : CASE OF TSEP guards PEND
         {
             $$ = std::make_unique<GuardNode>();
-            $$->target = std::move($2);
-            $$->branches = std::move($5);
+            $$->branches = std::move($4);
         }
     ;
 
 guards
-    : guard 
+    : guard
         { 
             $$ = std::vector<g_branch_ptr>{}; 
             $$.push_back(std::move($1));
@@ -352,13 +351,13 @@ guards
     ;
 
 guard
-    : BAR value_expr ARROW branch_expr
+    : BAR value_expr ARROW program
         {
             $$ = std::make_unique<GuardBranchNode>();
             $$->match = std::move($2);
             $$->body = std::move($4);
         }
-    | BAR ELSE ARROW branch_expr
+    | BAR ELSE ARROW program
         {
             $$ = std::make_unique<GuardBranchNode>();
             auto temp = std::make_unique<BoolLit>();
@@ -369,7 +368,7 @@ guard
     ;
 
 case_expr
-    : CASE value_expr OF TSEP patterns PEND
+    : MARK value_expr OF TSEP patterns PEND
         {
             $$ = std::make_unique<CaseNode>();
             $$->target = std::move($2);
@@ -391,7 +390,7 @@ patterns
     ;
 
 pattern_branch
-    : pattern ARROW branch_expr
+    : pattern ARROW program
         {
             $$ = std::make_unique<CaseBranchNode>();
             $$->pattern = std::move($1);
@@ -489,7 +488,7 @@ return_expr
     : RETURN value_expr { $$ = std::move($2); };
 
 helpers
-    : %empty { $$ = std::vector<expr_ptr>{}; }
+    : %empty { $$ = std::vector<decl_ptr>{}; }
     | helpers helper_expr
         {
             $1.push_back(std::move($2));
@@ -512,35 +511,28 @@ print_expr
     ;
 
 read_expr
-    : var_decl ASSGN READ LBRA RBRA
+    : LABEL TSEP type ASSGN READ LBRA RBRA
         {
             $$ = std::make_unique<ReadNode>();
-            $$->var = std::move($1);
-        }
-
-var_decl 
-    : LABEL TSEP type
-        {
-            $$ = std::make_unique<VarNode>();
-            $$->label = std::move($1);
+            $$->name = std::move($1);
             $$->type = std::move($3);
         }
-    ;
+
 
 assign_expr
-    : var_decl LBRA program RBRA 
+    : LABEL TSEP type LBRA program RBRA 
         { 
-            $$ = std::make_unique<BinaryNode>();
-            $$->op = BinaryOp::ASSIGN;
-            $$->l_exp = std::move($1);
-            $$->r_exp = std::move($3);
+            $$ = std::make_unique<VarDecl>();
+            $$->name = std::move($1);
+            $$->type = std::move($3);
+            $$->r_val = std::move($5);
         }
-    | var_decl ASSGN value_expr
+    | LABEL TSEP type ASSGN value_expr
         {
-            $$ = std::make_unique<BinaryNode>();
-            $$->op = BinaryOp::ASSIGN;
-            $$->l_exp = std::move($1);
-            $$->r_exp = std::move($3);
+            $$ = std::make_unique<VarDecl>();
+            $$->name = std::move($1);
+            $$->type = std::move($3);
+            $$->r_val = std::move($5);
         }
     ;
 
@@ -662,9 +654,10 @@ expr_list
 param_expr
     : LABEL LBRA RBRA 
         {
-            auto temp = std::make_unique<FunCallNode>();
-            temp->func = std::move($1);
-            temp->args = std::vector<expr_ptr>{};
+            auto temp = std::make_unique<ParamNode>();
+            temp->label = std::move($1);
+            temp->params = std::vector<expr_ptr>{};
+            temp->kind = ParamKind::FUNC_CALL;
             $$ = std::move(temp);
         }
     | LABEL LBRA expr_list RBRA
