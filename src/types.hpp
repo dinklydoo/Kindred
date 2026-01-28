@@ -7,7 +7,8 @@
 struct Type {
     enum class Kind {
         Bool, Char, Int, Long, Float, Double,
-        List, Func, Struct, Enum, Nominal
+        List, Func, Struct, Enum, Nominal, 
+        ERROR, GENERIC // error and unit types
     };
     Kind kind;
     explicit Type(Kind k) : kind(k) {}
@@ -25,6 +26,10 @@ struct IntType    : Type { IntType()    : Type(Kind::Int) {} };
 struct LongType   : Type { LongType()   : Type(Kind::Long) {} };
 struct FloatType  : Type { FloatType()  : Type(Kind::Float) {} };
 struct DoubleType : Type { DoubleType() : Type(Kind::Double) {} };
+
+// erraneous type
+struct ErrorType : Type { ErrorType() : Type(Kind::ERROR) {} };
+struct GenericType : Type { GenericType() : Type(Kind::GENERIC) {} };
 
 // Structural types
 struct ListType : Type {
@@ -63,6 +68,8 @@ struct TypeSystem {
     type_ptr long_type()   { return primitive_type<LongType>(); }
     type_ptr float_type()  { return primitive_type<FloatType>(); }
     type_ptr double_type() { return primitive_type<DoubleType>(); }
+    type_ptr error_type() { return primitive_type<ErrorType>(); }
+    type_ptr generic_type() { return primitive_type<GenericType>(); }
 
     type_ptr list_type(type_ptr elem) {
         auto it = list_cache.find(elem);

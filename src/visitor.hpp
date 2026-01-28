@@ -11,15 +11,17 @@ struct Visitor {
     virtual void visit( DefaultLit& node);
     virtual void visit( EnumLit& node);
 
-    virtual void visit( FieldNode& node);
+    virtual void visit( AccessNode& node);
     virtual void visit( VarDecl& node);
     virtual void visit( FuncDecl& node);
     virtual void visit( EnumDecl& node);
     virtual void visit( StructDecl& node);
     virtual void visit( UnaryNode& node);
     virtual void visit( BinaryNode& node);
-    virtual void visit( ParamNode& node);
+    virtual void visit( StructNode& node);
+    virtual void visit( CallNode& node);
     virtual void visit( NominalNode& node);
+    virtual void visit( ReturnNode& node);
     virtual void visit( CaseNode& node);
     virtual void visit( CaseBranchNode& node);
     virtual void visit( GuardNode& node);

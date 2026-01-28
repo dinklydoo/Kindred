@@ -6,9 +6,18 @@
 
 struct Visitor;
 
+struct Point {
+    int line; int col;
+};
+
 struct Source {
-    int line;
-    int col;
+    Point begin;
+    Point end;
+
+    // explicit Source(int bl, int bc, int el, int ec){
+    //     begin = {bl, bc};
+    //     end = {el, ec};
+    // }
 };
 
 struct ASTNode{
@@ -22,7 +31,6 @@ struct ExpNode : ASTNode{
     type_ptr resolved_type;
 };
 
- 
 struct LiteralNode : ExpNode{
     public: virtual ~LiteralNode() = default;
 };
@@ -84,8 +92,8 @@ struct NominalNode : ExpNode {
     public: virtual void accept(Visitor& v) override;
 };
 
-// field label for struct access
-struct FieldNode : ExpNode {
+struct AccessNode : ExpNode {
+    expr_ptr struct_expr;
     std::string field;
     public: virtual void accept(Visitor& v) override;
 };
@@ -107,8 +115,6 @@ enum BinaryOp {
     BAND, BOR, // boolean
     CGT, CLT, CGEQ, CLEQ, CEQ, CNEQ, // comparitive
     CONCAT, INDEX, // list based
-    ASSIGN, // var decl
-    ACCESS // structure based
 };
 
 struct BinaryNode : ExpNode{
@@ -118,25 +124,15 @@ struct BinaryNode : ExpNode{
     public: virtual void accept(Visitor& v) override;
 };
 
-/* Node for structs/function calls that can share syntax */
-/*
-    Function calls as:
-        foo(arg1, arg2)
-    
-    Structure constructors as:
-        struct(field, field2)
-
-    Both tokenized as LABEL LBRA expr_list RBRA
-    Specialize node types later in semantic/type checking
-*/
-enum ParamKind {
-    PARAM, FUNC_CALL, STRUCT_CONS
-};
-
-struct ParamNode : ExpNode{
+struct CallNode : ExpNode {
     std::string label;
     std::vector<expr_ptr> params;
-    ParamKind kind = PARAM;
+    public: virtual void accept(Visitor& v) override;
+};
+
+struct StructNode : ExpNode {
+    std::string name;
+    std::vector<expr_ptr> fields;
     public: virtual void accept(Visitor& v) override;
 };
 
@@ -159,6 +155,11 @@ struct ProgramNode : ExpNode {
     public: virtual void accept(Visitor& v) override;
 };
 using prog_ptr = std::unique_ptr<ProgramNode>;
+
+struct ReturnNode : ExpNode {
+    expr_ptr rexp;
+    public: virtual void accept(Visitor& v) override;
+};
 
 struct CaseBranchNode : ExpNode {
     literal_ptr pattern;
@@ -242,7 +243,7 @@ struct FuncDecl : DeclNode{
 struct VarDecl : DeclNode {
     std::string name;
     type_ptr type;
-    node_ptr r_val; 
+    expr_ptr r_val; 
     public: virtual void accept(Visitor& v) override;
 };
 

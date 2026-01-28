@@ -90,9 +90,12 @@ ESCAPE \\([\\'"?tn]|HEX)
 ")"             { return yy::parser::make_RBRA(make_location(yyleng)); }
 "["             { return yy::parser::make_SQ_LBRA(make_location(yyleng)); }
 "]"             { return yy::parser::make_SQ_RBRA(make_location(yyleng)); }
+"{"             { return yy::parser::make_C_LBRA(make_location(yyleng)); }
+"}"             { return yy::parser::make_C_RBRA(make_location(yyleng)); }
 ","             { return yy::parser::make_COMMA(make_location(yyleng)); }
 "."             { return yy::parser::make_DOT(make_location(yyleng)); }
 
+"nil"         { return yy::parser::make_NIL(make_location(yyleng)); }
 "case"        { return yy::parser::make_CASE(make_location(yyleng)); }
 "mark"        { return yy::parser::make_MARK(make_location(yyleng)); }
 "of"          { return yy::parser::make_OF(make_location(yyleng)); }

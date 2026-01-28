@@ -2,8 +2,21 @@
 #include "visitor.hpp"
 #include <map>
 #include <stack>
+#include <vector>
 
 using scope = std::map<std::string, type_ptr>;
+
+struct SemanticError{
+    enum class Kind{
+        TYPE, UNDEF, REDEF, REF, DIV, ACCESS, ARG
+    };
+    Kind kind;
+    Source location;
+    std::string message;
+};
+
+// todo : maybe use a sorted construct by location
+using ErrorList = std::vector<SemanticError>;
 
 struct TypeVarScope{
     std::vector<scope> stack;
@@ -17,13 +30,14 @@ struct TypeVarScope{
     }
 
     //Push a new variable declaration into the CURRENT scope
-    void push_var(std::string label, type_ptr type){
+    // if variable is already defined then return -1 else return 0
+    int push_var(std::string label, type_ptr type){
         auto& t = stack.back();
-        if (find_var(label)){
-            // throw error
-            return;
-        }
+
+        if (find_var(label)) return -1;
+
         t.emplace(label, type);
+        return 0;
     }
 
     void push_scope(){ stack.emplace_back(); }
@@ -41,20 +55,20 @@ struct TypeVarScope{
 
 */
 struct TypePropogator{
-    std::stack<type_ptr> stack;
-    bool binding = true;
+    private:
+        std::stack<type_ptr> stack;
+    public:
+        void prop_type(type_ptr t){ stack.push(t); }
+        type_ptr unprop_type(){ 
+            auto t = stack.top();
+            stack.pop(); 
+            return t;
+        }
 
-    void set_unbound(){ binding = false; }
-    void set_bound(){ binding = true; }
-
-    bool is_bound(){ return (binding && !stack.empty()); }
-
-    void prop_type(type_ptr t){ stack.push(t); }
-    type_ptr unprop_type(){ 
-        auto t = stack.top();
-        stack.pop(); 
-        return t;
-    }
+        type_ptr top_type(){
+            if (stack.empty()) return nullptr;
+            return stack.top();
+        }
 };
 
 struct TypeChecker : Visitor{
@@ -68,7 +82,11 @@ struct TypeChecker : Visitor{
     // types of declarations (functions, enums, structs) in global scope
     TypeVarScope definitions;
 
+    // type propogator object
     TypePropogator typeprop;
+
+    // error container object
+    ErrorList errors;
 
     /*
     Visitor definitions, double dispatched
@@ -79,14 +97,20 @@ struct TypeChecker : Visitor{
     virtual void visit( StructDecl& node) override;
     virtual void visit( UnaryNode& node) override;
     virtual void visit( BinaryNode& node) override;
-    virtual void visit( ParamNode& node) override;
+    virtual void visit( CallNode& node) override;
+    virtual void visit( StructNode& node) override;
+    virtual void visit( AccessNode& node) override;
     virtual void visit( NominalNode& node) override;
+    virtual void visit( CharLit& node) override;
     virtual void visit( IntLit& node) override;
     virtual void visit( FloatLit& node) override;
     virtual void visit( BoolLit& node) override;
     virtual void visit( ListLit& node) override;
     virtual void visit( ListPatternLit& node) override;
     virtual void visit( EnumLit& node) override;
+    virtual void visit( DefaultLit& node) override;
+    virtual void visit( NilLit& node) override;
+    virtual void visit( ReturnNode& node) override;
     virtual void visit( CaseNode& node) override;
     virtual void visit( CaseBranchNode& node) override;
     virtual void visit( GuardNode& node) override;
@@ -97,5 +121,15 @@ struct TypeChecker : Visitor{
     virtual void visit( ReadNode& node) override;
     virtual void visit( PrintNode& node) override;
 
-    virtual type_ptr cast_type(type_ptr a, type_ptr b);
+
+    virtual type_ptr cast_strongest(type_ptr a, type_ptr b);
+    virtual type_ptr cast_fixed(type_ptr fix, type_ptr castable);
+    virtual void type_error(std::string message, ExpNode& node);
+
+    virtual void push_error(std::string msg, SemanticError::Kind kind, Source& loc);
+    virtual void redef_error(std::string label, Source& loc);
+    virtual void undef_error(std::string message, ExpNode& node);
+    virtual void reference_error(std::string label, ExpNode& node);
+    virtual void access_error(std::string message, ExpNode& node);
+    virtual void arg_error(std::string message, ExpNode& node);
 };

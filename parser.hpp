@@ -184,7 +184,7 @@
 # define YYDEBUG 1
 #endif
 
-#line 32 "src/parser.y"
+#line 39 "src/parser.y"
 namespace yy {
 #line 190 "parser.hpp"
 
@@ -410,6 +410,7 @@ namespace yy {
 
       // definition
       // helper_expr
+      // assign_expr
       char dummy8[sizeof (decl_ptr)];
 
       // FLOAT
@@ -422,7 +423,8 @@ namespace yy {
       // return_expr
       // nominal_expr
       // list_expr
-      // param_expr
+      // call_expr
+      // struct_expr
       // value_expr
       // bool_expr
       // comp_expr
@@ -513,6 +515,7 @@ namespace yy {
       // struct_def
       char dummy31[sizeof (struct_decl_ptr)];
 
+      // non_function_type
       // type
       // literal_type
       // int_lit_type
@@ -524,9 +527,6 @@ namespace yy {
 
       // INT
       char dummy33[sizeof (uint64_t)];
-
-      // assign_expr
-      char dummy34[sizeof (var_decl_ptr)];
     };
 
     /// The size of the largest semantic type.
@@ -606,37 +606,39 @@ namespace yy {
     RBRA = 285,                    // RBRA
     SQ_LBRA = 286,                 // SQ_LBRA
     SQ_RBRA = 287,                 // SQ_RBRA
-    COMMA = 288,                   // COMMA
-    DOT = 289,                     // DOT
-    TSEP = 290,                    // TSEP
-    EMPTY = 291,                   // EMPTY
-    PEND = 292,                    // PEND
-    ASSGN = 293,                   // ASSGN
-    ADD = 294,                     // ADD
-    SUB = 295,                     // SUB
-    MUL = 296,                     // MUL
-    DIV = 297,                     // DIV
-    MOD = 298,                     // MOD
-    POW = 299,                     // POW
-    FLR = 300,                     // FLR
-    LAND = 301,                    // LAND
-    BAR = 302,                     // BAR
-    LXOR = 303,                    // LXOR
-    LNEG = 304,                    // LNEG
-    CGT = 305,                     // CGT
-    CLT = 306,                     // CLT
-    CGEQ = 307,                    // CGEQ
-    CLEQ = 308,                    // CLEQ
-    CEQ = 309,                     // CEQ
-    CNEQ = 310,                    // CNEQ
-    LSL = 311,                     // LSL
-    LSR = 312,                     // LSR
-    BAND = 313,                    // BAND
-    BOR = 314,                     // BOR
-    BNOT = 315,                    // BNOT
-    CONCAT = 316,                  // CONCAT
-    ARROW = 317,                   // ARROW
-    PROD = 318                     // PROD
+    C_LBRA = 288,                  // C_LBRA
+    C_RBRA = 289,                  // C_RBRA
+    COMMA = 290,                   // COMMA
+    DOT = 291,                     // DOT
+    TSEP = 292,                    // TSEP
+    EMPTY = 293,                   // EMPTY
+    PEND = 294,                    // PEND
+    ASSGN = 295,                   // ASSGN
+    ADD = 296,                     // ADD
+    SUB = 297,                     // SUB
+    MUL = 298,                     // MUL
+    DIV = 299,                     // DIV
+    MOD = 300,                     // MOD
+    POW = 301,                     // POW
+    FLR = 302,                     // FLR
+    LAND = 303,                    // LAND
+    BAR = 304,                     // BAR
+    LXOR = 305,                    // LXOR
+    LNEG = 306,                    // LNEG
+    CGT = 307,                     // CGT
+    CLT = 308,                     // CLT
+    CGEQ = 309,                    // CGEQ
+    CLEQ = 310,                    // CLEQ
+    CEQ = 311,                     // CEQ
+    CNEQ = 312,                    // CNEQ
+    LSL = 313,                     // LSL
+    LSR = 314,                     // LSR
+    BAND = 315,                    // BAND
+    BOR = 316,                     // BOR
+    BNOT = 317,                    // BNOT
+    CONCAT = 318,                  // CONCAT
+    ARROW = 319,                   // ARROW
+    PROD = 320                     // PROD
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -653,7 +655,7 @@ namespace yy {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 64, ///< Number of tokens.
+        YYNTOKENS = 66, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // KEOF
         S_YYerror = 1,                           // error
@@ -688,111 +690,115 @@ namespace yy {
         S_RBRA = 30,                             // RBRA
         S_SQ_LBRA = 31,                          // SQ_LBRA
         S_SQ_RBRA = 32,                          // SQ_RBRA
-        S_COMMA = 33,                            // COMMA
-        S_DOT = 34,                              // DOT
-        S_TSEP = 35,                             // TSEP
-        S_EMPTY = 36,                            // EMPTY
-        S_PEND = 37,                             // PEND
-        S_ASSGN = 38,                            // ASSGN
-        S_ADD = 39,                              // ADD
-        S_SUB = 40,                              // SUB
-        S_MUL = 41,                              // MUL
-        S_DIV = 42,                              // DIV
-        S_MOD = 43,                              // MOD
-        S_POW = 44,                              // POW
-        S_FLR = 45,                              // FLR
-        S_LAND = 46,                             // LAND
-        S_BAR = 47,                              // BAR
-        S_LXOR = 48,                             // LXOR
-        S_LNEG = 49,                             // LNEG
-        S_CGT = 50,                              // CGT
-        S_CLT = 51,                              // CLT
-        S_CGEQ = 52,                             // CGEQ
-        S_CLEQ = 53,                             // CLEQ
-        S_CEQ = 54,                              // CEQ
-        S_CNEQ = 55,                             // CNEQ
-        S_LSL = 56,                              // LSL
-        S_LSR = 57,                              // LSR
-        S_BAND = 58,                             // BAND
-        S_BOR = 59,                              // BOR
-        S_BNOT = 60,                             // BNOT
-        S_CONCAT = 61,                           // CONCAT
-        S_ARROW = 62,                            // ARROW
-        S_PROD = 63,                             // PROD
-        S_YYACCEPT = 64,                         // $accept
-        S_module = 65,                           // module
-        S_definitions = 66,                      // definitions
-        S_definition = 67,                       // definition
-        S_opt_types = 68,                        // opt_types
-        S_types = 69,                            // types
-        S_type = 70,                             // type
-        S_literal_type = 71,                     // literal_type
-        S_int_lit_type = 72,                     // int_lit_type
-        S_float_lit_type = 73,                   // float_lit_type
-        S_list_type = 74,                        // list_type
-        S_func_type = 75,                        // func_type
-        S_nominal_type = 76,                     // nominal_type
-        S_opt_params = 77,                       // opt_params
-        S_params = 78,                           // params
-        S_param = 79,                            // param
-        S_function_def = 80,                     // function_def
-        S_fields = 81,                           // fields
-        S_field = 82,                            // field
-        S_struct_def = 83,                       // struct_def
-        S_evar = 84,                             // evar
-        S_evars = 85,                            // evars
-        S_enum_def = 86,                         // enum_def
-        S_program = 87,                          // program
-        S_branch_expr = 88,                      // branch_expr
-        S_guard_expr = 89,                       // guard_expr
-        S_guards = 90,                           // guards
-        S_guard = 91,                            // guard
-        S_case_expr = 92,                        // case_expr
-        S_patterns = 93,                         // patterns
-        S_pattern_branch = 94,                   // pattern_branch
-        S_literal = 95,                          // literal
-        S_pattern = 96,                          // pattern
-        S_enum_lit = 97,                         // enum_lit
-        S_list_pattern = 98,                     // list_pattern
-        S_string_lit = 99,                       // string_lit
-        S_list_lit = 100,                        // list_lit
-        S_list_pattern_lit = 101,                // list_pattern_lit
-        S_size_patterns = 102,                   // size_patterns
-        S_size_pattern_two = 103,                // size_pattern_two
-        S_return_expr = 104,                     // return_expr
-        S_helpers = 105,                         // helpers
-        S_helper_expr = 106,                     // helper_expr
-        S_print_expr = 107,                      // print_expr
-        S_read_expr = 108,                       // read_expr
-        S_assign_expr = 109,                     // assign_expr
-        S_int_lit = 110,                         // int_lit
-        S_float_lit = 111,                       // float_lit
-        S_bool_lit = 112,                        // bool_lit
-        S_char_lit = 113,                        // char_lit
-        S_bool_op = 114,                         // bool_op
-        S_comp_op = 115,                         // comp_op
-        S_bitwise_op = 116,                      // bitwise_op
-        S_shift_op = 117,                        // shift_op
-        S_additive_op = 118,                     // additive_op
-        S_mult_op = 119,                         // mult_op
-        S_unary_op = 120,                        // unary_op
-        S_nominal_expr = 121,                    // nominal_expr
-        S_list_expr = 122,                       // list_expr
-        S_empty_list = 123,                      // empty_list
-        S_list_con = 124,                        // list_con
-        S_expr_list = 125,                       // expr_list
-        S_param_expr = 126,                      // param_expr
-        S_value_expr = 127,                      // value_expr
-        S_bool_expr = 128,                       // bool_expr
-        S_comp_expr = 129,                       // comp_expr
-        S_bitwise_expr = 130,                    // bitwise_expr
-        S_shift_expr = 131,                      // shift_expr
-        S_additive_expr = 132,                   // additive_expr
-        S_mult_expr = 133,                       // mult_expr
-        S_pow_expr = 134,                        // pow_expr
-        S_unary_expr = 135,                      // unary_expr
-        S_postfix_expr = 136,                    // postfix_expr
-        S_literal_expr = 137                     // literal_expr
+        S_C_LBRA = 33,                           // C_LBRA
+        S_C_RBRA = 34,                           // C_RBRA
+        S_COMMA = 35,                            // COMMA
+        S_DOT = 36,                              // DOT
+        S_TSEP = 37,                             // TSEP
+        S_EMPTY = 38,                            // EMPTY
+        S_PEND = 39,                             // PEND
+        S_ASSGN = 40,                            // ASSGN
+        S_ADD = 41,                              // ADD
+        S_SUB = 42,                              // SUB
+        S_MUL = 43,                              // MUL
+        S_DIV = 44,                              // DIV
+        S_MOD = 45,                              // MOD
+        S_POW = 46,                              // POW
+        S_FLR = 47,                              // FLR
+        S_LAND = 48,                             // LAND
+        S_BAR = 49,                              // BAR
+        S_LXOR = 50,                             // LXOR
+        S_LNEG = 51,                             // LNEG
+        S_CGT = 52,                              // CGT
+        S_CLT = 53,                              // CLT
+        S_CGEQ = 54,                             // CGEQ
+        S_CLEQ = 55,                             // CLEQ
+        S_CEQ = 56,                              // CEQ
+        S_CNEQ = 57,                             // CNEQ
+        S_LSL = 58,                              // LSL
+        S_LSR = 59,                              // LSR
+        S_BAND = 60,                             // BAND
+        S_BOR = 61,                              // BOR
+        S_BNOT = 62,                             // BNOT
+        S_CONCAT = 63,                           // CONCAT
+        S_ARROW = 64,                            // ARROW
+        S_PROD = 65,                             // PROD
+        S_YYACCEPT = 66,                         // $accept
+        S_module = 67,                           // module
+        S_definitions = 68,                      // definitions
+        S_definition = 69,                       // definition
+        S_opt_types = 70,                        // opt_types
+        S_types = 71,                            // types
+        S_non_function_type = 72,                // non_function_type
+        S_type = 73,                             // type
+        S_literal_type = 74,                     // literal_type
+        S_int_lit_type = 75,                     // int_lit_type
+        S_float_lit_type = 76,                   // float_lit_type
+        S_list_type = 77,                        // list_type
+        S_func_type = 78,                        // func_type
+        S_nominal_type = 79,                     // nominal_type
+        S_opt_params = 80,                       // opt_params
+        S_params = 81,                           // params
+        S_param = 82,                            // param
+        S_function_def = 83,                     // function_def
+        S_fields = 84,                           // fields
+        S_field = 85,                            // field
+        S_struct_def = 86,                       // struct_def
+        S_evar = 87,                             // evar
+        S_evars = 88,                            // evars
+        S_enum_def = 89,                         // enum_def
+        S_program = 90,                          // program
+        S_branch_expr = 91,                      // branch_expr
+        S_guard_expr = 92,                       // guard_expr
+        S_guards = 93,                           // guards
+        S_guard = 94,                            // guard
+        S_case_expr = 95,                        // case_expr
+        S_patterns = 96,                         // patterns
+        S_pattern_branch = 97,                   // pattern_branch
+        S_literal = 98,                          // literal
+        S_pattern = 99,                          // pattern
+        S_enum_lit = 100,                        // enum_lit
+        S_list_pattern = 101,                    // list_pattern
+        S_string_lit = 102,                      // string_lit
+        S_list_lit = 103,                        // list_lit
+        S_list_pattern_lit = 104,                // list_pattern_lit
+        S_size_patterns = 105,                   // size_patterns
+        S_size_pattern_two = 106,                // size_pattern_two
+        S_return_expr = 107,                     // return_expr
+        S_helpers = 108,                         // helpers
+        S_helper_expr = 109,                     // helper_expr
+        S_print_expr = 110,                      // print_expr
+        S_read_expr = 111,                       // read_expr
+        S_assign_expr = 112,                     // assign_expr
+        S_int_lit = 113,                         // int_lit
+        S_float_lit = 114,                       // float_lit
+        S_bool_lit = 115,                        // bool_lit
+        S_char_lit = 116,                        // char_lit
+        S_bool_op = 117,                         // bool_op
+        S_comp_op = 118,                         // comp_op
+        S_bitwise_op = 119,                      // bitwise_op
+        S_shift_op = 120,                        // shift_op
+        S_additive_op = 121,                     // additive_op
+        S_mult_op = 122,                         // mult_op
+        S_unary_op = 123,                        // unary_op
+        S_nominal_expr = 124,                    // nominal_expr
+        S_list_expr = 125,                       // list_expr
+        S_empty_list = 126,                      // empty_list
+        S_list_con = 127,                        // list_con
+        S_expr_list = 128,                       // expr_list
+        S_call_expr = 129,                       // call_expr
+        S_struct_expr = 130,                     // struct_expr
+        S_value_expr = 131,                      // value_expr
+        S_bool_expr = 132,                       // bool_expr
+        S_comp_expr = 133,                       // comp_expr
+        S_bitwise_expr = 134,                    // bitwise_expr
+        S_shift_expr = 135,                      // shift_expr
+        S_additive_expr = 136,                   // additive_expr
+        S_mult_expr = 137,                       // mult_expr
+        S_pow_expr = 138,                        // pow_expr
+        S_unary_expr = 139,                      // unary_expr
+        S_postfix_expr = 140,                    // postfix_expr
+        S_literal_expr = 141                     // literal_expr
       };
     };
 
@@ -864,6 +870,7 @@ namespace yy {
 
       case symbol_kind::S_definition: // definition
       case symbol_kind::S_helper_expr: // helper_expr
+      case symbol_kind::S_assign_expr: // assign_expr
         value.move< decl_ptr > (std::move (that.value));
         break;
 
@@ -879,7 +886,8 @@ namespace yy {
       case symbol_kind::S_return_expr: // return_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_param_expr: // param_expr
+      case symbol_kind::S_call_expr: // call_expr
+      case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
       case symbol_kind::S_comp_expr: // comp_expr
@@ -991,6 +999,7 @@ namespace yy {
         value.move< struct_decl_ptr > (std::move (that.value));
         break;
 
+      case symbol_kind::S_non_function_type: // non_function_type
       case symbol_kind::S_type: // type
       case symbol_kind::S_literal_type: // literal_type
       case symbol_kind::S_int_lit_type: // int_lit_type
@@ -1003,10 +1012,6 @@ namespace yy {
 
       case symbol_kind::S_INT: // INT
         value.move< uint64_t > (std::move (that.value));
-        break;
-
-      case symbol_kind::S_assign_expr: // assign_expr
-        value.move< var_decl_ptr > (std::move (that.value));
         break;
 
       default:
@@ -1494,20 +1499,6 @@ namespace yy {
       {}
 #endif
 
-#if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, var_decl_ptr&& v, location_type&& l)
-        : Base (t)
-        , value (std::move (v))
-        , location (std::move (l))
-      {}
-#else
-      basic_symbol (typename Base::kind_type t, const var_decl_ptr& v, const location_type& l)
-        : Base (t)
-        , value (v)
-        , location (l)
-      {}
-#endif
-
       /// Destroy the symbol.
       ~basic_symbol ()
       {
@@ -1567,6 +1558,7 @@ switch (yykind)
 
       case symbol_kind::S_definition: // definition
       case symbol_kind::S_helper_expr: // helper_expr
+      case symbol_kind::S_assign_expr: // assign_expr
         value.template destroy< decl_ptr > ();
         break;
 
@@ -1582,7 +1574,8 @@ switch (yykind)
       case symbol_kind::S_return_expr: // return_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_param_expr: // param_expr
+      case symbol_kind::S_call_expr: // call_expr
+      case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
       case symbol_kind::S_comp_expr: // comp_expr
@@ -1694,6 +1687,7 @@ switch (yykind)
         value.template destroy< struct_decl_ptr > ();
         break;
 
+      case symbol_kind::S_non_function_type: // non_function_type
       case symbol_kind::S_type: // type
       case symbol_kind::S_literal_type: // literal_type
       case symbol_kind::S_int_lit_type: // int_lit_type
@@ -1706,10 +1700,6 @@ switch (yykind)
 
       case symbol_kind::S_INT: // INT
         value.template destroy< uint64_t > ();
-        break;
-
-      case symbol_kind::S_assign_expr: // assign_expr
-        value.template destroy< var_decl_ptr > ();
         break;
 
       default:
@@ -2387,6 +2377,36 @@ switch (yykind)
       make_SQ_RBRA (const location_type& l)
       {
         return symbol_type (token::SQ_RBRA, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_C_LBRA (location_type l)
+      {
+        return symbol_type (token::C_LBRA, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_C_LBRA (const location_type& l)
+      {
+        return symbol_type (token::C_LBRA, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_C_RBRA (location_type l)
+      {
+        return symbol_type (token::C_RBRA, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_C_RBRA (const location_type& l)
+      {
+        return symbol_type (token::C_RBRA, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -3158,8 +3178,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 275,     ///< Last index in yytable_.
-      yynnts_ = 74,  ///< Number of nonterminal symbols.
+      yylast_ = 277,     ///< Last index in yytable_.
+      yynnts_ = 76,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
 
@@ -3208,10 +3228,11 @@ switch (yykind)
       25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
       35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
       45,    46,    47,    48,    49,    50,    51,    52,    53,    54,
-      55,    56,    57,    58,    59,    60,    61,    62,    63
+      55,    56,    57,    58,    59,    60,    61,    62,    63,    64,
+      65
     };
     // Last valid token kind.
-    const int code_max = 318;
+    const int code_max = 320;
 
     if (t <= 0)
       return symbol_kind::S_YYEOF;
@@ -3265,6 +3286,7 @@ switch (yykind)
 
       case symbol_kind::S_definition: // definition
       case symbol_kind::S_helper_expr: // helper_expr
+      case symbol_kind::S_assign_expr: // assign_expr
         value.copy< decl_ptr > (YY_MOVE (that.value));
         break;
 
@@ -3280,7 +3302,8 @@ switch (yykind)
       case symbol_kind::S_return_expr: // return_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_param_expr: // param_expr
+      case symbol_kind::S_call_expr: // call_expr
+      case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
       case symbol_kind::S_comp_expr: // comp_expr
@@ -3392,6 +3415,7 @@ switch (yykind)
         value.copy< struct_decl_ptr > (YY_MOVE (that.value));
         break;
 
+      case symbol_kind::S_non_function_type: // non_function_type
       case symbol_kind::S_type: // type
       case symbol_kind::S_literal_type: // literal_type
       case symbol_kind::S_int_lit_type: // int_lit_type
@@ -3404,10 +3428,6 @@ switch (yykind)
 
       case symbol_kind::S_INT: // INT
         value.copy< uint64_t > (YY_MOVE (that.value));
-        break;
-
-      case symbol_kind::S_assign_expr: // assign_expr
-        value.copy< var_decl_ptr > (YY_MOVE (that.value));
         break;
 
       default:
@@ -3476,6 +3496,7 @@ switch (yykind)
 
       case symbol_kind::S_definition: // definition
       case symbol_kind::S_helper_expr: // helper_expr
+      case symbol_kind::S_assign_expr: // assign_expr
         value.move< decl_ptr > (YY_MOVE (s.value));
         break;
 
@@ -3491,7 +3512,8 @@ switch (yykind)
       case symbol_kind::S_return_expr: // return_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_param_expr: // param_expr
+      case symbol_kind::S_call_expr: // call_expr
+      case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
       case symbol_kind::S_comp_expr: // comp_expr
@@ -3603,6 +3625,7 @@ switch (yykind)
         value.move< struct_decl_ptr > (YY_MOVE (s.value));
         break;
 
+      case symbol_kind::S_non_function_type: // non_function_type
       case symbol_kind::S_type: // type
       case symbol_kind::S_literal_type: // literal_type
       case symbol_kind::S_int_lit_type: // int_lit_type
@@ -3615,10 +3638,6 @@ switch (yykind)
 
       case symbol_kind::S_INT: // INT
         value.move< uint64_t > (YY_MOVE (s.value));
-        break;
-
-      case symbol_kind::S_assign_expr: // assign_expr
-        value.move< var_decl_ptr > (YY_MOVE (s.value));
         break;
 
       default:
@@ -3686,9 +3705,9 @@ switch (yykind)
   }
 
 
-#line 32 "src/parser.y"
+#line 39 "src/parser.y"
 } // yy
-#line 3692 "parser.hpp"
+#line 3711 "parser.hpp"
 
 
 

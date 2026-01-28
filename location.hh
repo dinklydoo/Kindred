@@ -53,7 +53,7 @@
 #  endif
 # endif
 
-#line 32 "src/parser.y"
+#line 39 "src/parser.y"
 namespace yy {
 #line 59 "location.hh"
 
@@ -299,7 +299,7 @@ namespace yy {
     return ostr;
   }
 
-#line 32 "src/parser.y"
+#line 39 "src/parser.y"
 } // yy
 #line 305 "location.hh"
 

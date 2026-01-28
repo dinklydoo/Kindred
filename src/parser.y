@@ -21,6 +21,13 @@
         return list;
     }
 
+    Source floc_to_loc(yy::location floc){
+        Source loc;
+        loc.begin = {floc.begin.line, floc.begin.column};
+        loc.end = {floc.end.line, floc.end.column};
+        return loc;
+    }
+
     module_ptr module;
     extern yy::parser::symbol_type yylex();
 %}
@@ -49,7 +56,9 @@
 %token T_INT T_LONG T_FLOAT T_DOUBLE T_CHAR T_BOOL
 
 /* punctuation */
-%token LBRA RBRA SQ_LBRA SQ_RBRA
+%token LBRA RBRA 
+%token SQ_LBRA SQ_RBRA
+%token C_LBRA C_RBRA
 %token COMMA DOT TSEP
 %token EMPTY
 %token KEOF 0
@@ -74,6 +83,7 @@
 
 /* Type Patterns */
 %type <type_ptr> type
+%type <type_ptr> non_function_type
 %type <std::vector<type_ptr>> opt_types
 %type <std::vector<type_ptr>> types
 %type <type_ptr> literal_type
@@ -107,7 +117,7 @@
 %type <decl_ptr> helper_expr;
 %type <print_ptr> print_expr;
 %type <read_ptr> read_expr;
-%type <var_decl_ptr> assign_expr;
+%type <decl_ptr> assign_expr;
 
 %type <expr_ptr> branch_expr;
 
@@ -162,7 +172,8 @@
 %type <expr_ptr> unary_expr;
 %type <expr_ptr> postfix_expr;
 %type <expr_ptr> literal_expr;
-%type <expr_ptr> param_expr;
+%type <expr_ptr> call_expr;
+%type <expr_ptr> struct_expr;
 %type <expr_ptr> nominal_expr;
 
 %start module
@@ -203,11 +214,15 @@ types
         $$ = std::move($1);
     };
 
-type
+non_function_type
     : literal_type { $$ = std::move($1); }
     | list_type { $$ = std::move($1); }
-    | func_type { $$ = std::move($1); }
     | nominal_type { $$ = std::move($1); }
+    ;
+
+type
+    : non_function_type { $$ = std::move($1); }
+    | func_type { $$ = std::move($1); }
     ;
 
 literal_type
@@ -263,6 +278,8 @@ function_def
             $$->params = std::move($4);
             $$->ret = std::move($7);
             $$->body = std::move($8);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -298,9 +315,9 @@ evar
 
 evars
     : evar { $$ = std::vector<std::string>{$1}; }
-    | evars evar 
+    | evars COMMA evar 
         {
-            $1.push_back(std::move($2));
+            $1.push_back(std::move($3));
             $$ = std::move($1);
         }
     ;
@@ -485,7 +502,13 @@ size_pattern_two
     ;
 
 return_expr
-    : RETURN value_expr { $$ = std::move($2); };
+    : RETURN value_expr 
+        { 
+            auto temp = std::make_unique<ReturnNode>();
+            temp->rexp = std::move($2); 
+            $$ = std::move(temp);
+        }
+    ;
 
 helpers
     : %empty { $$ = std::vector<decl_ptr>{}; }
@@ -511,7 +534,7 @@ print_expr
     ;
 
 read_expr
-    : LABEL TSEP type ASSGN READ LBRA RBRA
+    : LABEL TSEP non_function_type ASSGN READ LBRA RBRA
         {
             $$ = std::make_unique<ReadNode>();
             $$->name = std::move($1);
@@ -520,19 +543,22 @@ read_expr
 
 
 assign_expr
-    : LABEL TSEP type LBRA program RBRA 
+    : LABEL TSEP LBRA opt_params RBRA PROD type LBRA program RBRA 
         { 
-            $$ = std::make_unique<VarDecl>();
-            $$->name = std::move($1);
-            $$->type = std::move($3);
-            $$->r_val = std::move($5);
+            auto temp = std::make_unique<FuncDecl>();
+            temp->name = std::move($1);
+            temp->params = std::move($4);
+            temp->ret = std::move($7);
+            temp->body = std::move($9);
+            $$ = std::move(temp);
         }
-    | LABEL TSEP type ASSGN value_expr
+    | LABEL TSEP non_function_type ASSGN value_expr
         {
-            $$ = std::make_unique<VarDecl>();
-            $$->name = std::move($1);
-            $$->type = std::move($3);
-            $$->r_val = std::move($5);
+            auto temp = std::make_unique<VarDecl>();
+            temp->name = std::move($1);
+            temp->type = std::move($3);
+            temp->r_val = std::move($5);
+            $$ = std::move(temp);
         }
     ;
 
@@ -651,23 +677,31 @@ expr_list
         }
     ;
 
-param_expr
+call_expr
     : LABEL LBRA RBRA 
         {
-            auto temp = std::make_unique<ParamNode>();
+            auto temp = std::make_unique<CallNode>();
             temp->label = std::move($1);
             temp->params = std::vector<expr_ptr>{};
-            temp->kind = ParamKind::FUNC_CALL;
             $$ = std::move(temp);
         }
     | LABEL LBRA expr_list RBRA
         {
-            auto temp = std::make_unique<ParamNode>(); 
+            auto temp = std::make_unique<CallNode>(); 
             temp->label = std::move($1);
             temp->params = std::move($3);
             $$ = std::move(temp);
         }
     ;
+
+struct_expr
+    : LABEL C_LBRA expr_list C_RBRA
+        {
+            auto temp = std::make_unique<StructNode>();
+            temp->name = std::move($1);
+            temp->fields = std::move($3);
+            $$ = std::move(temp);
+        }
 
 value_expr
     : bool_expr { $$ = std::move($1); }
@@ -779,14 +813,9 @@ postfix_expr
         }
     | postfix_expr DOT LABEL
         {
-            auto temp = std::make_unique<BinaryNode>();
-
-            auto fnode = std::make_unique<FieldNode>();
-            fnode->field = std::move($3);
-
-            temp->op = BinaryOp::ACCESS;
-            temp->l_exp = std::move($1);
-            temp->r_exp = std::move(fnode);
+            auto temp = std::make_unique<AccessNode>();
+            temp->field = std::move($3);
+            temp->struct_expr = std::move($1);
             $$ = std::move(temp);
         }
     ;
@@ -798,6 +827,7 @@ literal_expr
     | bool_lit { $$ = std::move($1); }
     | list_expr { $$ = std::move($1); }
     | nominal_expr { $$ = std::move($1); }
-    | param_expr { $$ = std::move($1); }
+    | call_expr { $$ = std::move($1); }
+    | struct_expr { $$ = std::move($1); }
     | LBRA value_expr RBRA { $$ = std::move($2); }
     ;

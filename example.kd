@@ -1,4 +1,18 @@
-@ Factorial Example Code in Kindred
+enum example (
+    FOO, BAR, HELLO, WORLD
+)
+
+struct Tree (
+    left : Tree,
+    right : Tree,
+    val : int
+)
+
+func get_val(node: tree): int
+    mark node of:
+        nil => return 0,
+        default => return node.val
+    ;
 
 func factorial(n: int): int
     case of:
