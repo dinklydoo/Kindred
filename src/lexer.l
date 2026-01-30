@@ -53,7 +53,7 @@ ESCAPE \\([\\'"?tn]|HEX)
 <SCOMMENT>. { }
 <SCOMMENT>\n { BEGIN(INITIAL); }
 
-[ \t]+          { }
+[ \t]+          { yycolno += yyleng; }
 \n              { yycolno = 1; }
 
 "//"            { return yy::parser::make_FLR(make_location(yyleng)); }

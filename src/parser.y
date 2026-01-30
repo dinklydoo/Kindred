@@ -128,7 +128,6 @@
 %type <literal_ptr> pattern;
 %type <literal_ptr> list_pattern;
 %type <std::vector<std::string>> size_patterns;
-%type <std::vector<std::string>> size_pattern_two
 
 %type <guard_ptr> guard_expr;
 %type <std::vector<g_branch_ptr>> guards
@@ -268,6 +267,7 @@ param
             $$ = Param(); 
             $$.name = std::move($1);
             $$.type = std::move($3);
+            $$.location = floc_to_loc(@1);
         }
     ;
 
@@ -300,6 +300,8 @@ field
             $$ = Field();
             $$.name = std::move($1);
             $$.type = std::move($3);
+
+            $$.location = floc_to_loc(@1);
         };
 
 struct_def
@@ -308,6 +310,8 @@ struct_def
             $$ = std::make_unique<StructDecl>();
             $$->name = std::move($2);
             $$->fields = std::move($4);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -329,6 +333,8 @@ enum_def
             $$ = std::make_unique<EnumDecl>(); 
             $$->name = std::move($2);
             $$->evar = std::move($4);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -413,6 +419,8 @@ pattern_branch
             $$ = std::make_unique<CaseBranchNode>();
             $$->pattern = std::move($1);
             $$->body = std::move($3);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -427,7 +435,7 @@ literal
 
 pattern
     : literal { $$ = std::move($1); }
-    | NIL { $$ = std::make_unique<NilLit>(); }
+    | NIL { $$ = std::make_unique<NilLit>(); $$->location = floc_to_loc(@1);}
     | DEFAULT { $$ = std::make_unique<DefaultLit>(); }
     ;
 
@@ -437,6 +445,8 @@ enum_lit
             auto temp = std::make_unique<EnumLit>();
             temp->elem = std::move($1); 
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         };
 
 list_pattern
@@ -445,6 +455,8 @@ list_pattern
             auto temp = std::make_unique<ListLit>();
             temp->elems = std::vector<literal_ptr>{}; 
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     | list_lit { $$ = std::move($1); }
     | string_lit { $$ = std::move($1); }
@@ -453,11 +465,13 @@ list_pattern
             auto temp = std::make_unique<ListPatternLit>(); 
             temp->patterns = std::move($1);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
 string_lit
-    : STRING {$$ = str_to_chlist($1); };
+    : STRING {$$ = str_to_chlist($1); $$->location = floc_to_loc(@1); };
 
 list_lit
     : SQ_LBRA list_pattern_lit SQ_RBRA 
@@ -465,6 +479,8 @@ list_lit
             auto temp = std::make_unique<ListLit>(); 
             temp->elems = std::move($2); 
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         };
 
 list_pattern_lit
@@ -481,22 +497,13 @@ list_pattern_lit
     ;
 
 size_patterns
-    : LABEL TSEP SQ_LBRA SQ_LBRA 
-        { 
-            $$ = std::vector<std::string>{}; 
-            $$.push_back(std::move($1));
-        }
-    | size_pattern_two { $$ = std::move($1); }
-    ;
-
-size_pattern_two
     : LABEL TSEP LABEL 
         { 
             $$ = std::vector<std::string>{};
             $$.push_back(std::move($1));
             $$.push_back(std::move($3)); 
         }
-    | size_pattern_two TSEP LABEL {
+    | size_patterns TSEP LABEL {
         $1.push_back(std::move($3));
         $$ = std::move($1);
     }
@@ -508,6 +515,8 @@ return_expr
             auto temp = std::make_unique<ReturnNode>();
             temp->rexp = std::move($2); 
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -531,6 +540,8 @@ print_expr
         { 
             $$ = std::make_unique<PrintNode>();
             $$->msg = std::move($3);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -540,6 +551,8 @@ read_expr
             $$ = std::make_unique<ReadNode>();
             $$->name = std::move($1);
             $$->type = std::move($3);
+
+            $$->location = floc_to_loc(@1);
         }
 
 
@@ -552,6 +565,8 @@ assign_expr
             temp->ret = std::move($7);
             temp->body = std::move($9);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     | LABEL TSEP non_function_type ASSGN value_expr
         {
@@ -560,6 +575,7 @@ assign_expr
             temp->type = std::move($3);
             temp->r_val = std::move($5);
             $$ = std::move(temp);
+            $$->location = floc_to_loc(@5);
         }
     ;
 
@@ -569,6 +585,8 @@ int_lit
             auto temp = std::make_unique<IntLit>();
             temp->value = $1;
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         };
 
 float_lit
@@ -577,6 +595,8 @@ float_lit
             auto temp = std::make_unique<IntLit>();
             temp->value = $1;
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         };
 
 bool_lit
@@ -585,12 +605,16 @@ bool_lit
             auto temp = std::make_unique<BoolLit>();
             temp->value = true;
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     | FALSE
         { 
             auto temp = std::make_unique<BoolLit>();
             temp->value = false;
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -600,6 +624,8 @@ char_lit
             auto temp = std::make_unique<CharLit>();
             temp->value = $1;
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
 
 bool_op
@@ -650,6 +676,7 @@ nominal_expr
             auto temp = std::make_unique<NominalNode>();
             temp->label = std::move($1); 
             $$ = std::move(temp);
+            $$->location = floc_to_loc(@1);
         };
 
 list_expr
@@ -659,11 +686,22 @@ list_expr
     ;
 
 empty_list
-    : SQ_LBRA SQ_RBRA { $$ = std::make_unique<ListNode>(); $$->elems = std::vector<expr_ptr>{}; };
+    : SQ_LBRA SQ_RBRA 
+        { 
+            $$ = std::make_unique<ListNode>(); 
+            $$->elems = std::vector<expr_ptr>{}; 
+            $$->location = floc_to_loc(@1);
+        }
+    ;
 
 list_con
     : SQ_LBRA expr_list SQ_RBRA
-        { $$ = std::make_unique<ListNode>(); $$->elems = std::move($2); };
+        { 
+            $$ = std::make_unique<ListNode>(); 
+            $$->elems = std::move($2); 
+            $$->location = floc_to_loc(@1);
+        }
+    ;
 
 expr_list
     : value_expr 
@@ -685,6 +723,8 @@ call_expr
             temp->label = std::move($1);
             temp->params = std::vector<expr_ptr>{};
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     | LABEL LBRA expr_list RBRA
         {
@@ -692,6 +732,8 @@ call_expr
             temp->label = std::move($1);
             temp->params = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -702,6 +744,8 @@ struct_expr
             temp->name = std::move($1);
             temp->fields = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
 
 value_expr
@@ -716,6 +760,8 @@ bool_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 
@@ -728,6 +774,8 @@ comp_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 
@@ -740,6 +788,8 @@ bitwise_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 
@@ -752,6 +802,8 @@ shift_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 
@@ -764,6 +816,8 @@ additive_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 
@@ -776,6 +830,8 @@ mult_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 
@@ -788,6 +844,8 @@ pow_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 
@@ -799,6 +857,8 @@ unary_expr
             temp->op = $1;
             temp->exp = std::move($2);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
         }
     ;
 
@@ -811,6 +871,8 @@ postfix_expr
             temp->l_exp = std::move($1);
             temp->r_exp = std::move($3);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     | postfix_expr DOT LABEL
         {
@@ -818,6 +880,8 @@ postfix_expr
             temp->field = std::move($3);
             temp->struct_expr = std::move($1);
             $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@2);
         }
     ;
 

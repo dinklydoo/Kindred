@@ -1146,7 +1146,7 @@ YY_RULE_SETUP
 case 7:
 YY_RULE_SETUP
 #line 56 "src/lexer.l"
-{ }
+{ yycolno += yyleng; }
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */

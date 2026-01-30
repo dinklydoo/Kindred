@@ -505,7 +505,6 @@ namespace yy {
 
       // evars
       // size_patterns
-      // size_pattern_two
       char dummy29[sizeof (std::vector<std::string>)];
 
       // opt_types
@@ -763,42 +762,41 @@ namespace yy {
         S_list_lit = 103,                        // list_lit
         S_list_pattern_lit = 104,                // list_pattern_lit
         S_size_patterns = 105,                   // size_patterns
-        S_size_pattern_two = 106,                // size_pattern_two
-        S_return_expr = 107,                     // return_expr
-        S_helpers = 108,                         // helpers
-        S_helper_expr = 109,                     // helper_expr
-        S_print_expr = 110,                      // print_expr
-        S_read_expr = 111,                       // read_expr
-        S_assign_expr = 112,                     // assign_expr
-        S_int_lit = 113,                         // int_lit
-        S_float_lit = 114,                       // float_lit
-        S_bool_lit = 115,                        // bool_lit
-        S_char_lit = 116,                        // char_lit
-        S_bool_op = 117,                         // bool_op
-        S_comp_op = 118,                         // comp_op
-        S_bitwise_op = 119,                      // bitwise_op
-        S_shift_op = 120,                        // shift_op
-        S_additive_op = 121,                     // additive_op
-        S_mult_op = 122,                         // mult_op
-        S_unary_op = 123,                        // unary_op
-        S_nominal_expr = 124,                    // nominal_expr
-        S_list_expr = 125,                       // list_expr
-        S_empty_list = 126,                      // empty_list
-        S_list_con = 127,                        // list_con
-        S_expr_list = 128,                       // expr_list
-        S_call_expr = 129,                       // call_expr
-        S_struct_expr = 130,                     // struct_expr
-        S_value_expr = 131,                      // value_expr
-        S_bool_expr = 132,                       // bool_expr
-        S_comp_expr = 133,                       // comp_expr
-        S_bitwise_expr = 134,                    // bitwise_expr
-        S_shift_expr = 135,                      // shift_expr
-        S_additive_expr = 136,                   // additive_expr
-        S_mult_expr = 137,                       // mult_expr
-        S_pow_expr = 138,                        // pow_expr
-        S_unary_expr = 139,                      // unary_expr
-        S_postfix_expr = 140,                    // postfix_expr
-        S_literal_expr = 141                     // literal_expr
+        S_return_expr = 106,                     // return_expr
+        S_helpers = 107,                         // helpers
+        S_helper_expr = 108,                     // helper_expr
+        S_print_expr = 109,                      // print_expr
+        S_read_expr = 110,                       // read_expr
+        S_assign_expr = 111,                     // assign_expr
+        S_int_lit = 112,                         // int_lit
+        S_float_lit = 113,                       // float_lit
+        S_bool_lit = 114,                        // bool_lit
+        S_char_lit = 115,                        // char_lit
+        S_bool_op = 116,                         // bool_op
+        S_comp_op = 117,                         // comp_op
+        S_bitwise_op = 118,                      // bitwise_op
+        S_shift_op = 119,                        // shift_op
+        S_additive_op = 120,                     // additive_op
+        S_mult_op = 121,                         // mult_op
+        S_unary_op = 122,                        // unary_op
+        S_nominal_expr = 123,                    // nominal_expr
+        S_list_expr = 124,                       // list_expr
+        S_empty_list = 125,                      // empty_list
+        S_list_con = 126,                        // list_con
+        S_expr_list = 127,                       // expr_list
+        S_call_expr = 128,                       // call_expr
+        S_struct_expr = 129,                     // struct_expr
+        S_value_expr = 130,                      // value_expr
+        S_bool_expr = 131,                       // bool_expr
+        S_comp_expr = 132,                       // comp_expr
+        S_bitwise_expr = 133,                    // bitwise_expr
+        S_shift_expr = 134,                      // shift_expr
+        S_additive_expr = 135,                   // additive_expr
+        S_mult_expr = 136,                       // mult_expr
+        S_pow_expr = 137,                        // pow_expr
+        S_unary_expr = 138,                      // unary_expr
+        S_postfix_expr = 139,                    // postfix_expr
+        S_literal_expr = 140                     // literal_expr
       };
     };
 
@@ -986,7 +984,6 @@ namespace yy {
 
       case symbol_kind::S_evars: // evars
       case symbol_kind::S_size_patterns: // size_patterns
-      case symbol_kind::S_size_pattern_two: // size_pattern_two
         value.move< std::vector<std::string> > (std::move (that.value));
         break;
 
@@ -1674,7 +1671,6 @@ switch (yykind)
 
       case symbol_kind::S_evars: // evars
       case symbol_kind::S_size_patterns: // size_patterns
-      case symbol_kind::S_size_pattern_two: // size_pattern_two
         value.template destroy< std::vector<std::string> > ();
         break;
 
@@ -2936,7 +2932,7 @@ switch (yykind)
     // number is the opposite.  If YYTABLE_NINF, syntax error.
     static const unsigned char yytable_[];
 
-    static const short yycheck_[];
+    static const unsigned char yycheck_[];
 
     // YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
     // state STATE-NUM.
@@ -3178,8 +3174,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 277,     ///< Last index in yytable_.
-      yynnts_ = 76,  ///< Number of nonterminal symbols.
+      yylast_ = 272,     ///< Last index in yytable_.
+      yynnts_ = 75,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
 
@@ -3402,7 +3398,6 @@ switch (yykind)
 
       case symbol_kind::S_evars: // evars
       case symbol_kind::S_size_patterns: // size_patterns
-      case symbol_kind::S_size_pattern_two: // size_pattern_two
         value.copy< std::vector<std::string> > (YY_MOVE (that.value));
         break;
 
@@ -3612,7 +3607,6 @@ switch (yykind)
 
       case symbol_kind::S_evars: // evars
       case symbol_kind::S_size_patterns: // size_patterns
-      case symbol_kind::S_size_pattern_two: // size_pattern_two
         value.move< std::vector<std::string> > (YY_MOVE (s.value));
         break;
 
@@ -3707,7 +3701,7 @@ switch (yykind)
 
 #line 39 "src/parser.y"
 } // yy
-#line 3711 "parser.hpp"
+#line 3705 "parser.hpp"
 
 
 

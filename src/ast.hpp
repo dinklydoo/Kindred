@@ -128,10 +128,10 @@ struct StructNode : ExpNode {
     public: virtual void accept(Visitor& v) override;
 };
 
-
 struct Param {
     std::string name;
     type_ptr type;
+    Source location;
 };
 
 // struct LambNode : ExpNode {
@@ -188,6 +188,7 @@ struct ListNode : ExpNode {
 struct Field {
     type_ptr type;
     std::string name;
+    Source location;
 };
 
 struct StructDecl : DeclNode{
