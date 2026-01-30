@@ -1,34 +1,37 @@
+#pragma once
 #include "ast.hpp"
 
 struct Visitor {
-    virtual void visit( IntLit& node);
-    virtual void visit( FloatLit& node);
-    virtual void visit( BoolLit& node);
-    virtual void visit( CharLit& node);
-    virtual void visit( ListLit& node);
-    virtual void visit( ListPatternLit& node);
-    virtual void visit( NilLit& node);
-    virtual void visit( DefaultLit& node);
-    virtual void visit( EnumLit& node);
+    virtual ~Visitor() = default;  // ← THIS LINE
 
-    virtual void visit( AccessNode& node);
-    virtual void visit( VarDecl& node);
-    virtual void visit( FuncDecl& node);
-    virtual void visit( EnumDecl& node);
-    virtual void visit( StructDecl& node);
-    virtual void visit( UnaryNode& node);
-    virtual void visit( BinaryNode& node);
-    virtual void visit( StructNode& node);
-    virtual void visit( CallNode& node);
-    virtual void visit( NominalNode& node);
-    virtual void visit( ReturnNode& node);
-    virtual void visit( CaseNode& node);
-    virtual void visit( CaseBranchNode& node);
-    virtual void visit( GuardNode& node);
-    virtual void visit( GuardBranchNode& node);
-    virtual void visit( ListNode& node);
-    virtual void visit( ProgramNode& node);
-    virtual void visit( ModuleNode& node);
-    virtual void visit( ReadNode& node);
-    virtual void visit( PrintNode& node);
+    virtual void visit( IntLit& node) =0;
+    virtual void visit( FloatLit& node) =0;
+    virtual void visit( BoolLit& node) =0;
+    virtual void visit( CharLit& node) =0;
+    virtual void visit( ListLit& node) =0;
+    virtual void visit( ListPatternLit& node) =0;
+    virtual void visit( NilLit& node) =0;
+    virtual void visit( DefaultLit& node) =0;
+    virtual void visit( EnumLit& node) =0;
+
+    virtual void visit( AccessNode& node) =0;
+    virtual void visit( VarDecl& node) =0;
+    virtual void visit( FuncDecl& node) =0;
+    virtual void visit( EnumDecl& node) =0;
+    virtual void visit( StructDecl& node) =0;
+    virtual void visit( UnaryNode& node) =0;
+    virtual void visit( BinaryNode& node) =0;
+    virtual void visit( StructNode& node) =0;
+    virtual void visit( CallNode& node) =0;
+    virtual void visit( NominalNode& node) =0;
+    virtual void visit( ReturnNode& node) =0;
+    virtual void visit( CaseNode& node) =0;
+    virtual void visit( CaseBranchNode& node) =0;
+    virtual void visit( GuardNode& node) =0;
+    virtual void visit( GuardBranchNode& node) =0;
+    virtual void visit( ListNode& node) =0;
+    virtual void visit( ProgramNode& node) =0;
+    virtual void visit( ModuleNode& node) =0;
+    virtual void visit( ReadNode& node) =0;
+    virtual void visit( PrintNode& node) =0;
 };

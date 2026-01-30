@@ -1,4 +1,5 @@
 #include "visitor.hpp"
+#include <iostream>
 
 // visitor pattern boilerplate
 

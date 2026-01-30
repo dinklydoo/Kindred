@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "src/typecheck.hpp"
 #include <string>
 
 void yy::parser::error(const yy::location& loc,const std::string& msg) {
@@ -9,11 +10,15 @@ void yy::parser::error(const yy::location& loc,const std::string& msg) {
   int yydebug = 1;
 #endif
 
-extern module_ptr module;
+extern module_ptr module_node;
 
 int main() {
-    yydebug = 1;
-    yy::parser parser;
-    parser.parse();
-    return 0;
+  yydebug = 1;
+  yy::parser parser;
+  parser.parse();
+
+  TypeChecker& tc = TypeChecker::instance();
+  tc.typecheck(*module_node);
+
+  return 0;
 }

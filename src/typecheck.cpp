@@ -1,8 +1,40 @@
 #include "typecheck.hpp"
+#include "ast.hpp"
 #include "types.hpp"
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <iostream>
+
+#define LOG(msg)\
+    std::cout << msg << std::endl;
+
+void TypeChecker::typecheck(ModuleNode& node){
+    node.accept(*this);
+    
+    if (errors.size() > 0){
+        for (auto err : errors){
+            std::cout << "Error (line: "+std::to_string(err.location.line)+" col: "+
+            std::to_string(err.location.col)+"): "<< err.message << std::endl;
+        }
+        std::cerr << "";
+        return;
+    }
+}
+
+bool TypeChecker::push_var_safe(std::string label, type_ptr type, Source& loc){
+    if (definitions.push_var(label, type) < 0){
+        redef_error(label, loc);
+        return 0;
+    }
+    return 1;
+};
+
+/* ============================================================================================================================================================
+
+                TYPE CHECKING LOGIC
+
+ ============================================================================================================================================================ */
 
 bool is_arith_whole(Type::Kind kind){
     switch (kind) {
@@ -49,6 +81,7 @@ std::string kind_to_string(Type::Kind kind){
 
 std::string type_to_string(type_ptr type){
     switch (type->kind){
+        case Type::Kind::Nominal :
         case Type::Kind::Struct :
         case Type::Kind::Enum : {
             auto temp = std::static_pointer_cast<NominalType>(type);
@@ -76,7 +109,7 @@ std::string type_to_string(type_ptr type){
         case Type::Kind::Long : return "long";
         case Type::Kind::Float : return "float";
         case Type::Kind::Double : return "double";
-        default : return "";
+        default : return "T";
     }
 }
 
@@ -84,7 +117,7 @@ void TypeChecker::redef_error(std::string label, Source& loc){
     type_ptr defined = definitions.find_var(label);
     std::string defined_type = kind_to_string(defined->kind);
     push_error(
-        "Redefinition of " + label + " conflicts with prior " + defined_type + "definition",
+        "Redefinition of " + label + " conflicts with prior " + defined_type + " definition",
         SemanticError::Kind::REDEF, loc
     );
 }
@@ -155,10 +188,11 @@ type_ptr TypeChecker::cast_strongest(type_ptr a, type_ptr b){
     if (a->kind == Type::Kind::List && b->kind == Type::Kind::List){
         auto al = std::static_pointer_cast<ListType>(a);
         auto bl = std::static_pointer_cast<ListType>(b);
-        return 
-            type_s.list_type(
-                cast_strongest(al->elem, bl->elem)
-            );
+
+        auto elem = cast_strongest(al->elem, bl->elem);
+        if (!elem) return nullptr;
+        
+        return type_s.list_type(elem);
     }
     int bind_a = binding_strength(a);
     int bind_b = binding_strength(b);
@@ -203,16 +237,13 @@ void TypeChecker::visit( FuncDecl& node ){
     type_ptr ftype = type_s.func_type(param_types, node.ret);
 
     // generate function type in global scope
-    if (definitions.push_var(node.name, ftype) < 0){
-        redef_error(node.name, node.location);
-        return;
-    }
+    if (!push_var_safe(node.name, ftype, node.location)) return;
 
     typeprop.prop_type(node.ret); // cache return type
     definitions.push_scope(); // enter function decl scope from global scope
 
     for (auto& param : node.params){
-        definitions.push_var(param.name, param.type);
+        if (!push_var_safe(param.name, param.type, node.location)) return;
     }
     node.body->accept(*this);
 
@@ -225,9 +256,7 @@ void TypeChecker::visit( EnumDecl& node){
     // error check definition name
     type_ptr etype = type_s.declare_enum(node.name);
     for (auto& ev : node.evar){
-        if (definitions.push_var(ev, etype) < 0){
-            redef_error(node.name, node.location);
-        }
+        if (!push_var_safe(ev, etype, node.location)) return;
     }
 }
 
@@ -237,9 +266,8 @@ void TypeChecker::visit( StructDecl& node){
 }
 
 void TypeChecker::visit( VarDecl& node){
-    if (definitions.push_var(node.name, node.type) < 0){
-        redef_error(node.name, node.location);
-    }
+    if (!push_var_safe(node.name, node.type, node.location)) return;
+    
     node.r_val->accept(*this);
     if (is_error(node.r_val->resolved_type)) return;
 
@@ -266,7 +294,7 @@ void TypeChecker::visit( ReturnNode& node){
     type_ptr rtype = typeprop.top_type();
     if (!cast_fixed(rtype, node.rexp->resolved_type)){
         type_error(
-            "Function return type expects return expression of type "
+            "Function expects return expression of type "
             +type_to_string(rtype)+" instead got "+
             type_to_string(node.rexp->resolved_type), node);
         return;
@@ -573,7 +601,7 @@ void TypeChecker::visit(CallNode& node){
             type_error(
                 "function "+node.label+" expects an argument of type "
                 +type_to_string(expected)+" in position "+std::to_string(i+1)
-                +"but got an argument of "+type_to_string(arg->resolved_type)+" instead", node
+                +" but got an argument of "+type_to_string(arg->resolved_type)+" instead", node
             );
             return;
         }
@@ -619,7 +647,7 @@ void TypeChecker::visit(NominalNode& node){
 }
 
 void TypeChecker::visit( ReadNode& node){
-    definitions.push_var(node.name, node.type);
+    if (!push_var_safe(node.name, node.type, node.location)) return;
     if (node.type ){
 
     } // NEED TO CHECK FOR READABLE TYPE
@@ -662,9 +690,15 @@ void TypeChecker::visit(ListPatternLit& node){
     }
     auto ltype = std::static_pointer_cast<ListType>(ptype);
     for (int i = 0; i < n - 1; i++){
-        definitions.push_var(node.patterns[i], ltype->elem);
+        if (!push_var_safe(node.patterns[i], ltype->elem, node.location)){ 
+            node.resolved_type = type_s.error_type();
+            return;
+        }
     }
-    definitions.push_var(node.patterns[n-1], ltype);
+    if (!push_var_safe(node.patterns[n-1], ltype, node.location)){ 
+        node.resolved_type = type_s.error_type();
+        return;
+    }
     node.resolved_type = ptype;
 }
 

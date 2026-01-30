@@ -23,12 +23,12 @@
 
     Source floc_to_loc(yy::location floc){
         Source loc;
-        loc.begin = {floc.begin.line, floc.begin.column};
-        loc.end = {floc.end.line, floc.end.column};
+        loc.line = floc.begin.line;
+        loc.col = floc.begin.column;
         return loc;
     }
 
-    module_ptr module;
+    module_ptr module_node;
     extern yy::parser::symbol_type yylex();
 %}
 
@@ -185,6 +185,7 @@ module
         { 
             $$ = std::make_unique<ModuleNode>();
             $$->decl = std::move($1);
+            module_node = std::move($$);
         }
     ;
 

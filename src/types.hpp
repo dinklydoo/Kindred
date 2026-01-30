@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+//#include <iostream>
 
 struct Type {
     enum class Kind {
@@ -15,8 +16,7 @@ struct Type {
     virtual ~Type() = default;
 };
 
-using type_ptr = std::shared_ptr<const Type>;
-using w_type_ptr = std::weak_ptr<const Type>;
+using type_ptr = std::shared_ptr<Type>;
 struct Field;
 
 // Primitives
@@ -34,7 +34,7 @@ struct GenericType : Type { GenericType() : Type(Kind::GENERIC) {} };
 // Structural types
 struct ListType : Type {
     type_ptr elem;
-    explicit ListType(type_ptr e) : Type(Kind::List), elem(std::move(e)) {}
+    explicit ListType(type_ptr e) : Type(Kind::List), elem(e) {}
 };
 
 struct FuncType : Type {
@@ -53,7 +53,6 @@ struct NominalType : Type {
 };
 
 using nominal_ptr = std::shared_ptr<NominalType>;
-using w_nominal_ptr = std::weak_ptr<NominalType>;
 
 struct TypeSystem {
     // singleton type system
@@ -74,8 +73,7 @@ struct TypeSystem {
     type_ptr list_type(type_ptr elem) {
         auto it = list_cache.find(elem);
         if (it != list_cache.end()) {
-            if (type_ptr p = it->second.lock()) return p;
-            list_cache.erase(it);
+            return it->second;
         }
         auto t = std::make_shared<ListType>(elem);
         list_cache[elem] = t;
@@ -86,20 +84,26 @@ struct TypeSystem {
         FuncKey key{ret, args};
         auto it = func_cache.find(key);
         if (it != func_cache.end()) {
-            if (type_ptr p = it->second.lock()) return p;
-            func_cache.erase(it);
+            return it->second;
         }
         auto t = std::make_shared<FuncType>(args, ret);
         func_cache[key] = t;
         return t;
     }
 
+    // check if nominal type exists
+    nominal_ptr find_nominal(const std::string& name){
+        auto it = nominal_cache.find(name);
+        if (it != nominal_cache.end()){
+            return it->second;
+        }
+        return nullptr;
+    }
+
     nominal_ptr nominal_type(const std::string& name){
         auto it = nominal_cache.find(name);
         if (it != nominal_cache.end()){
-            if (auto nt = it->second.lock())
-                return nt;
-            nominal_cache.erase(it);
+            return it->second;
         }
         nominal_ptr nt = std::make_shared<NominalType>(Type::Kind::Nominal, name);
         nominal_cache.emplace(name, nt);
@@ -112,7 +116,7 @@ struct TypeSystem {
             // defined -> error
         }
         t->kind = Type::Kind::Struct;
-        t->fields = std::move(fields);
+        t->fields = fields;
         t->defined = true;
         return t;
     }
@@ -158,7 +162,7 @@ private:
             - func types identifiable via arg/ret type
             - struct/elem nominally typed
     */
-    std::unordered_map<type_ptr, w_type_ptr> list_cache;
-    std::unordered_map<FuncKey, w_type_ptr, FuncKeyHash> func_cache;
-    std::unordered_map<std::string, w_nominal_ptr> nominal_cache;
+    std::unordered_map<type_ptr, type_ptr> list_cache;
+    std::unordered_map<FuncKey, type_ptr, FuncKeyHash> func_cache;
+    std::unordered_map<std::string, nominal_ptr> nominal_cache;
 };

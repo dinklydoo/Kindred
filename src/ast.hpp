@@ -1,3 +1,4 @@
+#pragma once
 #include "types.hpp"
 #include <cstdint>
 #include <memory>
@@ -6,18 +7,9 @@
 
 struct Visitor;
 
-struct Point {
-    int line; int col;
-};
-
 struct Source {
-    Point begin;
-    Point end;
-
-    // explicit Source(int bl, int bc, int el, int ec){
-    //     begin = {bl, bc};
-    //     end = {el, ec};
-    // }
+    int line;
+    int col;
 };
 
 struct ASTNode{

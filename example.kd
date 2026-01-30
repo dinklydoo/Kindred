@@ -8,7 +8,7 @@ struct Tree (
     val : int
 )
 
-func get_val(node: tree): int
+func get_val(node: Tree): int
     mark node of:
         nil => return 0,
         default => return node.val
@@ -32,6 +32,6 @@ func atoi(r: [char], n: int): int
 
 func main(): int
     r:[char] = read()
-    n:int = atoi(r)
+    n:int = atoi(r, 0)
     print(factorial(n))
     return 1

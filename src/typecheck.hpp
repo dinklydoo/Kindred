@@ -1,3 +1,4 @@
+#include "ast.hpp"
 #include "types.hpp"
 #include "visitor.hpp"
 #include <map>
@@ -88,6 +89,8 @@ struct TypeChecker : Visitor{
     // error container object
     ErrorList errors;
 
+    virtual void typecheck(ModuleNode& node);
+
     /*
     Visitor definitions, double dispatched
     */
@@ -125,6 +128,8 @@ struct TypeChecker : Visitor{
     virtual type_ptr cast_strongest(type_ptr a, type_ptr b);
     virtual type_ptr cast_fixed(type_ptr fix, type_ptr castable);
     virtual void type_error(std::string message, ExpNode& node);
+
+    virtual bool push_var_safe(std::string label, type_ptr type, Source& loc);
 
     virtual void push_error(std::string msg, SemanticError::Kind kind, Source& loc);
     virtual void redef_error(std::string label, Source& loc);

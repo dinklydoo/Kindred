@@ -95,6 +95,13 @@ ESCAPE \\([\\'"?tn]|HEX)
 ","             { return yy::parser::make_COMMA(make_location(yyleng)); }
 "."             { return yy::parser::make_DOT(make_location(yyleng)); }
 
+"int"        { return yy::parser::make_T_INT(make_location(yyleng)); }
+"long"        { return yy::parser::make_T_LONG(make_location(yyleng)); }
+"float"        { return yy::parser::make_T_FLOAT(make_location(yyleng)); }
+"double"        { return yy::parser::make_T_DOUBLE(make_location(yyleng)); }
+"bool"        { return yy::parser::make_T_BOOL(make_location(yyleng)); }
+"char"        { return yy::parser::make_T_CHAR(make_location(yyleng)); }
+
 "nil"         { return yy::parser::make_NIL(make_location(yyleng)); }
 "case"        { return yy::parser::make_CASE(make_location(yyleng)); }
 "mark"        { return yy::parser::make_MARK(make_location(yyleng)); }
