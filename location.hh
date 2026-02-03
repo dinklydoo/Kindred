@@ -31,12 +31,12 @@
 // version 2.2 of Bison.
 
 /**
- ** \file location.hh
+ ** \file /Users/huangyugen/Documents/cs projects/Kindred/location.hh
  ** Define the yy::location class.
  */
 
-#ifndef YY_YY_LOCATION_HH_INCLUDED
-# define YY_YY_LOCATION_HH_INCLUDED
+#ifndef YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_LOCATION_HH_INCLUDED
+# define YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_LOCATION_HH_INCLUDED
 
 # include <iostream>
 # include <string>
@@ -53,9 +53,9 @@
 #  endif
 # endif
 
-#line 39 "src/parser.y"
+#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
 namespace yy {
-#line 59 "location.hh"
+#line 59 "/Users/huangyugen/Documents/cs projects/Kindred/location.hh"
 
   /// A point in a source file.
   class position
@@ -299,8 +299,8 @@ namespace yy {
     return ostr;
   }
 
-#line 39 "src/parser.y"
+#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
 } // yy
-#line 305 "location.hh"
+#line 305 "/Users/huangyugen/Documents/cs projects/Kindred/location.hh"
 
-#endif // !YY_YY_LOCATION_HH_INCLUDED
+#endif // !YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_LOCATION_HH_INCLUDED

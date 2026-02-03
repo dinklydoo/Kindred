@@ -1,3 +1,6 @@
+#pragma once
+
+#include "semerror.hpp"
 #include "ast.hpp"
 #include "types.hpp"
 #include "visitor.hpp"
@@ -6,18 +9,6 @@
 #include <vector>
 
 using scope = std::map<std::string, type_ptr>;
-
-struct SemanticError{
-    enum class Kind{
-        TYPE, UNDEF, REDEF, REF, DIV, ACCESS, ARG
-    };
-    Kind kind;
-    Source location;
-    std::string message;
-};
-
-// todo : maybe use a sorted construct by location
-using ErrorList = std::vector<SemanticError>;
 
 struct TypeVarScope{
     std::vector<scope> stack;
@@ -89,52 +80,45 @@ struct TypeChecker : Visitor{
     // error container object
     ErrorList errors;
 
-    virtual void typecheck(ModuleNode& node);
+    void typecheck(ModuleNode& node);
 
     /*
     Visitor definitions, double dispatched
     */
-    virtual void visit( VarDecl& node) override;
-    virtual void visit( FuncDecl& node) override;
-    virtual void visit( EnumDecl& node) override;
-    virtual void visit( StructDecl& node) override;
-    virtual void visit( UnaryNode& node) override;
-    virtual void visit( BinaryNode& node) override;
-    virtual void visit( CallNode& node) override;
-    virtual void visit( StructNode& node) override;
-    virtual void visit( AccessNode& node) override;
-    virtual void visit( NominalNode& node) override;
-    virtual void visit( CharLit& node) override;
-    virtual void visit( IntLit& node) override;
-    virtual void visit( FloatLit& node) override;
-    virtual void visit( BoolLit& node) override;
-    virtual void visit( ListLit& node) override;
-    virtual void visit( ListPatternLit& node) override;
-    virtual void visit( EnumLit& node) override;
-    virtual void visit( DefaultLit& node) override;
-    virtual void visit( NilLit& node) override;
-    virtual void visit( ReturnNode& node) override;
-    virtual void visit( CaseNode& node) override;
-    virtual void visit( CaseBranchNode& node) override;
-    virtual void visit( GuardNode& node) override;
-    virtual void visit( GuardBranchNode& node) override;
-    virtual void visit( ListNode& node) override;
-    virtual void visit( ProgramNode& node) override;
-    virtual void visit( ModuleNode& node) override;
-    virtual void visit( ReadNode& node) override;
-    virtual void visit( PrintNode& node) override;
+    void visit( VarDecl& node) override;
+    void visit( FuncDecl& node) override;
+    void visit( EnumDecl& node) override;
+    void visit( StructDecl& node) override;
+    void visit( UnaryNode& node) override;
+    void visit( BinaryNode& node) override;
+    void visit( CallNode& node) override;
+    void visit( StructNode& node) override;
+    void visit( AccessNode& node) override;
+    void visit( NominalNode& node) override;
+    void visit( CharLit& node) override;
+    void visit( IntLit& node) override;
+    void visit( FloatLit& node) override;
+    void visit( BoolLit& node) override;
+    void visit( ListPatternLit& node) override;
+    void visit( StructPatternLit& node) override;
+    void visit( EnumLit& node) override;
+    void visit( DefaultLit& node) override;
+    void visit( ElseLit& node) override;
+    void visit( NilLit& node) override;
+    void visit( EmptyLit& node) override;
+    void visit( ReturnNode& node) override;
+    void visit( CaseNode& node) override;
+    void visit( CaseBranchNode& node) override;
+    void visit( GuardNode& node) override;
+    void visit( GuardBranchNode& node) override;
+    void visit( ListNode& node) override;
+    void visit( ProgramNode& node) override;
+    void visit( ModuleNode& node) override;
+    void visit( ReadNode& node) override;
+    void visit( PrintNode& node) override;
 
-
-    virtual type_ptr cast_strongest(type_ptr a, type_ptr b);
-    virtual type_ptr cast_fixed(type_ptr fix, type_ptr castable);
-    virtual void type_error(std::string message, ExpNode& node);
-
-    virtual bool push_var_safe(std::string label, type_ptr type, Source& loc);
-
-    virtual void push_error(std::string msg, SemanticError::Kind kind, Source& loc);
-    virtual void redef_error(std::string label, Source& loc);
-    virtual void undef_error(std::string message, ExpNode& node);
-    virtual void reference_error(std::string label, ExpNode& node);
-    virtual void access_error(std::string message, ExpNode& node);
-    virtual void arg_error(std::string message, ExpNode& node);
+    type_ptr cast_strongest(type_ptr a, type_ptr b);
+    type_ptr cast_fixed(type_ptr fix, type_ptr castable);
+    
+    bool push_var_safe(std::string label, type_ptr type, Source& loc);
 };

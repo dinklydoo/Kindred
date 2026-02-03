@@ -1,3 +1,4 @@
+#include "flowcheck.hpp"
 #include "parser.hpp"
 #include "src/typecheck.hpp"
 #include <string>
@@ -19,6 +20,9 @@ int main() {
 
   TypeChecker& tc = TypeChecker::instance();
   tc.typecheck(*module_node);
+
+  FlowChecker& fc = FlowChecker::instance();
+  fc.flowcheck(*module_node);
 
   return 0;
 }

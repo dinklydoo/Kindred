@@ -7,11 +7,6 @@
 
 struct Visitor;
 
-struct Source {
-    int line;
-    int col;
-};
-
 struct ASTNode{
     Source location;
     public: 
@@ -24,7 +19,8 @@ struct ExpNode : ASTNode{
 };
 
 struct LiteralNode : ExpNode{
-    public: virtual ~LiteralNode() = default;
+    public: 
+        virtual ~LiteralNode() = default;
 };
     
 struct DeclNode : ASTNode {
@@ -46,31 +42,40 @@ struct FloatLit : LiteralNode{
 };
 struct BoolLit : LiteralNode{ 
     bool value; 
-    public: virtual void accept(Visitor& v) override;
+    public: 
+        virtual void accept(Visitor& v) override;
 };
 struct CharLit : LiteralNode{ 
     char value; 
-    public: virtual void accept(Visitor& v) override;
-};
-struct ListLit : LiteralNode { 
-    std::vector<literal_ptr> elems; 
     public: virtual void accept(Visitor& v) override;
 };
 struct ListPatternLit : LiteralNode { 
     std::vector<std::string> patterns; 
     public: virtual void accept(Visitor& v) override;
 };
+struct StructPatternLit : LiteralNode {
+    std::string name; 
+    std::vector<std::string> patterns;
+    public: virtual void accept(Visitor& v) override;
+};
+struct EmptyLit : LiteralNode {
+    public: virtual void accept(Visitor& v) override;
+};
 struct NilLit : LiteralNode{
     public: virtual void accept(Visitor& v) override;
 };
 struct DefaultLit : LiteralNode{ 
-    public: virtual void accept(Visitor& v) override;
+    public: 
+        virtual void accept(Visitor& v) override;
+};
+struct ElseLit : LiteralNode{
+    public: 
+        virtual void accept(Visitor& v) override;
 };
 struct EnumLit : LiteralNode{ 
     std::string elem; 
     public: virtual void accept(Visitor& v) override;
 };
-
 
 enum NominalKind {
     NOMINAL, ENUM_VAL, VAR_REF
@@ -156,6 +161,7 @@ struct ReturnNode : ExpNode {
 struct CaseBranchNode : ExpNode {
     literal_ptr pattern;
     prog_ptr body;
+    bool reachable = true;
     public: virtual void accept(Visitor& v) override;
 };
 
@@ -170,6 +176,7 @@ struct CaseNode : ExpNode {
 struct GuardBranchNode : ExpNode {
     expr_ptr match;
     prog_ptr body;
+    bool reachable = true;
     public: virtual void accept(Visitor& v) override;
 };
 
@@ -183,12 +190,6 @@ struct GuardNode : ExpNode {
 struct ListNode : ExpNode {
     std::vector<expr_ptr> elems;
     public: virtual void accept(Visitor& v) override;
-};
-
-struct Field {
-    type_ptr type;
-    std::string name;
-    Source location;
 };
 
 struct StructDecl : DeclNode{

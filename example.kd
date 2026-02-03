@@ -23,10 +23,10 @@ func factorial(n: int): int
 func atoi(r: [char], n: int): int
     mark r of:
         [] => return n,
-        r:rs =>
-            mark r of:
-                '-' => return -atoi(rs, n),
-                default => return atoi(rs, (r - '0') + 10*n)
+        x:xs =>
+            mark x of:
+                '-' => return -atoi(xs, n),
+                default => return atoi(xs, (x - '0') + 10*n)
             ;
         ;
 

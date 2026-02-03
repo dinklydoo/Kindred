@@ -1,0 +1,3343 @@
+Terminals unused in grammar
+
+    LAMB
+    EMPTY
+
+
+Grammar
+
+    0 $accept: module KEOF
+
+    1 module: definitions KEOF
+
+    2 definitions: ε
+    3            | definitions definition
+
+    4 definition: function_def
+    5           | struct_def
+    6           | enum_def
+
+    7 opt_types: ε
+    8          | types
+
+    9 types: type
+   10      | types COMMA type
+
+   11 non_function_type: literal_type
+   12                  | list_type
+   13                  | nominal_type
+
+   14 type: non_function_type
+   15     | func_type
+
+   16 literal_type: T_CHAR
+   17             | T_BOOL
+   18             | int_lit_type
+   19             | float_lit_type
+
+   20 int_lit_type: T_INT
+   21             | T_LONG
+
+   22 float_lit_type: T_FLOAT
+   23               | T_DOUBLE
+
+   24 list_type: SQ_LBRA type SQ_RBRA
+
+   25 func_type: LBRA opt_types RBRA PROD type
+
+   26 nominal_type: LABEL
+
+   27 opt_params: ε
+   28           | params
+
+   29 params: param
+   30       | params COMMA param
+
+   31 param: LABEL TSEP type
+
+   32 function_def: FUNC LABEL LBRA opt_params RBRA TSEP type program
+
+   33 fields: field
+   34       | fields COMMA field
+
+   35 field: LABEL TSEP type
+
+   36 struct_def: STRUCT LABEL LBRA fields RBRA
+
+   37 evar: LABEL
+
+   38 evars: evar
+   39      | evars COMMA evar
+
+   40 enum_def: ENUM LABEL LBRA evars RBRA
+
+   41 program: helpers branch_expr
+
+   42 branch_expr: return_expr
+   43            | guard_expr
+   44            | case_expr
+
+   45 guard_expr: CASE OF TSEP guards PEND
+
+   46 guards: guard
+   47       | guards COMMA guard
+
+   48 guard: BAR value_expr ARROW program
+   49      | BAR ELSE ARROW program
+
+   50 case_expr: MARK value_expr OF TSEP patterns PEND
+
+   51 patterns: pattern_branch
+   52         | patterns COMMA pattern_branch
+
+   53 pattern_branch: pattern ARROW program
+
+   54 literal: char_lit
+   55        | int_lit
+   56        | float_lit
+   57        | bool_lit
+   58        | enum_lit
+   59        | list_pattern
+   60        | struct_lit
+
+   61 pattern: literal
+   62        | DEFAULT
+
+   63 enum_lit: LABEL
+
+   64 struct_lit: NIL
+   65           | LABEL C_LBRA list_pattern_lit C_RBRA
+
+   66 list_pattern: SQ_LBRA SQ_RBRA
+   67             | list_lit
+   68             | string_lit
+   69             | size_patterns
+
+   70 string_lit: STRING
+
+   71 list_lit: SQ_LBRA list_pattern_lit SQ_RBRA
+
+   72 list_pattern_lit: literal
+   73                 | list_pattern_lit COMMA literal
+
+   74 size_patterns: LABEL TSEP LABEL
+   75              | size_patterns TSEP LABEL
+
+   76 return_expr: RETURN value_expr
+
+   77 helpers: ε
+   78        | helpers helper_expr
+
+   79 helper_expr: assign_expr
+   80            | print_expr
+   81            | read_expr
+
+   82 print_expr: PRINT LBRA value_expr RBRA
+
+   83 read_expr: LABEL TSEP non_function_type ASSGN READ LBRA RBRA
+
+   84 assign_expr: LABEL TSEP LBRA opt_params RBRA PROD type LBRA program RBRA
+   85            | LABEL TSEP non_function_type ASSGN value_expr
+
+   86 int_lit: INT
+
+   87 float_lit: FLOAT
+
+   88 bool_lit: TRUE
+   89         | FALSE
+
+   90 char_lit: CHAR
+
+   91 bool_op: BOR
+   92        | BAND
+
+   93 comp_op: CEQ
+   94        | CNEQ
+   95        | CGT
+   96        | CLT
+   97        | CGEQ
+   98        | CLEQ
+
+   99 bitwise_op: LAND
+  100           | BAR
+  101           | LXOR
+
+  102 shift_op: LSL
+  103         | LSR
+
+  104 additive_op: ADD
+  105            | SUB
+  106            | CONCAT
+
+  107 mult_op: MUL
+  108        | DIV
+  109        | MOD
+  110        | FLR
+
+  111 unary_op: BNOT
+  112         | LNEG
+  113         | SUB
+
+  114 nominal_expr: LABEL
+
+  115 list_expr: empty_list
+  116          | list_con
+  117          | string_lit
+
+  118 empty_list: SQ_LBRA SQ_RBRA
+
+  119 list_con: SQ_LBRA expr_list SQ_RBRA
+
+  120 expr_list: value_expr
+  121          | expr_list COMMA value_expr
+
+  122 call_expr: LABEL LBRA RBRA
+  123          | LABEL LBRA expr_list RBRA
+
+  124 struct_expr: LABEL C_LBRA expr_list C_RBRA
+
+  125 value_expr: bool_expr
+
+  126 bool_expr: comp_expr
+  127          | bool_expr bool_op comp_expr
+
+  128 comp_expr: bitwise_expr
+  129          | bitwise_expr comp_op bitwise_expr
+
+  130 bitwise_expr: shift_expr
+  131             | bitwise_expr bitwise_op shift_expr
+
+  132 shift_expr: additive_expr
+  133           | shift_expr shift_op additive_expr
+
+  134 additive_expr: mult_expr
+  135              | additive_expr additive_op mult_expr
+
+  136 mult_expr: pow_expr
+  137          | mult_expr mult_op pow_expr
+
+  138 pow_expr: unary_expr
+  139         | unary_expr POW pow_expr
+
+  140 unary_expr: postfix_expr
+  141           | unary_op postfix_expr
+
+  142 postfix_expr: literal_expr
+  143             | postfix_expr SQ_LBRA value_expr SQ_RBRA
+  144             | postfix_expr DOT LABEL
+
+  145 literal_expr: int_lit
+  146             | float_lit
+  147             | char_lit
+  148             | bool_lit
+  149             | list_expr
+  150             | nominal_expr
+  151             | call_expr
+  152             | struct_expr
+  153             | LBRA value_expr RBRA
+
+
+Terminals, with rules where they appear
+
+    KEOF (0) 0 1
+    error (256)
+    INT <uint64_t> (258) 86
+    FLOAT <double> (259) 87
+    CHAR <char> (260) 90
+    STRING <std::string> (261) 70
+    LABEL <std::string> (262) 26 31 32 35 36 37 40 63 65 74 75 83 84 85 114 122 123 124 144
+    CASE (263) 45
+    OF (264) 45 50
+    DEFAULT (265) 62
+    FUNC (266) 32
+    LAMB (267)
+    MARK (268) 50
+    ELSE (269) 49
+    STRUCT (270) 36
+    ENUM (271) 40
+    TRUE (272) 88
+    FALSE (273) 89
+    NIL (274) 64
+    READ (275) 83
+    PRINT (276) 82
+    RETURN (277) 76
+    T_INT (278) 20
+    T_LONG (279) 21
+    T_FLOAT (280) 22
+    T_DOUBLE (281) 23
+    T_CHAR (282) 16
+    T_BOOL (283) 17
+    LBRA (284) 25 32 36 40 82 83 84 122 123 153
+    RBRA (285) 25 32 36 40 82 83 84 122 123 153
+    SQ_LBRA (286) 24 66 71 118 119 143
+    SQ_RBRA (287) 24 66 71 118 119 143
+    C_LBRA (288) 65 124
+    C_RBRA (289) 65 124
+    COMMA (290) 10 30 34 39 47 52 73 121
+    DOT (291) 144
+    TSEP (292) 31 32 35 45 50 74 75 83 84 85
+    EMPTY (293)
+    PEND (294) 45 50
+    ASSGN (295) 83 85
+    ADD (296) 104
+    SUB (297) 105 113
+    MUL (298) 107
+    DIV (299) 108
+    MOD (300) 109
+    POW (301) 139
+    FLR (302) 110
+    LAND (303) 99
+    BAR (304) 48 49 100
+    LXOR (305) 101
+    LNEG (306) 112
+    CGT (307) 95
+    CLT (308) 96
+    CGEQ (309) 97
+    CLEQ (310) 98
+    CEQ (311) 93
+    CNEQ (312) 94
+    LSL (313) 102
+    LSR (314) 103
+    BAND (315) 92
+    BOR (316) 91
+    BNOT (317) 111
+    CONCAT (318) 106
+    ARROW (319) 48 49 53
+    PROD (320) 25 84
+
+
+Nonterminals, with rules where they appear
+
+    $accept (66)
+        on left: 0
+    module <module_ptr> (67)
+        on left: 1
+        on right: 0
+    definitions <std::vector<decl_ptr>> (68)
+        on left: 2 3
+        on right: 1 3
+    definition <decl_ptr> (69)
+        on left: 4 5 6
+        on right: 3
+    opt_types <std::vector<type_ptr>> (70)
+        on left: 7 8
+        on right: 25
+    types <std::vector<type_ptr>> (71)
+        on left: 9 10
+        on right: 8 10
+    non_function_type <type_ptr> (72)
+        on left: 11 12 13
+        on right: 14 83 85
+    type <type_ptr> (73)
+        on left: 14 15
+        on right: 9 10 24 25 31 32 35 84
+    literal_type <type_ptr> (74)
+        on left: 16 17 18 19
+        on right: 11
+    int_lit_type <type_ptr> (75)
+        on left: 20 21
+        on right: 18
+    float_lit_type <type_ptr> (76)
+        on left: 22 23
+        on right: 19
+    list_type <type_ptr> (77)
+        on left: 24
+        on right: 12
+    func_type <type_ptr> (78)
+        on left: 25
+        on right: 15
+    nominal_type <type_ptr> (79)
+        on left: 26
+        on right: 13
+    opt_params <std::vector<Param>> (80)
+        on left: 27 28
+        on right: 32 84
+    params <std::vector<Param>> (81)
+        on left: 29 30
+        on right: 28 30
+    param <Param> (82)
+        on left: 31
+        on right: 29 30
+    function_def <func_decl_ptr> (83)
+        on left: 32
+        on right: 4
+    fields <std::vector<Field>> (84)
+        on left: 33 34
+        on right: 34 36
+    field <Field> (85)
+        on left: 35
+        on right: 33 34
+    struct_def <struct_decl_ptr> (86)
+        on left: 36
+        on right: 5
+    evar <std::string> (87)
+        on left: 37
+        on right: 38 39
+    evars <std::vector<std::string>> (88)
+        on left: 38 39
+        on right: 39 40
+    enum_def <enum_decl_ptr> (89)
+        on left: 40
+        on right: 6
+    program <prog_ptr> (90)
+        on left: 41
+        on right: 32 48 49 53 84
+    branch_expr <expr_ptr> (91)
+        on left: 42 43 44
+        on right: 41
+    guard_expr <guard_ptr> (92)
+        on left: 45
+        on right: 43
+    guards <std::vector<g_branch_ptr>> (93)
+        on left: 46 47
+        on right: 45 47
+    guard <g_branch_ptr> (94)
+        on left: 48 49
+        on right: 46 47
+    case_expr <case_ptr> (95)
+        on left: 50
+        on right: 44
+    patterns <std::vector<c_branch_ptr>> (96)
+        on left: 51 52
+        on right: 50 52
+    pattern_branch <c_branch_ptr> (97)
+        on left: 53
+        on right: 51 52
+    literal <literal_ptr> (98)
+        on left: 54 55 56 57 58 59 60
+        on right: 61 72 73
+    pattern <literal_ptr> (99)
+        on left: 61 62
+        on right: 53
+    enum_lit <literal_ptr> (100)
+        on left: 63
+        on right: 58
+    struct_lit <literal_ptr> (101)
+        on left: 64 65
+        on right: 60
+    list_pattern <literal_ptr> (102)
+        on left: 66 67 68 69
+        on right: 59
+    string_lit <literal_ptr> (103)
+        on left: 70
+        on right: 68 117
+    list_lit <literal_ptr> (104)
+        on left: 71
+        on right: 67
+    list_pattern_lit <std::vector<literal_ptr>> (105)
+        on left: 72 73
+        on right: 65 71 73
+    size_patterns <std::vector<std::string>> (106)
+        on left: 74 75
+        on right: 69 75
+    return_expr <expr_ptr> (107)
+        on left: 76
+        on right: 42
+    helpers <std::vector<decl_ptr>> (108)
+        on left: 77 78
+        on right: 41 78
+    helper_expr <decl_ptr> (109)
+        on left: 79 80 81
+        on right: 78
+    print_expr <print_ptr> (110)
+        on left: 82
+        on right: 80
+    read_expr <read_ptr> (111)
+        on left: 83
+        on right: 81
+    assign_expr <decl_ptr> (112)
+        on left: 84 85
+        on right: 79
+    int_lit <literal_ptr> (113)
+        on left: 86
+        on right: 55 145
+    float_lit <literal_ptr> (114)
+        on left: 87
+        on right: 56 146
+    bool_lit <literal_ptr> (115)
+        on left: 88 89
+        on right: 57 148
+    char_lit <literal_ptr> (116)
+        on left: 90
+        on right: 54 147
+    bool_op <BinaryOp> (117)
+        on left: 91 92
+        on right: 127
+    comp_op <BinaryOp> (118)
+        on left: 93 94 95 96 97 98
+        on right: 129
+    bitwise_op <BinaryOp> (119)
+        on left: 99 100 101
+        on right: 131
+    shift_op <BinaryOp> (120)
+        on left: 102 103
+        on right: 133
+    additive_op <BinaryOp> (121)
+        on left: 104 105 106
+        on right: 135
+    mult_op <BinaryOp> (122)
+        on left: 107 108 109 110
+        on right: 137
+    unary_op <UnaryOp> (123)
+        on left: 111 112 113
+        on right: 141
+    nominal_expr <expr_ptr> (124)
+        on left: 114
+        on right: 150
+    list_expr <expr_ptr> (125)
+        on left: 115 116 117
+        on right: 149
+    empty_list <list_ptr> (126)
+        on left: 118
+        on right: 115
+    list_con <list_ptr> (127)
+        on left: 119
+        on right: 116
+    expr_list <std::vector<expr_ptr>> (128)
+        on left: 120 121
+        on right: 119 121 123 124
+    call_expr <expr_ptr> (129)
+        on left: 122 123
+        on right: 151
+    struct_expr <expr_ptr> (130)
+        on left: 124
+        on right: 152
+    value_expr <expr_ptr> (131)
+        on left: 125
+        on right: 48 50 76 82 85 120 121 143 153
+    bool_expr <expr_ptr> (132)
+        on left: 126 127
+        on right: 125 127
+    comp_expr <expr_ptr> (133)
+        on left: 128 129
+        on right: 126 127
+    bitwise_expr <expr_ptr> (134)
+        on left: 130 131
+        on right: 128 129 131
+    shift_expr <expr_ptr> (135)
+        on left: 132 133
+        on right: 130 131 133
+    additive_expr <expr_ptr> (136)
+        on left: 134 135
+        on right: 132 133 135
+    mult_expr <expr_ptr> (137)
+        on left: 136 137
+        on right: 134 135 137
+    pow_expr <expr_ptr> (138)
+        on left: 138 139
+        on right: 136 137 139
+    unary_expr <expr_ptr> (139)
+        on left: 140 141
+        on right: 138 139
+    postfix_expr <expr_ptr> (140)
+        on left: 142 143 144
+        on right: 140 141 143 144
+    literal_expr <expr_ptr> (141)
+        on left: 145 146 147 148 149 150 151 152 153
+        on right: 142
+
+
+State 0
+
+    0 $accept: • module KEOF
+
+    $default  reduce using rule 2 (definitions)
+
+    module       go to state 1
+    definitions  go to state 2
+
+
+State 1
+
+    0 $accept: module • KEOF
+
+    KEOF  shift, and go to state 3
+
+
+State 2
+
+    1 module: definitions • KEOF
+    3 definitions: definitions • definition
+
+    KEOF    shift, and go to state 4
+    FUNC    shift, and go to state 5
+    STRUCT  shift, and go to state 6
+    ENUM    shift, and go to state 7
+
+    definition    go to state 8
+    function_def  go to state 9
+    struct_def    go to state 10
+    enum_def      go to state 11
+
+
+State 3
+
+    0 $accept: module KEOF •
+
+    $default  accept
+
+
+State 4
+
+    1 module: definitions KEOF •
+
+    $default  reduce using rule 1 (module)
+
+
+State 5
+
+   32 function_def: FUNC • LABEL LBRA opt_params RBRA TSEP type program
+
+    LABEL  shift, and go to state 12
+
+
+State 6
+
+   36 struct_def: STRUCT • LABEL LBRA fields RBRA
+
+    LABEL  shift, and go to state 13
+
+
+State 7
+
+   40 enum_def: ENUM • LABEL LBRA evars RBRA
+
+    LABEL  shift, and go to state 14
+
+
+State 8
+
+    3 definitions: definitions definition •
+
+    $default  reduce using rule 3 (definitions)
+
+
+State 9
+
+    4 definition: function_def •
+
+    $default  reduce using rule 4 (definition)
+
+
+State 10
+
+    5 definition: struct_def •
+
+    $default  reduce using rule 5 (definition)
+
+
+State 11
+
+    6 definition: enum_def •
+
+    $default  reduce using rule 6 (definition)
+
+
+State 12
+
+   32 function_def: FUNC LABEL • LBRA opt_params RBRA TSEP type program
+
+    LBRA  shift, and go to state 15
+
+
+State 13
+
+   36 struct_def: STRUCT LABEL • LBRA fields RBRA
+
+    LBRA  shift, and go to state 16
+
+
+State 14
+
+   40 enum_def: ENUM LABEL • LBRA evars RBRA
+
+    LBRA  shift, and go to state 17
+
+
+State 15
+
+   32 function_def: FUNC LABEL LBRA • opt_params RBRA TSEP type program
+
+    LABEL  shift, and go to state 18
+
+    $default  reduce using rule 27 (opt_params)
+
+    opt_params  go to state 19
+    params      go to state 20
+    param       go to state 21
+
+
+State 16
+
+   36 struct_def: STRUCT LABEL LBRA • fields RBRA
+
+    LABEL  shift, and go to state 22
+
+    fields  go to state 23
+    field   go to state 24
+
+
+State 17
+
+   40 enum_def: ENUM LABEL LBRA • evars RBRA
+
+    LABEL  shift, and go to state 25
+
+    evar   go to state 26
+    evars  go to state 27
+
+
+State 18
+
+   31 param: LABEL • TSEP type
+
+    TSEP  shift, and go to state 28
+
+
+State 19
+
+   32 function_def: FUNC LABEL LBRA opt_params • RBRA TSEP type program
+
+    RBRA  shift, and go to state 29
+
+
+State 20
+
+   28 opt_params: params •
+   30 params: params • COMMA param
+
+    COMMA  shift, and go to state 30
+
+    $default  reduce using rule 28 (opt_params)
+
+
+State 21
+
+   29 params: param •
+
+    $default  reduce using rule 29 (params)
+
+
+State 22
+
+   35 field: LABEL • TSEP type
+
+    TSEP  shift, and go to state 31
+
+
+State 23
+
+   34 fields: fields • COMMA field
+   36 struct_def: STRUCT LABEL LBRA fields • RBRA
+
+    RBRA   shift, and go to state 32
+    COMMA  shift, and go to state 33
+
+
+State 24
+
+   33 fields: field •
+
+    $default  reduce using rule 33 (fields)
+
+
+State 25
+
+   37 evar: LABEL •
+
+    $default  reduce using rule 37 (evar)
+
+
+State 26
+
+   38 evars: evar •
+
+    $default  reduce using rule 38 (evars)
+
+
+State 27
+
+   39 evars: evars • COMMA evar
+   40 enum_def: ENUM LABEL LBRA evars • RBRA
+
+    RBRA   shift, and go to state 34
+    COMMA  shift, and go to state 35
+
+
+State 28
+
+   31 param: LABEL TSEP • type
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 45
+    type               go to state 46
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 29
+
+   32 function_def: FUNC LABEL LBRA opt_params RBRA • TSEP type program
+
+    TSEP  shift, and go to state 53
+
+
+State 30
+
+   30 params: params COMMA • param
+
+    LABEL  shift, and go to state 18
+
+    param  go to state 54
+
+
+State 31
+
+   35 field: LABEL TSEP • type
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 45
+    type               go to state 55
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 32
+
+   36 struct_def: STRUCT LABEL LBRA fields RBRA •
+
+    $default  reduce using rule 36 (struct_def)
+
+
+State 33
+
+   34 fields: fields COMMA • field
+
+    LABEL  shift, and go to state 22
+
+    field  go to state 56
+
+
+State 34
+
+   40 enum_def: ENUM LABEL LBRA evars RBRA •
+
+    $default  reduce using rule 40 (enum_def)
+
+
+State 35
+
+   39 evars: evars COMMA • evar
+
+    LABEL  shift, and go to state 25
+
+    evar  go to state 57
+
+
+State 36
+
+   26 nominal_type: LABEL •
+
+    $default  reduce using rule 26 (nominal_type)
+
+
+State 37
+
+   20 int_lit_type: T_INT •
+
+    $default  reduce using rule 20 (int_lit_type)
+
+
+State 38
+
+   21 int_lit_type: T_LONG •
+
+    $default  reduce using rule 21 (int_lit_type)
+
+
+State 39
+
+   22 float_lit_type: T_FLOAT •
+
+    $default  reduce using rule 22 (float_lit_type)
+
+
+State 40
+
+   23 float_lit_type: T_DOUBLE •
+
+    $default  reduce using rule 23 (float_lit_type)
+
+
+State 41
+
+   16 literal_type: T_CHAR •
+
+    $default  reduce using rule 16 (literal_type)
+
+
+State 42
+
+   17 literal_type: T_BOOL •
+
+    $default  reduce using rule 17 (literal_type)
+
+
+State 43
+
+   25 func_type: LBRA • opt_types RBRA PROD type
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    $default  reduce using rule 7 (opt_types)
+
+    opt_types          go to state 58
+    types              go to state 59
+    non_function_type  go to state 45
+    type               go to state 60
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 44
+
+   24 list_type: SQ_LBRA • type SQ_RBRA
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 45
+    type               go to state 61
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 45
+
+   14 type: non_function_type •
+
+    $default  reduce using rule 14 (type)
+
+
+State 46
+
+   31 param: LABEL TSEP type •
+
+    $default  reduce using rule 31 (param)
+
+
+State 47
+
+   11 non_function_type: literal_type •
+
+    $default  reduce using rule 11 (non_function_type)
+
+
+State 48
+
+   18 literal_type: int_lit_type •
+
+    $default  reduce using rule 18 (literal_type)
+
+
+State 49
+
+   19 literal_type: float_lit_type •
+
+    $default  reduce using rule 19 (literal_type)
+
+
+State 50
+
+   12 non_function_type: list_type •
+
+    $default  reduce using rule 12 (non_function_type)
+
+
+State 51
+
+   15 type: func_type •
+
+    $default  reduce using rule 15 (type)
+
+
+State 52
+
+   13 non_function_type: nominal_type •
+
+    $default  reduce using rule 13 (non_function_type)
+
+
+State 53
+
+   32 function_def: FUNC LABEL LBRA opt_params RBRA TSEP • type program
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 45
+    type               go to state 62
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 54
+
+   30 params: params COMMA param •
+
+    $default  reduce using rule 30 (params)
+
+
+State 55
+
+   35 field: LABEL TSEP type •
+
+    $default  reduce using rule 35 (field)
+
+
+State 56
+
+   34 fields: fields COMMA field •
+
+    $default  reduce using rule 34 (fields)
+
+
+State 57
+
+   39 evars: evars COMMA evar •
+
+    $default  reduce using rule 39 (evars)
+
+
+State 58
+
+   25 func_type: LBRA opt_types • RBRA PROD type
+
+    RBRA  shift, and go to state 63
+
+
+State 59
+
+    8 opt_types: types •
+   10 types: types • COMMA type
+
+    COMMA  shift, and go to state 64
+
+    $default  reduce using rule 8 (opt_types)
+
+
+State 60
+
+    9 types: type •
+
+    $default  reduce using rule 9 (types)
+
+
+State 61
+
+   24 list_type: SQ_LBRA type • SQ_RBRA
+
+    SQ_RBRA  shift, and go to state 65
+
+
+State 62
+
+   32 function_def: FUNC LABEL LBRA opt_params RBRA TSEP type • program
+
+    $default  reduce using rule 77 (helpers)
+
+    program  go to state 66
+    helpers  go to state 67
+
+
+State 63
+
+   25 func_type: LBRA opt_types RBRA • PROD type
+
+    PROD  shift, and go to state 68
+
+
+State 64
+
+   10 types: types COMMA • type
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 45
+    type               go to state 69
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 65
+
+   24 list_type: SQ_LBRA type SQ_RBRA •
+
+    $default  reduce using rule 24 (list_type)
+
+
+State 66
+
+   32 function_def: FUNC LABEL LBRA opt_params RBRA TSEP type program •
+
+    $default  reduce using rule 32 (function_def)
+
+
+State 67
+
+   41 program: helpers • branch_expr
+   78 helpers: helpers • helper_expr
+
+    LABEL   shift, and go to state 70
+    CASE    shift, and go to state 71
+    MARK    shift, and go to state 72
+    PRINT   shift, and go to state 73
+    RETURN  shift, and go to state 74
+
+    branch_expr  go to state 75
+    guard_expr   go to state 76
+    case_expr    go to state 77
+    return_expr  go to state 78
+    helper_expr  go to state 79
+    print_expr   go to state 80
+    read_expr    go to state 81
+    assign_expr  go to state 82
+
+
+State 68
+
+   25 func_type: LBRA opt_types RBRA PROD • type
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 45
+    type               go to state 83
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 69
+
+   10 types: types COMMA type •
+
+    $default  reduce using rule 10 (types)
+
+
+State 70
+
+   83 read_expr: LABEL • TSEP non_function_type ASSGN READ LBRA RBRA
+   84 assign_expr: LABEL • TSEP LBRA opt_params RBRA PROD type LBRA program RBRA
+   85            | LABEL • TSEP non_function_type ASSGN value_expr
+
+    TSEP  shift, and go to state 84
+
+
+State 71
+
+   45 guard_expr: CASE • OF TSEP guards PEND
+
+    OF  shift, and go to state 85
+
+
+State 72
+
+   50 case_expr: MARK • value_expr OF TSEP patterns PEND
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 110
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 73
+
+   82 print_expr: PRINT • LBRA value_expr RBRA
+
+    LBRA  shift, and go to state 121
+
+
+State 74
+
+   76 return_expr: RETURN • value_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 122
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 75
+
+   41 program: helpers branch_expr •
+
+    $default  reduce using rule 41 (program)
+
+
+State 76
+
+   43 branch_expr: guard_expr •
+
+    $default  reduce using rule 43 (branch_expr)
+
+
+State 77
+
+   44 branch_expr: case_expr •
+
+    $default  reduce using rule 44 (branch_expr)
+
+
+State 78
+
+   42 branch_expr: return_expr •
+
+    $default  reduce using rule 42 (branch_expr)
+
+
+State 79
+
+   78 helpers: helpers helper_expr •
+
+    $default  reduce using rule 78 (helpers)
+
+
+State 80
+
+   80 helper_expr: print_expr •
+
+    $default  reduce using rule 80 (helper_expr)
+
+
+State 81
+
+   81 helper_expr: read_expr •
+
+    $default  reduce using rule 81 (helper_expr)
+
+
+State 82
+
+   79 helper_expr: assign_expr •
+
+    $default  reduce using rule 79 (helper_expr)
+
+
+State 83
+
+   25 func_type: LBRA opt_types RBRA PROD type •
+
+    $default  reduce using rule 25 (func_type)
+
+
+State 84
+
+   83 read_expr: LABEL TSEP • non_function_type ASSGN READ LBRA RBRA
+   84 assign_expr: LABEL TSEP • LBRA opt_params RBRA PROD type LBRA program RBRA
+   85            | LABEL TSEP • non_function_type ASSGN value_expr
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 123
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 124
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    nominal_type       go to state 52
+
+
+State 85
+
+   45 guard_expr: CASE OF • TSEP guards PEND
+
+    TSEP  shift, and go to state 125
+
+
+State 86
+
+   86 int_lit: INT •
+
+    $default  reduce using rule 86 (int_lit)
+
+
+State 87
+
+   87 float_lit: FLOAT •
+
+    $default  reduce using rule 87 (float_lit)
+
+
+State 88
+
+   90 char_lit: CHAR •
+
+    $default  reduce using rule 90 (char_lit)
+
+
+State 89
+
+   70 string_lit: STRING •
+
+    $default  reduce using rule 70 (string_lit)
+
+
+State 90
+
+  114 nominal_expr: LABEL •
+  122 call_expr: LABEL • LBRA RBRA
+  123          | LABEL • LBRA expr_list RBRA
+  124 struct_expr: LABEL • C_LBRA expr_list C_RBRA
+
+    LBRA    shift, and go to state 126
+    C_LBRA  shift, and go to state 127
+
+    $default  reduce using rule 114 (nominal_expr)
+
+
+State 91
+
+   88 bool_lit: TRUE •
+
+    $default  reduce using rule 88 (bool_lit)
+
+
+State 92
+
+   89 bool_lit: FALSE •
+
+    $default  reduce using rule 89 (bool_lit)
+
+
+State 93
+
+  153 literal_expr: LBRA • value_expr RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 128
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 94
+
+  118 empty_list: SQ_LBRA • SQ_RBRA
+  119 list_con: SQ_LBRA • expr_list SQ_RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SQ_RBRA  shift, and go to state 129
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    expr_list      go to state 130
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 131
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 95
+
+  113 unary_op: SUB •
+
+    $default  reduce using rule 113 (unary_op)
+
+
+State 96
+
+  112 unary_op: LNEG •
+
+    $default  reduce using rule 112 (unary_op)
+
+
+State 97
+
+  111 unary_op: BNOT •
+
+    $default  reduce using rule 111 (unary_op)
+
+
+State 98
+
+  117 list_expr: string_lit •
+
+    $default  reduce using rule 117 (list_expr)
+
+
+State 99
+
+  145 literal_expr: int_lit •
+
+    $default  reduce using rule 145 (literal_expr)
+
+
+State 100
+
+  146 literal_expr: float_lit •
+
+    $default  reduce using rule 146 (literal_expr)
+
+
+State 101
+
+  148 literal_expr: bool_lit •
+
+    $default  reduce using rule 148 (literal_expr)
+
+
+State 102
+
+  147 literal_expr: char_lit •
+
+    $default  reduce using rule 147 (literal_expr)
+
+
+State 103
+
+  141 unary_expr: unary_op • postfix_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+
+    string_lit    go to state 98
+    int_lit       go to state 99
+    float_lit     go to state 100
+    bool_lit      go to state 101
+    char_lit      go to state 102
+    nominal_expr  go to state 104
+    list_expr     go to state 105
+    empty_list    go to state 106
+    list_con      go to state 107
+    call_expr     go to state 108
+    struct_expr   go to state 109
+    postfix_expr  go to state 132
+    literal_expr  go to state 120
+
+
+State 104
+
+  150 literal_expr: nominal_expr •
+
+    $default  reduce using rule 150 (literal_expr)
+
+
+State 105
+
+  149 literal_expr: list_expr •
+
+    $default  reduce using rule 149 (literal_expr)
+
+
+State 106
+
+  115 list_expr: empty_list •
+
+    $default  reduce using rule 115 (list_expr)
+
+
+State 107
+
+  116 list_expr: list_con •
+
+    $default  reduce using rule 116 (list_expr)
+
+
+State 108
+
+  151 literal_expr: call_expr •
+
+    $default  reduce using rule 151 (literal_expr)
+
+
+State 109
+
+  152 literal_expr: struct_expr •
+
+    $default  reduce using rule 152 (literal_expr)
+
+
+State 110
+
+   50 case_expr: MARK value_expr • OF TSEP patterns PEND
+
+    OF  shift, and go to state 133
+
+
+State 111
+
+  125 value_expr: bool_expr •
+  127 bool_expr: bool_expr • bool_op comp_expr
+
+    BAND  shift, and go to state 134
+    BOR   shift, and go to state 135
+
+    $default  reduce using rule 125 (value_expr)
+
+    bool_op  go to state 136
+
+
+State 112
+
+  126 bool_expr: comp_expr •
+
+    $default  reduce using rule 126 (bool_expr)
+
+
+State 113
+
+  128 comp_expr: bitwise_expr •
+  129          | bitwise_expr • comp_op bitwise_expr
+  131 bitwise_expr: bitwise_expr • bitwise_op shift_expr
+
+    LAND  shift, and go to state 137
+    BAR   shift, and go to state 138
+    LXOR  shift, and go to state 139
+    CGT   shift, and go to state 140
+    CLT   shift, and go to state 141
+    CGEQ  shift, and go to state 142
+    CLEQ  shift, and go to state 143
+    CEQ   shift, and go to state 144
+    CNEQ  shift, and go to state 145
+
+    $default  reduce using rule 128 (comp_expr)
+
+    comp_op     go to state 146
+    bitwise_op  go to state 147
+
+
+State 114
+
+  130 bitwise_expr: shift_expr •
+  133 shift_expr: shift_expr • shift_op additive_expr
+
+    LSL  shift, and go to state 148
+    LSR  shift, and go to state 149
+
+    $default  reduce using rule 130 (bitwise_expr)
+
+    shift_op  go to state 150
+
+
+State 115
+
+  132 shift_expr: additive_expr •
+  135 additive_expr: additive_expr • additive_op mult_expr
+
+    ADD     shift, and go to state 151
+    SUB     shift, and go to state 152
+    CONCAT  shift, and go to state 153
+
+    $default  reduce using rule 132 (shift_expr)
+
+    additive_op  go to state 154
+
+
+State 116
+
+  134 additive_expr: mult_expr •
+  137 mult_expr: mult_expr • mult_op pow_expr
+
+    MUL  shift, and go to state 155
+    DIV  shift, and go to state 156
+    MOD  shift, and go to state 157
+    FLR  shift, and go to state 158
+
+    $default  reduce using rule 134 (additive_expr)
+
+    mult_op  go to state 159
+
+
+State 117
+
+  136 mult_expr: pow_expr •
+
+    $default  reduce using rule 136 (mult_expr)
+
+
+State 118
+
+  138 pow_expr: unary_expr •
+  139         | unary_expr • POW pow_expr
+
+    POW  shift, and go to state 160
+
+    $default  reduce using rule 138 (pow_expr)
+
+
+State 119
+
+  140 unary_expr: postfix_expr •
+  143 postfix_expr: postfix_expr • SQ_LBRA value_expr SQ_RBRA
+  144             | postfix_expr • DOT LABEL
+
+    SQ_LBRA  shift, and go to state 161
+    DOT      shift, and go to state 162
+
+    $default  reduce using rule 140 (unary_expr)
+
+
+State 120
+
+  142 postfix_expr: literal_expr •
+
+    $default  reduce using rule 142 (postfix_expr)
+
+
+State 121
+
+   82 print_expr: PRINT LBRA • value_expr RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 163
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 122
+
+   76 return_expr: RETURN value_expr •
+
+    $default  reduce using rule 76 (return_expr)
+
+
+State 123
+
+   84 assign_expr: LABEL TSEP LBRA • opt_params RBRA PROD type LBRA program RBRA
+
+    LABEL  shift, and go to state 18
+
+    $default  reduce using rule 27 (opt_params)
+
+    opt_params  go to state 164
+    params      go to state 20
+    param       go to state 21
+
+
+State 124
+
+   83 read_expr: LABEL TSEP non_function_type • ASSGN READ LBRA RBRA
+   85 assign_expr: LABEL TSEP non_function_type • ASSGN value_expr
+
+    ASSGN  shift, and go to state 165
+
+
+State 125
+
+   45 guard_expr: CASE OF TSEP • guards PEND
+
+    BAR  shift, and go to state 166
+
+    guards  go to state 167
+    guard   go to state 168
+
+
+State 126
+
+  122 call_expr: LABEL LBRA • RBRA
+  123          | LABEL LBRA • expr_list RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    RBRA     shift, and go to state 169
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    expr_list      go to state 170
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 131
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 127
+
+  124 struct_expr: LABEL C_LBRA • expr_list C_RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    expr_list      go to state 171
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 131
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 128
+
+  153 literal_expr: LBRA value_expr • RBRA
+
+    RBRA  shift, and go to state 172
+
+
+State 129
+
+  118 empty_list: SQ_LBRA SQ_RBRA •
+
+    $default  reduce using rule 118 (empty_list)
+
+
+State 130
+
+  119 list_con: SQ_LBRA expr_list • SQ_RBRA
+  121 expr_list: expr_list • COMMA value_expr
+
+    SQ_RBRA  shift, and go to state 173
+    COMMA    shift, and go to state 174
+
+
+State 131
+
+  120 expr_list: value_expr •
+
+    $default  reduce using rule 120 (expr_list)
+
+
+State 132
+
+  141 unary_expr: unary_op postfix_expr •
+  143 postfix_expr: postfix_expr • SQ_LBRA value_expr SQ_RBRA
+  144             | postfix_expr • DOT LABEL
+
+    SQ_LBRA  shift, and go to state 161
+    DOT      shift, and go to state 162
+
+    $default  reduce using rule 141 (unary_expr)
+
+
+State 133
+
+   50 case_expr: MARK value_expr OF • TSEP patterns PEND
+
+    TSEP  shift, and go to state 175
+
+
+State 134
+
+   92 bool_op: BAND •
+
+    $default  reduce using rule 92 (bool_op)
+
+
+State 135
+
+   91 bool_op: BOR •
+
+    $default  reduce using rule 91 (bool_op)
+
+
+State 136
+
+  127 bool_expr: bool_expr bool_op • comp_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    comp_expr      go to state 176
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 137
+
+   99 bitwise_op: LAND •
+
+    $default  reduce using rule 99 (bitwise_op)
+
+
+State 138
+
+  100 bitwise_op: BAR •
+
+    $default  reduce using rule 100 (bitwise_op)
+
+
+State 139
+
+  101 bitwise_op: LXOR •
+
+    $default  reduce using rule 101 (bitwise_op)
+
+
+State 140
+
+   95 comp_op: CGT •
+
+    $default  reduce using rule 95 (comp_op)
+
+
+State 141
+
+   96 comp_op: CLT •
+
+    $default  reduce using rule 96 (comp_op)
+
+
+State 142
+
+   97 comp_op: CGEQ •
+
+    $default  reduce using rule 97 (comp_op)
+
+
+State 143
+
+   98 comp_op: CLEQ •
+
+    $default  reduce using rule 98 (comp_op)
+
+
+State 144
+
+   93 comp_op: CEQ •
+
+    $default  reduce using rule 93 (comp_op)
+
+
+State 145
+
+   94 comp_op: CNEQ •
+
+    $default  reduce using rule 94 (comp_op)
+
+
+State 146
+
+  129 comp_expr: bitwise_expr comp_op • bitwise_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    bitwise_expr   go to state 177
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 147
+
+  131 bitwise_expr: bitwise_expr bitwise_op • shift_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    shift_expr     go to state 178
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 148
+
+  102 shift_op: LSL •
+
+    $default  reduce using rule 102 (shift_op)
+
+
+State 149
+
+  103 shift_op: LSR •
+
+    $default  reduce using rule 103 (shift_op)
+
+
+State 150
+
+  133 shift_expr: shift_expr shift_op • additive_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    additive_expr  go to state 179
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 151
+
+  104 additive_op: ADD •
+
+    $default  reduce using rule 104 (additive_op)
+
+
+State 152
+
+  105 additive_op: SUB •
+
+    $default  reduce using rule 105 (additive_op)
+
+
+State 153
+
+  106 additive_op: CONCAT •
+
+    $default  reduce using rule 106 (additive_op)
+
+
+State 154
+
+  135 additive_expr: additive_expr additive_op • mult_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit    go to state 98
+    int_lit       go to state 99
+    float_lit     go to state 100
+    bool_lit      go to state 101
+    char_lit      go to state 102
+    unary_op      go to state 103
+    nominal_expr  go to state 104
+    list_expr     go to state 105
+    empty_list    go to state 106
+    list_con      go to state 107
+    call_expr     go to state 108
+    struct_expr   go to state 109
+    mult_expr     go to state 180
+    pow_expr      go to state 117
+    unary_expr    go to state 118
+    postfix_expr  go to state 119
+    literal_expr  go to state 120
+
+
+State 155
+
+  107 mult_op: MUL •
+
+    $default  reduce using rule 107 (mult_op)
+
+
+State 156
+
+  108 mult_op: DIV •
+
+    $default  reduce using rule 108 (mult_op)
+
+
+State 157
+
+  109 mult_op: MOD •
+
+    $default  reduce using rule 109 (mult_op)
+
+
+State 158
+
+  110 mult_op: FLR •
+
+    $default  reduce using rule 110 (mult_op)
+
+
+State 159
+
+  137 mult_expr: mult_expr mult_op • pow_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit    go to state 98
+    int_lit       go to state 99
+    float_lit     go to state 100
+    bool_lit      go to state 101
+    char_lit      go to state 102
+    unary_op      go to state 103
+    nominal_expr  go to state 104
+    list_expr     go to state 105
+    empty_list    go to state 106
+    list_con      go to state 107
+    call_expr     go to state 108
+    struct_expr   go to state 109
+    pow_expr      go to state 181
+    unary_expr    go to state 118
+    postfix_expr  go to state 119
+    literal_expr  go to state 120
+
+
+State 160
+
+  139 pow_expr: unary_expr POW • pow_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit    go to state 98
+    int_lit       go to state 99
+    float_lit     go to state 100
+    bool_lit      go to state 101
+    char_lit      go to state 102
+    unary_op      go to state 103
+    nominal_expr  go to state 104
+    list_expr     go to state 105
+    empty_list    go to state 106
+    list_con      go to state 107
+    call_expr     go to state 108
+    struct_expr   go to state 109
+    pow_expr      go to state 182
+    unary_expr    go to state 118
+    postfix_expr  go to state 119
+    literal_expr  go to state 120
+
+
+State 161
+
+  143 postfix_expr: postfix_expr SQ_LBRA • value_expr SQ_RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 183
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 162
+
+  144 postfix_expr: postfix_expr DOT • LABEL
+
+    LABEL  shift, and go to state 184
+
+
+State 163
+
+   82 print_expr: PRINT LBRA value_expr • RBRA
+
+    RBRA  shift, and go to state 185
+
+
+State 164
+
+   84 assign_expr: LABEL TSEP LBRA opt_params • RBRA PROD type LBRA program RBRA
+
+    RBRA  shift, and go to state 186
+
+
+State 165
+
+   83 read_expr: LABEL TSEP non_function_type ASSGN • READ LBRA RBRA
+   85 assign_expr: LABEL TSEP non_function_type ASSGN • value_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    READ     shift, and go to state 187
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 188
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 166
+
+   48 guard: BAR • value_expr ARROW program
+   49      | BAR • ELSE ARROW program
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    ELSE     shift, and go to state 189
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 190
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 167
+
+   45 guard_expr: CASE OF TSEP guards • PEND
+   47 guards: guards • COMMA guard
+
+    COMMA  shift, and go to state 191
+    PEND   shift, and go to state 192
+
+
+State 168
+
+   46 guards: guard •
+
+    $default  reduce using rule 46 (guards)
+
+
+State 169
+
+  122 call_expr: LABEL LBRA RBRA •
+
+    $default  reduce using rule 122 (call_expr)
+
+
+State 170
+
+  121 expr_list: expr_list • COMMA value_expr
+  123 call_expr: LABEL LBRA expr_list • RBRA
+
+    RBRA   shift, and go to state 193
+    COMMA  shift, and go to state 174
+
+
+State 171
+
+  121 expr_list: expr_list • COMMA value_expr
+  124 struct_expr: LABEL C_LBRA expr_list • C_RBRA
+
+    C_RBRA  shift, and go to state 194
+    COMMA   shift, and go to state 174
+
+
+State 172
+
+  153 literal_expr: LBRA value_expr RBRA •
+
+    $default  reduce using rule 153 (literal_expr)
+
+
+State 173
+
+  119 list_con: SQ_LBRA expr_list SQ_RBRA •
+
+    $default  reduce using rule 119 (list_con)
+
+
+State 174
+
+  121 expr_list: expr_list COMMA • value_expr
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 90
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    LBRA     shift, and go to state 93
+    SQ_LBRA  shift, and go to state 94
+    SUB      shift, and go to state 95
+    LNEG     shift, and go to state 96
+    BNOT     shift, and go to state 97
+
+    string_lit     go to state 98
+    int_lit        go to state 99
+    float_lit      go to state 100
+    bool_lit       go to state 101
+    char_lit       go to state 102
+    unary_op       go to state 103
+    nominal_expr   go to state 104
+    list_expr      go to state 105
+    empty_list     go to state 106
+    list_con       go to state 107
+    call_expr      go to state 108
+    struct_expr    go to state 109
+    value_expr     go to state 195
+    bool_expr      go to state 111
+    comp_expr      go to state 112
+    bitwise_expr   go to state 113
+    shift_expr     go to state 114
+    additive_expr  go to state 115
+    mult_expr      go to state 116
+    pow_expr       go to state 117
+    unary_expr     go to state 118
+    postfix_expr   go to state 119
+    literal_expr   go to state 120
+
+
+State 175
+
+   50 case_expr: MARK value_expr OF TSEP • patterns PEND
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 196
+    DEFAULT  shift, and go to state 197
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    NIL      shift, and go to state 198
+    SQ_LBRA  shift, and go to state 199
+
+    patterns        go to state 200
+    pattern_branch  go to state 201
+    literal         go to state 202
+    pattern         go to state 203
+    enum_lit        go to state 204
+    struct_lit      go to state 205
+    list_pattern    go to state 206
+    string_lit      go to state 207
+    list_lit        go to state 208
+    size_patterns   go to state 209
+    int_lit         go to state 210
+    float_lit       go to state 211
+    bool_lit        go to state 212
+    char_lit        go to state 213
+
+
+State 176
+
+  127 bool_expr: bool_expr bool_op comp_expr •
+
+    $default  reduce using rule 127 (bool_expr)
+
+
+State 177
+
+  129 comp_expr: bitwise_expr comp_op bitwise_expr •
+  131 bitwise_expr: bitwise_expr • bitwise_op shift_expr
+
+    LAND  shift, and go to state 137
+    BAR   shift, and go to state 138
+    LXOR  shift, and go to state 139
+
+    $default  reduce using rule 129 (comp_expr)
+
+    bitwise_op  go to state 147
+
+
+State 178
+
+  131 bitwise_expr: bitwise_expr bitwise_op shift_expr •
+  133 shift_expr: shift_expr • shift_op additive_expr
+
+    LSL  shift, and go to state 148
+    LSR  shift, and go to state 149
+
+    $default  reduce using rule 131 (bitwise_expr)
+
+    shift_op  go to state 150
+
+
+State 179
+
+  133 shift_expr: shift_expr shift_op additive_expr •
+  135 additive_expr: additive_expr • additive_op mult_expr
+
+    ADD     shift, and go to state 151
+    SUB     shift, and go to state 152
+    CONCAT  shift, and go to state 153
+
+    $default  reduce using rule 133 (shift_expr)
+
+    additive_op  go to state 154
+
+
+State 180
+
+  135 additive_expr: additive_expr additive_op mult_expr •
+  137 mult_expr: mult_expr • mult_op pow_expr
+
+    MUL  shift, and go to state 155
+    DIV  shift, and go to state 156
+    MOD  shift, and go to state 157
+    FLR  shift, and go to state 158
+
+    $default  reduce using rule 135 (additive_expr)
+
+    mult_op  go to state 159
+
+
+State 181
+
+  137 mult_expr: mult_expr mult_op pow_expr •
+
+    $default  reduce using rule 137 (mult_expr)
+
+
+State 182
+
+  139 pow_expr: unary_expr POW pow_expr •
+
+    $default  reduce using rule 139 (pow_expr)
+
+
+State 183
+
+  143 postfix_expr: postfix_expr SQ_LBRA value_expr • SQ_RBRA
+
+    SQ_RBRA  shift, and go to state 214
+
+
+State 184
+
+  144 postfix_expr: postfix_expr DOT LABEL •
+
+    $default  reduce using rule 144 (postfix_expr)
+
+
+State 185
+
+   82 print_expr: PRINT LBRA value_expr RBRA •
+
+    $default  reduce using rule 82 (print_expr)
+
+
+State 186
+
+   84 assign_expr: LABEL TSEP LBRA opt_params RBRA • PROD type LBRA program RBRA
+
+    PROD  shift, and go to state 215
+
+
+State 187
+
+   83 read_expr: LABEL TSEP non_function_type ASSGN READ • LBRA RBRA
+
+    LBRA  shift, and go to state 216
+
+
+State 188
+
+   85 assign_expr: LABEL TSEP non_function_type ASSGN value_expr •
+
+    $default  reduce using rule 85 (assign_expr)
+
+
+State 189
+
+   49 guard: BAR ELSE • ARROW program
+
+    ARROW  shift, and go to state 217
+
+
+State 190
+
+   48 guard: BAR value_expr • ARROW program
+
+    ARROW  shift, and go to state 218
+
+
+State 191
+
+   47 guards: guards COMMA • guard
+
+    BAR  shift, and go to state 166
+
+    guard  go to state 219
+
+
+State 192
+
+   45 guard_expr: CASE OF TSEP guards PEND •
+
+    $default  reduce using rule 45 (guard_expr)
+
+
+State 193
+
+  123 call_expr: LABEL LBRA expr_list RBRA •
+
+    $default  reduce using rule 123 (call_expr)
+
+
+State 194
+
+  124 struct_expr: LABEL C_LBRA expr_list C_RBRA •
+
+    $default  reduce using rule 124 (struct_expr)
+
+
+State 195
+
+  121 expr_list: expr_list COMMA value_expr •
+
+    $default  reduce using rule 121 (expr_list)
+
+
+State 196
+
+   63 enum_lit: LABEL •
+   65 struct_lit: LABEL • C_LBRA list_pattern_lit C_RBRA
+   74 size_patterns: LABEL • TSEP LABEL
+
+    C_LBRA  shift, and go to state 220
+    TSEP    shift, and go to state 221
+
+    $default  reduce using rule 63 (enum_lit)
+
+
+State 197
+
+   62 pattern: DEFAULT •
+
+    $default  reduce using rule 62 (pattern)
+
+
+State 198
+
+   64 struct_lit: NIL •
+
+    $default  reduce using rule 64 (struct_lit)
+
+
+State 199
+
+   66 list_pattern: SQ_LBRA • SQ_RBRA
+   71 list_lit: SQ_LBRA • list_pattern_lit SQ_RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 196
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    NIL      shift, and go to state 198
+    SQ_LBRA  shift, and go to state 199
+    SQ_RBRA  shift, and go to state 222
+
+    literal           go to state 223
+    enum_lit          go to state 204
+    struct_lit        go to state 205
+    list_pattern      go to state 206
+    string_lit        go to state 207
+    list_lit          go to state 208
+    list_pattern_lit  go to state 224
+    size_patterns     go to state 209
+    int_lit           go to state 210
+    float_lit         go to state 211
+    bool_lit          go to state 212
+    char_lit          go to state 213
+
+
+State 200
+
+   50 case_expr: MARK value_expr OF TSEP patterns • PEND
+   52 patterns: patterns • COMMA pattern_branch
+
+    COMMA  shift, and go to state 225
+    PEND   shift, and go to state 226
+
+
+State 201
+
+   51 patterns: pattern_branch •
+
+    $default  reduce using rule 51 (patterns)
+
+
+State 202
+
+   61 pattern: literal •
+
+    $default  reduce using rule 61 (pattern)
+
+
+State 203
+
+   53 pattern_branch: pattern • ARROW program
+
+    ARROW  shift, and go to state 227
+
+
+State 204
+
+   58 literal: enum_lit •
+
+    $default  reduce using rule 58 (literal)
+
+
+State 205
+
+   60 literal: struct_lit •
+
+    $default  reduce using rule 60 (literal)
+
+
+State 206
+
+   59 literal: list_pattern •
+
+    $default  reduce using rule 59 (literal)
+
+
+State 207
+
+   68 list_pattern: string_lit •
+
+    $default  reduce using rule 68 (list_pattern)
+
+
+State 208
+
+   67 list_pattern: list_lit •
+
+    $default  reduce using rule 67 (list_pattern)
+
+
+State 209
+
+   69 list_pattern: size_patterns •
+   75 size_patterns: size_patterns • TSEP LABEL
+
+    TSEP  shift, and go to state 228
+
+    $default  reduce using rule 69 (list_pattern)
+
+
+State 210
+
+   55 literal: int_lit •
+
+    $default  reduce using rule 55 (literal)
+
+
+State 211
+
+   56 literal: float_lit •
+
+    $default  reduce using rule 56 (literal)
+
+
+State 212
+
+   57 literal: bool_lit •
+
+    $default  reduce using rule 57 (literal)
+
+
+State 213
+
+   54 literal: char_lit •
+
+    $default  reduce using rule 54 (literal)
+
+
+State 214
+
+  143 postfix_expr: postfix_expr SQ_LBRA value_expr SQ_RBRA •
+
+    $default  reduce using rule 143 (postfix_expr)
+
+
+State 215
+
+   84 assign_expr: LABEL TSEP LBRA opt_params RBRA PROD • type LBRA program RBRA
+
+    LABEL     shift, and go to state 36
+    T_INT     shift, and go to state 37
+    T_LONG    shift, and go to state 38
+    T_FLOAT   shift, and go to state 39
+    T_DOUBLE  shift, and go to state 40
+    T_CHAR    shift, and go to state 41
+    T_BOOL    shift, and go to state 42
+    LBRA      shift, and go to state 43
+    SQ_LBRA   shift, and go to state 44
+
+    non_function_type  go to state 45
+    type               go to state 229
+    literal_type       go to state 47
+    int_lit_type       go to state 48
+    float_lit_type     go to state 49
+    list_type          go to state 50
+    func_type          go to state 51
+    nominal_type       go to state 52
+
+
+State 216
+
+   83 read_expr: LABEL TSEP non_function_type ASSGN READ LBRA • RBRA
+
+    RBRA  shift, and go to state 230
+
+
+State 217
+
+   49 guard: BAR ELSE ARROW • program
+
+    $default  reduce using rule 77 (helpers)
+
+    program  go to state 231
+    helpers  go to state 67
+
+
+State 218
+
+   48 guard: BAR value_expr ARROW • program
+
+    $default  reduce using rule 77 (helpers)
+
+    program  go to state 232
+    helpers  go to state 67
+
+
+State 219
+
+   47 guards: guards COMMA guard •
+
+    $default  reduce using rule 47 (guards)
+
+
+State 220
+
+   65 struct_lit: LABEL C_LBRA • list_pattern_lit C_RBRA
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 196
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    NIL      shift, and go to state 198
+    SQ_LBRA  shift, and go to state 199
+
+    literal           go to state 223
+    enum_lit          go to state 204
+    struct_lit        go to state 205
+    list_pattern      go to state 206
+    string_lit        go to state 207
+    list_lit          go to state 208
+    list_pattern_lit  go to state 233
+    size_patterns     go to state 209
+    int_lit           go to state 210
+    float_lit         go to state 211
+    bool_lit          go to state 212
+    char_lit          go to state 213
+
+
+State 221
+
+   74 size_patterns: LABEL TSEP • LABEL
+
+    LABEL  shift, and go to state 234
+
+
+State 222
+
+   66 list_pattern: SQ_LBRA SQ_RBRA •
+
+    $default  reduce using rule 66 (list_pattern)
+
+
+State 223
+
+   72 list_pattern_lit: literal •
+
+    $default  reduce using rule 72 (list_pattern_lit)
+
+
+State 224
+
+   71 list_lit: SQ_LBRA list_pattern_lit • SQ_RBRA
+   73 list_pattern_lit: list_pattern_lit • COMMA literal
+
+    SQ_RBRA  shift, and go to state 235
+    COMMA    shift, and go to state 236
+
+
+State 225
+
+   52 patterns: patterns COMMA • pattern_branch
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 196
+    DEFAULT  shift, and go to state 197
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    NIL      shift, and go to state 198
+    SQ_LBRA  shift, and go to state 199
+
+    pattern_branch  go to state 237
+    literal         go to state 202
+    pattern         go to state 203
+    enum_lit        go to state 204
+    struct_lit      go to state 205
+    list_pattern    go to state 206
+    string_lit      go to state 207
+    list_lit        go to state 208
+    size_patterns   go to state 209
+    int_lit         go to state 210
+    float_lit       go to state 211
+    bool_lit        go to state 212
+    char_lit        go to state 213
+
+
+State 226
+
+   50 case_expr: MARK value_expr OF TSEP patterns PEND •
+
+    $default  reduce using rule 50 (case_expr)
+
+
+State 227
+
+   53 pattern_branch: pattern ARROW • program
+
+    $default  reduce using rule 77 (helpers)
+
+    program  go to state 238
+    helpers  go to state 67
+
+
+State 228
+
+   75 size_patterns: size_patterns TSEP • LABEL
+
+    LABEL  shift, and go to state 239
+
+
+State 229
+
+   84 assign_expr: LABEL TSEP LBRA opt_params RBRA PROD type • LBRA program RBRA
+
+    LBRA  shift, and go to state 240
+
+
+State 230
+
+   83 read_expr: LABEL TSEP non_function_type ASSGN READ LBRA RBRA •
+
+    $default  reduce using rule 83 (read_expr)
+
+
+State 231
+
+   49 guard: BAR ELSE ARROW program •
+
+    $default  reduce using rule 49 (guard)
+
+
+State 232
+
+   48 guard: BAR value_expr ARROW program •
+
+    $default  reduce using rule 48 (guard)
+
+
+State 233
+
+   65 struct_lit: LABEL C_LBRA list_pattern_lit • C_RBRA
+   73 list_pattern_lit: list_pattern_lit • COMMA literal
+
+    C_RBRA  shift, and go to state 241
+    COMMA   shift, and go to state 236
+
+
+State 234
+
+   74 size_patterns: LABEL TSEP LABEL •
+
+    $default  reduce using rule 74 (size_patterns)
+
+
+State 235
+
+   71 list_lit: SQ_LBRA list_pattern_lit SQ_RBRA •
+
+    $default  reduce using rule 71 (list_lit)
+
+
+State 236
+
+   73 list_pattern_lit: list_pattern_lit COMMA • literal
+
+    INT      shift, and go to state 86
+    FLOAT    shift, and go to state 87
+    CHAR     shift, and go to state 88
+    STRING   shift, and go to state 89
+    LABEL    shift, and go to state 196
+    TRUE     shift, and go to state 91
+    FALSE    shift, and go to state 92
+    NIL      shift, and go to state 198
+    SQ_LBRA  shift, and go to state 199
+
+    literal        go to state 242
+    enum_lit       go to state 204
+    struct_lit     go to state 205
+    list_pattern   go to state 206
+    string_lit     go to state 207
+    list_lit       go to state 208
+    size_patterns  go to state 209
+    int_lit        go to state 210
+    float_lit      go to state 211
+    bool_lit       go to state 212
+    char_lit       go to state 213
+
+
+State 237
+
+   52 patterns: patterns COMMA pattern_branch •
+
+    $default  reduce using rule 52 (patterns)
+
+
+State 238
+
+   53 pattern_branch: pattern ARROW program •
+
+    $default  reduce using rule 53 (pattern_branch)
+
+
+State 239
+
+   75 size_patterns: size_patterns TSEP LABEL •
+
+    $default  reduce using rule 75 (size_patterns)
+
+
+State 240
+
+   84 assign_expr: LABEL TSEP LBRA opt_params RBRA PROD type LBRA • program RBRA
+
+    $default  reduce using rule 77 (helpers)
+
+    program  go to state 243
+    helpers  go to state 67
+
+
+State 241
+
+   65 struct_lit: LABEL C_LBRA list_pattern_lit C_RBRA •
+
+    $default  reduce using rule 65 (struct_lit)
+
+
+State 242
+
+   73 list_pattern_lit: list_pattern_lit COMMA literal •
+
+    $default  reduce using rule 73 (list_pattern_lit)
+
+
+State 243
+
+   84 assign_expr: LABEL TSEP LBRA opt_params RBRA PROD type LBRA program • RBRA
+
+    RBRA  shift, and go to state 244
+
+
+State 244
+
+   84 assign_expr: LABEL TSEP LBRA opt_params RBRA PROD type LBRA program RBRA •
+
+    $default  reduce using rule 84 (assign_expr)

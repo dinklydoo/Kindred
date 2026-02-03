@@ -1,5 +1,4 @@
 #include "visitor.hpp"
-#include <iostream>
 
 // visitor pattern boilerplate
 
@@ -7,11 +6,13 @@ void IntLit::accept(Visitor& v){ v.visit(*this);}
 void FloatLit::accept(Visitor& v){v.visit(*this);}
 void BoolLit::accept(Visitor& v){v.visit(*this);}
 void CharLit::accept(Visitor& v){v.visit(*this);}
-void ListLit::accept(Visitor& v){v.visit(*this);}
 void ListPatternLit::accept(Visitor& v){v.visit(*this);}
+void StructPatternLit::accept(Visitor& v){v.visit(*this);}
 void NilLit::accept(Visitor& v){v.visit(*this);}
 void DefaultLit::accept(Visitor& v){v.visit(*this);}
+void ElseLit::accept(Visitor& v){v.visit(*this);}
 void EnumLit::accept(Visitor& v){v.visit(*this);}
+void EmptyLit::accept(Visitor& v){v.visit(*this);}
 void NominalNode::accept(Visitor& v){v.visit(*this);}
 void AccessNode::accept(Visitor& v){v.visit(*this);}
 void VarDecl::accept(Visitor& v){v.visit(*this);}

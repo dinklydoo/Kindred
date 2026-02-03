@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <variant>
 //#include <iostream>
 
 struct Type {
@@ -17,7 +18,6 @@ struct Type {
 };
 
 using type_ptr = std::shared_ptr<Type>;
-struct Field;
 
 // Primitives
 struct BoolType   : Type { BoolType()   : Type(Kind::Bool) {} };
@@ -44,12 +44,33 @@ struct FuncType : Type {
         : Type(Kind::Func), args(std::move(a)), ret(std::move(r)) {}
 };
 
+struct Source {
+    int line;
+    int col;
+};
+
+struct Enumerable{
+    std::string label;
+    int id;
+};
+
+struct Field {
+    type_ptr type;
+    std::string name;
+    Source location;
+};
+
+using NominalChildren = std::variant<std::vector<Field>, std::vector<Enumerable>>;
+
 // Nominal types
 struct NominalType : Type {
     std::string name;
-    std::vector<Field> fields;
+    NominalChildren children;
     bool defined = false;
     explicit NominalType(Kind k, std::string name) : Type(k), name(name) {}
+
+    std::vector<Field>& get_fields(){ return std::get<std::vector<Field>>(this->children); }
+    std::vector<Enumerable>& get_enums(){ return std::get<std::vector<Enumerable>>(this->children); }
 };
 
 using nominal_ptr = std::shared_ptr<NominalType>;
@@ -116,17 +137,18 @@ struct TypeSystem {
             // defined -> error
         }
         t->kind = Type::Kind::Struct;
-        t->fields = fields;
+        t->children = fields;
         t->defined = true;
         return t;
     }
 
-    type_ptr declare_enum(const std::string& name){
+    type_ptr declare_enum(const std::string& name, std::vector<Enumerable>& enumerable){
         nominal_ptr t = nominal_type(name); // forward declare regardless
         if (t->defined){
             // defined -> error
         }
         t->kind = Type::Kind::Enum;
+        t->children = enumerable;
         t->defined = true;
         return t;
     }

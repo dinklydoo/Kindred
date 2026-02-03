@@ -8,11 +8,13 @@ struct Visitor {
     virtual void visit( FloatLit& node) =0;
     virtual void visit( BoolLit& node) =0;
     virtual void visit( CharLit& node) =0;
-    virtual void visit( ListLit& node) =0;
     virtual void visit( ListPatternLit& node) =0;
+    virtual void visit( StructPatternLit& node) =0;
     virtual void visit( NilLit& node) =0;
     virtual void visit( DefaultLit& node) =0;
+    virtual void visit( ElseLit& node) =0;
     virtual void visit( EnumLit& node) =0;
+    virtual void visit( EmptyLit& node) =0;
 
     virtual void visit( AccessNode& node) =0;
     virtual void visit( VarDecl& node) =0;

@@ -7,16 +7,16 @@
     #include <iostream>
     #include "parser.hpp"
 
-    TypeSystem& type_s = TypeSystem::instance();
+    static TypeSystem& type_s = TypeSystem::instance();
 
-    literal_ptr str_to_chlist(std::string s){
-        std::vector<literal_ptr> chars;
+    expr_ptr str_to_chlist(std::string s){
+        std::vector<expr_ptr> chars;
         for (char c : s){
             auto temp = std::make_unique<CharLit>();
             temp->value = c;
             chars.push_back(std::move(temp));
         }
-        auto list = std::make_unique<ListLit>();
+        auto list = std::make_unique<ListNode>();
         list->elems = std::move(chars);
         return list;
     }
@@ -127,7 +127,11 @@
 %type <literal_ptr> literal;
 %type <literal_ptr> pattern;
 %type <literal_ptr> list_pattern;
-%type <std::vector<std::string>> size_patterns;
+%type <literal_ptr> list_size_pattern;
+%type <std::vector<std::string>> list_vars;
+
+%type <literal_ptr> struct_size_pattern
+%type <std::vector<std::string>> struct_vars;
 
 %type <guard_ptr> guard_expr;
 %type <std::vector<g_branch_ptr>> guards
@@ -140,10 +144,7 @@
 %type <literal_ptr> float_lit;
 %type <literal_ptr> bool_lit;
 %type <literal_ptr> char_lit;
-%type <literal_ptr> list_lit;
-%type <literal_ptr> string_lit;
 %type <literal_ptr> enum_lit;
-%type <std::vector<literal_ptr>> list_pattern_lit;
 
 %type <BinaryOp> bitwise_op;
 %type <BinaryOp> shift_op;
@@ -155,6 +156,7 @@
 
 /* List Expression Patterns */
 %type <expr_ptr> list_expr;
+%type <expr_ptr> string_expr;
 %type <list_ptr> empty_list
 %type <list_ptr> list_con;
 %type <std::vector<expr_ptr>> expr_list;
@@ -358,6 +360,8 @@ guard_expr
         {
             $$ = std::make_unique<GuardNode>();
             $$->branches = std::move($4);
+
+            $$->location = floc_to_loc(@3);
         }
     ;
 
@@ -380,14 +384,21 @@ guard
             $$ = std::make_unique<GuardBranchNode>();
             $$->match = std::move($2);
             $$->body = std::move($4);
+
+            $$->location = floc_to_loc(@3);
         }
     | BAR ELSE ARROW program
         {
             $$ = std::make_unique<GuardBranchNode>();
-            auto temp = std::make_unique<BoolLit>();
-            temp->value = true;
+            //auto temp = std::make_unique<BoolLit>();
+            //temp->value = true;
+            //$$->match = std::move(temp);
+
+            auto temp = std::make_unique<ElseLit>();
             $$->match = std::move(temp);
             $$->body = std::move($4);
+
+            $$->location = floc_to_loc(@3);
         }
     ;
 
@@ -397,6 +408,8 @@ case_expr
             $$ = std::make_unique<CaseNode>();
             $$->target = std::move($2);
             $$->patterns = std::move($5);
+
+            $$->location = floc_to_loc(@3);
         }
     ;
 
@@ -435,8 +448,10 @@ literal
 
 pattern
     : literal { $$ = std::move($1); }
+    | list_size_pattern { $$ = std::move($1); }
+    | struct_size_pattern { $$ = std::move($1); }
+    | DEFAULT { $$ = std::make_unique<DefaultLit>(); $$->location = floc_to_loc(@1);}
     | NIL { $$ = std::make_unique<NilLit>(); $$->location = floc_to_loc(@1);}
-    | DEFAULT { $$ = std::make_unique<DefaultLit>(); }
     ;
 
 enum_lit
@@ -452,15 +467,18 @@ enum_lit
 list_pattern
     : SQ_LBRA SQ_RBRA 
         { 
-            auto temp = std::make_unique<ListLit>();
-            temp->elems = std::vector<literal_ptr>{}; 
-            $$ = std::move(temp);
+            $$ = std::make_unique<EmptyLit>();
 
             $$->location = floc_to_loc(@1);
         }
-    | list_lit { $$ = std::move($1); }
-    | string_lit { $$ = std::move($1); }
-    | size_patterns 
+    ;
+
+string_expr
+    : STRING {$$ = str_to_chlist($1); $$->location = floc_to_loc(@1); };
+
+
+list_size_pattern
+    : list_vars
         {
             auto temp = std::make_unique<ListPatternLit>(); 
             temp->patterns = std::move($1);
@@ -470,43 +488,37 @@ list_pattern
         }
     ;
 
-string_lit
-    : STRING {$$ = str_to_chlist($1); $$->location = floc_to_loc(@1); };
-
-list_lit
-    : SQ_LBRA list_pattern_lit SQ_RBRA 
-        { 
-            auto temp = std::make_unique<ListLit>(); 
-            temp->elems = std::move($2); 
-            $$ = std::move(temp);
-
-            $$->location = floc_to_loc(@1);
-        };
-
-list_pattern_lit
-    : literal 
-        { 
-            $$ = std::vector<literal_ptr>{}; 
-            $$.push_back(std::move($1));
-        }
-    | list_pattern_lit COMMA literal
-        { 
-            $1.push_back(std::move($3));
-            $$ = std::move($1);
-        }
-    ;
-
-size_patterns
+list_vars
     : LABEL TSEP LABEL 
         { 
             $$ = std::vector<std::string>{};
             $$.push_back(std::move($1));
             $$.push_back(std::move($3)); 
         }
-    | size_patterns TSEP LABEL {
-        $1.push_back(std::move($3));
-        $$ = std::move($1);
-    }
+    | list_vars TSEP LABEL 
+        {
+            $1.push_back(std::move($3));
+            $$ = std::move($1);
+        }
+    ;
+
+struct_size_pattern
+    : LABEL C_LBRA struct_vars C_RBRA
+        {
+            auto temp = std::make_unique<StructPatternLit>();
+            temp->name = std::move($1);
+            temp->patterns = std::move($3);
+            $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
+        }
+    ;
+
+struct_vars
+    : LABEL{ $$ = std::vector<std::string>{}; $$.push_back(std::move($1));}
+    | NIL{ $$ = std::vector<std::string>{}; $$.push_back("");}
+    | struct_vars COMMA LABEL { $1.push_back(std::move($3)); $$ = std::move($1); }
+    | struct_vars COMMA NIL { $1.push_back(std::move("")); $$ = std::move($1); }
     ;
 
 return_expr
@@ -682,7 +694,7 @@ nominal_expr
 list_expr
     : empty_list { $$ = std::move($1); }
     | list_con { $$ = std::move($1); }
-    | string_lit { $$ = std::move($1); }
+    | string_expr { $$ = std::move($1); }
     ;
 
 empty_list

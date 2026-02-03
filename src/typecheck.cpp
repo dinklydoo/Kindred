@@ -4,27 +4,18 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <iostream>
 
 #define LOG(msg)\
     std::cout << msg << std::endl;
 
 void TypeChecker::typecheck(ModuleNode& node){
     node.accept(*this);
-    
-    if (errors.size() > 0){
-        for (auto err : errors){
-            std::cout << "Error (line: "+std::to_string(err.location.line)+" col: "+
-            std::to_string(err.location.col)+"): "<< err.message << std::endl;
-        }
-        std::cerr << "";
-        return;
-    }
+    errors.report_errors();
 }
 
 bool TypeChecker::push_var_safe(std::string label, type_ptr type, Source& loc){
     if (definitions.push_var(label, type) < 0){
-        redef_error(label, loc);
+        errors.redef_error(label, definitions.find_var(label), loc);
         return 0;
     }
     return 1;
@@ -58,101 +49,6 @@ bool is_arith(Type::Kind kind){
 
 bool is_error(type_ptr type){
     return (type->kind == Type::Kind::ERROR);
-}
-
-/* ============================================================================================================================================================
-
-                ERROR HANDLING LOGIC
-
- ============================================================================================================================================================ */
-
-void TypeChecker::push_error(std::string msg, SemanticError::Kind kind, Source& loc){
-    errors.push_back(SemanticError{kind, loc, msg});
-}
-
-std::string kind_to_string(Type::Kind kind){
-    switch(kind){
-        case Type::Kind::Enum : { return "enum"; }
-        case Type::Kind::Struct : { return "struct"; }
-        case Type::Kind::Func : { return "function"; }
-        default : return "variable";
-    }
-}
-
-std::string type_to_string(type_ptr type){
-    switch (type->kind){
-        case Type::Kind::Nominal :
-        case Type::Kind::Struct :
-        case Type::Kind::Enum : {
-            auto temp = std::static_pointer_cast<NominalType>(type);
-            return temp->name;
-        };
-        case Type::Kind::Func : {
-            auto temp = std::static_pointer_cast<FuncType>(type);
-            std::string ftype = "(";
-            for (type_ptr atype : temp->args){
-                ftype += type_to_string(atype) + ',';
-            }
-            ftype += ")->" + type_to_string(temp->ret);
-            return ftype;
-        }
-        case Type::Kind::List : {
-            auto temp = std::static_pointer_cast<ListType>(type);
-            std::string ltype = "[";
-            ltype += type_to_string(temp->elem);
-            ltype += ']';
-            return ltype;
-        }
-        case Type::Kind::Bool : return "bool";
-        case Type::Kind::Char : return "char";
-        case Type::Kind::Int : return "int";
-        case Type::Kind::Long : return "long";
-        case Type::Kind::Float : return "float";
-        case Type::Kind::Double : return "double";
-        default : return "T";
-    }
-}
-
-void TypeChecker::redef_error(std::string label, Source& loc){
-    type_ptr defined = definitions.find_var(label);
-    std::string defined_type = kind_to_string(defined->kind);
-    push_error(
-        "Redefinition of " + label + " conflicts with prior " + defined_type + " definition",
-        SemanticError::Kind::REDEF, loc
-    );
-}
-
-void TypeChecker::type_error(std::string message, ExpNode& node){
-    push_error(message, SemanticError::Kind::TYPE, node.location);
-    node.resolved_type = type_s.error_type();
-}
-
-void TypeChecker::access_error(std::string message, ExpNode& node){
-    push_error(message, SemanticError::Kind::ACCESS, node.location);
-    node.resolved_type = type_s.error_type();
-}
-
-void TypeChecker::arg_error(std::string message, ExpNode& node){
-    push_error(message, SemanticError::Kind::ARG, node.location);
-    node.resolved_type = type_s.error_type();
-}
-
-void TypeChecker::undef_error(std::string message, ExpNode& node){
-    push_error(message, SemanticError::Kind::UNDEF, node.location);
-    node.resolved_type = type_s.error_type();
-}
-
-void TypeChecker::reference_error(std::string label, ExpNode& node){
-    Type::Kind defined = definitions.find_var(label)->kind;
-    std::string def_str = kind_to_string(defined);
-
-    Type::Kind referenced = node.resolved_type->kind;
-    std::string ref_str = kind_to_string(referenced);
-    push_error(
-        "Reference to '" + label + "' as '" + ref_str + "' conflicts with prior definition as '" + def_str + "'",
-        SemanticError::Kind::REF, node.location
-    );
-    node.resolved_type = type_s.error_type();
 }
 
 /* ============================================================================================================================================================
@@ -254,7 +150,12 @@ void TypeChecker::visit( FuncDecl& node ){
 
 void TypeChecker::visit( EnumDecl& node){
     // error check definition name
-    type_ptr etype = type_s.declare_enum(node.name);
+    int numerable = 1;
+    std::vector<Enumerable> enumerables;
+    for (auto& ev : node.evar){
+        enumerables.push_back({ev, numerable++});
+    }
+    type_ptr etype = type_s.declare_enum(node.name, enumerables);
     for (auto& ev : node.evar){
         if (!push_var_safe(ev, etype, node.location)) return;
     }
@@ -272,7 +173,7 @@ void TypeChecker::visit( VarDecl& node){
     if (is_error(node.r_val->resolved_type)) return;
 
     if (!cast_fixed(node.type, node.r_val->resolved_type)){
-        type_error(
+        errors.type_error(
             "Variable " + node.name + " expects expression of type " + 
             type_to_string(node.type) + " but got expression of type " + 
             type_to_string(node.r_val->resolved_type) + " instead",*node.r_val
@@ -293,7 +194,7 @@ void TypeChecker::visit( ReturnNode& node){
 
     type_ptr rtype = typeprop.top_type();
     if (!cast_fixed(rtype, node.rexp->resolved_type)){
-        type_error(
+        errors.type_error(
             "Function expects return expression of type "
             +type_to_string(rtype)+" instead got "+
             type_to_string(node.rexp->resolved_type), node);
@@ -311,18 +212,21 @@ void TypeChecker::visit( CaseNode& node){
     typeprop.unprop_type();
 }
 
-
 void TypeChecker::visit(CaseBranchNode& node){
     definitions.push_scope();
     type_ptr exp = typeprop.top_type();
+    node.resolved_type = exp;
+    
     node.pattern->accept(*this);
 
     if (is_error(node.pattern->resolved_type)){ /*do nothing*/}
 
     else if (!cast_fixed(exp, node.pattern->resolved_type)){
-        type_error("Pattern matching requires pattern to share a type with match value", *node.pattern);
+        errors.type_error("Pattern matching requires pattern to share a type with match value", *node.pattern);
     }
     else {
+        node.pattern->resolved_type = exp;
+        
         // pop pattern type to reveal return type for return expr
         type_ptr pat_type = typeprop.unprop_type();
         node.body->accept(*this);
@@ -343,9 +247,8 @@ void TypeChecker::visit(GuardBranchNode& node){
     Type::Kind kind = node.match->resolved_type->kind;
 
     if (is_error(node.match->resolved_type)){ /*do nothing*/ }
-
     else if (kind != Type::Kind::Bool){
-        type_error("Guard Expression branch must be a boolean value", *node.match);
+        errors.type_error("Guard Expression branch must be a boolean value", *node.match);
     }
     else {
         node.body->accept(*this);
@@ -363,19 +266,19 @@ void TypeChecker::visit(UnaryNode& node){
     switch (node.op){
         case UnaryOp::BNOT : {
             if (kind != Type::Kind::Bool){
-                type_error("Logical Negation Operator '!' requires a bool operand", node);
+                errors.type_error("Logical Negation Operator '!' requires a bool operand", node);
             }
             return;
         }
         case UnaryOp::LNEG : {
             if (!is_arith_whole(kind)){
-                type_error("Bitwise Negation Operator '~' requires a char, int, long operand", node);
+                errors.type_error("Bitwise Negation Operator '~' requires a char, int, long operand", node);
             }
             return;
         }
         case UnaryOp::MINUS : {
             if (!is_arith(kind)){
-                type_error("Unary Minus Operator '-' requires numeric operand", node);
+                errors.type_error("Unary Minus Operator '-' requires numeric operand", node);
             }
             return;
         }
@@ -405,7 +308,7 @@ void TypeChecker::visit(BinaryNode& node){
         case BinaryOp::DIV : {
             if (op_token.empty()) op_token = '/';
             if (!is_arith(l_kind) || !is_arith(r_kind)){
-                type_error(std::string("Arithmetic operator '") + op_token + "' requires numeric operands", node);
+                errors.type_error(std::string("Arithmetic operator '") + op_token + "' requires numeric operands", node);
             }
             else node.resolved_type = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
             return;
@@ -418,7 +321,7 @@ void TypeChecker::visit(BinaryNode& node){
         case BinaryOp::MOD : {
             if (op_token.empty()) op_token = '%';
             if (!is_arith_whole(l_kind) || !is_arith_whole(r_kind)){
-                type_error(std::string("Arithmetic operator '") + op_token + "' requires whole numeric operands", node);
+                errors.type_error(std::string("Arithmetic operator '") + op_token + "' requires whole numeric operands", node);
             }
             else node.resolved_type = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
             return;
@@ -429,7 +332,7 @@ void TypeChecker::visit(BinaryNode& node){
         case BinaryOp::CLEQ : {
             if (op_token.empty()) op_token = "<=";
             if (!is_arith_whole(l_kind) || !is_arith_whole(r_kind)){
-                type_error(std::string("Comparative operator '") + op_token + "' requires numeric operands", node);
+                errors.type_error(std::string("Comparative operator '") + op_token + "' requires numeric operands", node);
             }
             else node.resolved_type = type_s.bool_type();
             return;
@@ -439,7 +342,7 @@ void TypeChecker::visit(BinaryNode& node){
             if (op_token.empty()) op_token = "!=";
             type_ptr casted;
             if (!(casted = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type))){
-                type_error(std::string("Equality operator '") + op_token + "' requires operands of same type (or castable)", node);
+                errors.type_error(std::string("Equality operator '") + op_token + "' requires operands of same type (or castable)", node);
             }
             else node.resolved_type = type_s.bool_type();
             return;
@@ -448,14 +351,14 @@ void TypeChecker::visit(BinaryNode& node){
         case BinaryOp::BOR : {
             if (op_token.empty()) op_token = "||";
             if (l_kind != Type::Kind::Bool || r_kind != l_kind){
-                type_error(std::string("Boolean operator '") + op_token + "' requires bool operands", node);
+                errors.type_error(std::string("Boolean operator '") + op_token + "' requires bool operands", node);
             }
             else node.resolved_type = type_s.bool_type();
             return;
         }
         case BinaryOp::CONCAT : {
             if (l_kind != Type::Kind::List && r_kind != Type::Kind::List){
-                type_error("List concatenation requires at least one list operand", node);
+                errors.type_error("List concatenation requires at least one list operand", node);
             }
             else {
                 if (node.l_exp->resolved_type == node.r_exp->resolved_type){
@@ -468,7 +371,7 @@ void TypeChecker::visit(BinaryNode& node){
                     internal = 
                         std::static_pointer_cast<ListType>(node.l_exp->resolved_type)->elem;
                     if (!(casted = cast_strongest(internal, node.r_exp->resolved_type))){
-                        type_error("List concatenation requires operands of the same element type", node);
+                        errors.type_error("List concatenation requires operands of the same element type", node);
                         return;
                     }
                     node.resolved_type = node.l_exp->resolved_type;
@@ -477,7 +380,7 @@ void TypeChecker::visit(BinaryNode& node){
                     internal =
                         std::static_pointer_cast<ListType>(node.r_exp->resolved_type)->elem;
                     if (!(casted = cast_strongest(internal, node.l_exp->resolved_type))){
-                        type_error("List concatenation requires operands of the same element type", node);
+                        errors.type_error("List concatenation requires operands of the same element type", node);
                         return;
                     }
                     node.resolved_type = node.r_exp->resolved_type;
@@ -487,11 +390,11 @@ void TypeChecker::visit(BinaryNode& node){
         }
         case BinaryOp::INDEX : {
             if (l_kind != Type::Kind::List){
-                type_error("List indexing requires left operand to be a list", node);
+                errors.type_error("List indexing requires left operand to be a list", node);
                 return;
             }          
             if (!is_arith_whole(r_kind)){
-                type_error("List concatenation requires numeric right operand (index)", node);
+                errors.type_error("List concatenation requires numeric right operand (index)", node);
                 return;
             }
             auto internal = 
@@ -513,7 +416,7 @@ void TypeChecker::visit(ListNode& node){
             return;
         }
         if (!(type = cast_strongest(type, elem->resolved_type))){
-            type_error(
+            errors.type_error(
                 "List constructor element has conflicting type\
                  with container at index " + std::to_string(i),node
             );
@@ -526,19 +429,22 @@ void TypeChecker::visit(ListNode& node){
 void TypeChecker::visit(StructNode& node){
     type_ptr defn = definitions.find_var(node.name);
     if (!defn){
-        undef_error("Reference to struct " + node.name + " is undefined", node);
+        errors.undef_error("Reference to struct " + node.name + " is undefined", node);
         return;
     }
     if (defn->kind != Type::Kind::Struct){
-        reference_error(node.name, node);
+        errors.reference_error(
+            node.name, definitions.find_var(node.name), node
+        );
         return;
     }
     auto struct_defn = std::static_pointer_cast<NominalType>(defn);
 
-    if (node.fields.size() != struct_defn->fields.size()){
-        access_error(
+    const std::vector<Field>& fields = struct_defn->get_fields();
+    if (node.fields.size() != fields.size()){
+        errors.access_error(
             "struct '" + node.name + "' expects "+ 
-            std::to_string(struct_defn->fields.size())+ 
+            std::to_string(fields.size())+ 
             " fields, instead got "+
             std::to_string(node.fields.size()), node
         );
@@ -554,9 +460,9 @@ void TypeChecker::visit(StructNode& node){
             return;
         }
 
-        auto correspondent = struct_defn->fields[i];
+        auto correspondent = fields[i];
         if (!cast_fixed(correspondent.type, fval->resolved_type)){
-            type_error(
+            errors.type_error(
                 "struct "+node.name+" with field "+correspondent.name
                 +"expects type "+type_to_string(correspondent.type)+" but got "
                 + type_to_string(fval->resolved_type), node
@@ -570,16 +476,16 @@ void TypeChecker::visit(StructNode& node){
 void TypeChecker::visit(CallNode& node){
     type_ptr defn = definitions.find_var(node.label);
     if (!defn){
-        undef_error("Reference to function " + node.label + " is undefined", node);
+        errors.undef_error("Reference to function " + node.label + " is undefined", node);
         return;
     }
     if (defn->kind != Type::Kind::Func){
-        reference_error(node.label, node);
+        errors.reference_error(node.label, definitions.find_var(node.label), node);
         return;
     }
     auto func_defn = std::static_pointer_cast<FuncType>(defn);
     if (node.params.size() != func_defn->args.size()){
-        arg_error(
+        errors.arg_error(
             "function "+node.label+" expects "+
             std::to_string(func_defn->args.size())+" arguments but got "+
             std::to_string(node.params.size())+" instead", node
@@ -598,7 +504,7 @@ void TypeChecker::visit(CallNode& node){
 
         auto expected = func_defn->args[i];
         if (!cast_fixed(expected, arg->resolved_type)){
-            type_error(
+            errors.type_error(
                 "function "+node.label+" expects an argument of type "
                 +type_to_string(expected)+" in position "+std::to_string(i+1)
                 +" but got an argument of "+type_to_string(arg->resolved_type)+" instead", node
@@ -617,7 +523,7 @@ void TypeChecker::visit(AccessNode& node){
     }
     type_ptr stype = node.struct_expr->resolved_type;
     if (stype->kind != Type::Kind::Struct){
-        type_error(
+        errors.type_error(
             "struct access requires l-val to be a struct type instead got "
             +type_to_string(stype), node
         );
@@ -625,13 +531,15 @@ void TypeChecker::visit(AccessNode& node){
     }
     auto sdefn = std::static_pointer_cast<NominalType>(stype);
     type_ptr ftype = nullptr;
-    for (auto field : sdefn->fields){
+    const std::vector<Field>& fields = sdefn->get_fields();
+
+    for (auto field : fields){
         if (field.name == node.field){
             ftype = field.type; break;
         }
     }
     if (!ftype){
-        access_error("struct "+sdefn->name+" has no field labelled "+node.field, node);
+        errors.access_error("struct "+sdefn->name+" has no field labelled "+node.field, node);
         return;
     }
     node.resolved_type = ftype;
@@ -640,7 +548,7 @@ void TypeChecker::visit(AccessNode& node){
 void TypeChecker::visit(NominalNode& node){
     type_ptr defn = definitions.find_var(node.label);
     if (!defn){
-        undef_error("undefined reference to nominal value (variable/enum) "+node.label, node);
+        errors.undef_error("undefined reference to nominal value (variable/enum) "+node.label, node);
         return;
     }
     node.resolved_type = defn;
@@ -666,7 +574,7 @@ void TypeChecker::visit( PrintNode& node){
 void TypeChecker::visit(EnumLit& node){
     type_ptr defn = definitions.find_var(node.elem);
     if (!defn){
-        undef_error("undefined reference to enumerator "+node.elem, node);
+        errors.undef_error("undefined reference to enumerator "+node.elem, node);
         return;
     }
     node.resolved_type = defn;
@@ -676,8 +584,16 @@ void TypeChecker::visit(DefaultLit& node){
     node.resolved_type = type_s.generic_type();
 }
 
+void TypeChecker::visit(ElseLit& node){
+    node.resolved_type = type_s.bool_type();
+}
+
 void TypeChecker::visit(NilLit& node){
     node.resolved_type = type_s.generic_type();
+}
+
+void TypeChecker::visit(EmptyLit& node){
+    node.resolved_type = type_s.list_type(type_s.generic_type());
 }
 
 void TypeChecker::visit(ListPatternLit& node){
@@ -702,21 +618,39 @@ void TypeChecker::visit(ListPatternLit& node){
     node.resolved_type = ptype;
 }
 
-void TypeChecker::visit(ListLit& node){
-    type_ptr expected = type_s.generic_type();
-    for (int i = 0; i < node.elems.size(); i++){
-        node.elems[i]->accept(*this);
-        type_ptr temp = cast_strongest(expected, node.elems[i]->resolved_type);
-        if (!temp){
-            type_error(
-                "List type mismatch, list literal expects type "+type_to_string(expected)+
-                " up to index "+std::to_string(i)+"but got type "+
-                type_to_string(node.elems[i]->resolved_type)+"instead",node
-            );
-        }
-        else expected = temp;
+void TypeChecker::visit(StructPatternLit& node){
+    type_ptr type = definitions.find_var(node.name);
+    nominal_ptr stype = std::static_pointer_cast<NominalType>(type);
+    std::vector<Field>& exp = stype->get_fields();
+
+    if (node.patterns.size() != exp.size()){
+        errors.access_error(
+            "struct '" + node.name + "' expects "+ 
+            std::to_string(exp.size())+ 
+            " fields, instead got "+
+            std::to_string(node.patterns.size()), node
+        );
+        return;
     }
-    node.resolved_type = type_s.list_type(expected);
+
+    for (int i = 0; i < node.patterns.size(); i++){
+        if (node.patterns[i] == ""){
+            if (exp[i].type->kind != Type::Kind::Struct){
+                errors.type_error(
+                    "nil value in field "+exp[i].name+" which expects\
+                     type "+type_to_string(exp[i].type), node
+                );
+                return;
+            }
+        }
+        else {
+            if (!push_var_safe(node.patterns[i], exp[i].type, node.location)){
+                node.resolved_type = type_s.error_type();
+                return;
+            }
+        }
+    }
+    node.resolved_type = stype;
 }
 
 void TypeChecker::visit(CharLit& node){
@@ -734,7 +668,11 @@ void TypeChecker::visit(FloatLit& node){
 
 // whole values can be semantically cast
 void TypeChecker::visit(IntLit& node){
-    if (node.value > INT_MAX || node.value < INT_MIN)
+    if (node.value > INT_MAX || node.value < INT_MIN){
         node.resolved_type = type_s.long_type();
-    else node.resolved_type = type_s.int_type();
+    }
+    else if (node.value > 127 || node.value < -128){
+        node.resolved_type = type_s.int_type();
+    }
+    else node.resolved_type = type_s.char_type();
 }
