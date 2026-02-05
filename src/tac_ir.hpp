@@ -8,20 +8,18 @@ struct Operand {
     int64_t value;
 
 private:
-    static int reg_count;
     Operand(Type type, int64_t val) : type(type), value(val) {};
 
 public:
-    Operand reg(){
-        if (!reg_count) reg_count = 0;
-        return Operand{ REG, reg_count++};
+    Operand reg(int64_t rc){
+        return { REG, rc};
     }
     Operand imm(int64_t val){
-        return Operand{IMM, val};
+        return {IMM, val};
     }
     Operand var(int64_t id){
         // convert var names to id values
-        return Operand{VAR, id};
+        return {VAR, id};
     }
     virtual ~Operand() = default;
 };
@@ -53,6 +51,10 @@ struct Instruction {
 };
 
 struct Block {
-    std::vector<Instruction> ins;
-    
+    int id;
+    std::vector<Instruction> ins;  
+};
+
+struct FunctionIR {
+    std::vector<Block> blocks;
 };

@@ -6,6 +6,8 @@
 #include <unordered_set>
 #include <stack>
 
+namespace fc {
+
 struct ExBlock { 
     bool ex = false; //exhausted flag
     bool contained = false;// pattern seen flag
@@ -125,3 +127,5 @@ struct FlowChecker : Visitor {
     void visit( ReadNode& node) override {};
     void visit( PrintNode& node) override {};
 };
+
+}

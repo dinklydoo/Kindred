@@ -31,6 +31,7 @@ add_executable(main
     src/semerror.cpp
     src/typecheck.cpp
     src/flowcheck.cpp
+    src/ir_lower.cpp
     ${BISON_Parser_OUTPUTS}
     ${FLEX_Lexer_OUTPUTS}
 )

@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <memory>
 
+using namespace fc;
+
 void FlowChecker::flowcheck( ModuleNode& node){
     node.accept(*this);
     warnings.report_warnings();

@@ -4,11 +4,13 @@
 #include "ast.hpp"
 #include "types.hpp"
 #include "visitor.hpp"
-#include <map>
+#include <unordered_map>
 #include <stack>
 #include <vector>
 
-using scope = std::map<std::string, type_ptr>;
+namespace tc {
+
+using scope = std::unordered_map<std::string, type_ptr>;
 
 struct TypeVarScope{
     std::vector<scope> stack;
@@ -122,3 +124,5 @@ struct TypeChecker : Visitor{
     
     bool push_var_safe(std::string label, type_ptr type, Source& loc);
 };
+
+}

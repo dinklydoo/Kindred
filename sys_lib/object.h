@@ -3,13 +3,13 @@
 
 #include <stdlib.h>
 
-struct Object {
+typedef struct object {
     int ref; // reference count
-    void* object;
-};
+    void* obj;
+} object;
 
-void decr_ref(struct Object* obj);
-void incr_ref(struct Object* obj);
-struct Object* allocate_obj(size_t size);
+void decr_obj(object* obj);
+void incr_obj(object* obj);
+object* allocate_obj(size_t size);
 
 #endif

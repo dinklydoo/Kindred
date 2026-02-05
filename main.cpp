@@ -1,6 +1,7 @@
-#include "flowcheck.hpp"
+#include "src/flowcheck.hpp"
 #include "parser.hpp"
 #include "src/typecheck.hpp"
+#include "src/ir_lower.hpp"
 #include <string>
 
 void yy::parser::error(const yy::location& loc,const std::string& msg) {
@@ -18,11 +19,14 @@ int main() {
   yy::parser parser;
   parser.parse();
 
-  TypeChecker& tc = TypeChecker::instance();
+  tc::TypeChecker& tc = tc::TypeChecker::instance();
   tc.typecheck(*module_node);
 
-  FlowChecker& fc = FlowChecker::instance();
+  fc::FlowChecker& fc = fc::FlowChecker::instance();
   fc.flowcheck(*module_node);
+
+  ir::IR_Lowerer& ir = ir::IR_Lowerer::instance();
+  ir.lower(*module_node);
 
   return 0;
 }

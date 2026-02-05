@@ -9,7 +9,7 @@
 struct Type {
     enum class Kind {
         Bool, Char, Int, Long, Float, Double,
-        List, Func, Struct, Enum, Nominal, 
+        List, Func, Struct, Enum, Nominal, Nil,
         ERROR, GENERIC // error and unit types
     };
     Kind kind;
@@ -29,6 +29,7 @@ struct DoubleType : Type { DoubleType() : Type(Kind::Double) {} };
 
 // erraneous type
 struct ErrorType : Type { ErrorType() : Type(Kind::ERROR) {} };
+struct NilType : Type { NilType() : Type(Kind::Nil) {} };
 struct GenericType : Type { GenericType() : Type(Kind::GENERIC) {} };
 
 // Structural types
@@ -51,7 +52,7 @@ struct Source {
 
 struct Enumerable{
     std::string label;
-    int id;
+    unsigned int id;
 };
 
 struct Field {
@@ -89,6 +90,7 @@ struct TypeSystem {
     type_ptr float_type()  { return primitive_type<FloatType>(); }
     type_ptr double_type() { return primitive_type<DoubleType>(); }
     type_ptr error_type() { return primitive_type<ErrorType>(); }
+    type_ptr nil_type() { return primitive_type<NilType>(); }
     type_ptr generic_type() { return primitive_type<GenericType>(); }
 
     type_ptr list_type(type_ptr elem) {

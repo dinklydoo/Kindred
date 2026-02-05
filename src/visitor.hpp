@@ -2,7 +2,7 @@
 #include "ast.hpp"
 
 struct Visitor {
-    virtual ~Visitor() = default;  // ← THIS LINE
+    virtual ~Visitor() = default;
 
     virtual void visit( IntLit& node) =0;
     virtual void visit( FloatLit& node) =0;

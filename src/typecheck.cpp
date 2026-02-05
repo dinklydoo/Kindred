@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+using namespace tc;
+
 #define LOG(msg)\
     std::cout << msg << std::endl;
 
@@ -80,6 +82,9 @@ int binding_strength(type_ptr tp){
 
 // If a cast is impossible returns nullptr
 type_ptr TypeChecker::cast_strongest(type_ptr a, type_ptr b){
+    if (a->kind == Type::Kind::Nil && b->kind == Type::Kind::Struct) return b;
+    if (b->kind == Type::Kind::Nil && a->kind == Type::Kind::Struct) return a;
+
     // recursively cast for list types
     if (a->kind == Type::Kind::List && b->kind == Type::Kind::List){
         auto al = std::static_pointer_cast<ListType>(a);
@@ -150,7 +155,7 @@ void TypeChecker::visit( FuncDecl& node ){
 
 void TypeChecker::visit( EnumDecl& node){
     // error check definition name
-    int numerable = 1;
+    unsigned int numerable = 1;
     std::vector<Enumerable> enumerables;
     for (auto& ev : node.evar){
         enumerables.push_back({ev, numerable++});
@@ -589,7 +594,7 @@ void TypeChecker::visit(ElseLit& node){
 }
 
 void TypeChecker::visit(NilLit& node){
-    node.resolved_type = type_s.generic_type();
+    node.resolved_type = type_s.nil_type();
 }
 
 void TypeChecker::visit(EmptyLit& node){

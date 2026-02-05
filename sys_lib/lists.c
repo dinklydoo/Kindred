@@ -1,130 +1,69 @@
 #include "lists.h"
-#include "object.h"
-#include <stdlib.h>
-#include <stdio.h>
 
-// construct a new list
-// assert : len > 0
-struct list_node* allocate_dyn_list(size_t elem, int len){
-    struct list_node* head = malloc(sizeof(struct list_node));
-    head->ref = 1;
-    struct list_node* curr = head;
-    for (int i = 1; i < len; i++){
-        struct list_node* temp = malloc(sizeof(struct list_node));
-        temp->ref = 1;
-        temp->elem = NULL;
-        temp->next = NULL;
+#include "mem.h"
 
-        curr->next = temp;
-        curr = temp;
+list_node* cons(void* elem, int type, list_node* tail){
+    list_node* n = (list_node*)malloc(sizeof(list_node));
+    n->ref = 1;
+    n->elem = elem;
+    n->type = type;
+    n->next = tail;
+
+    incr_ref(elem, type);
+    if (tail) tail->ref++;
+
+    return n;
+}
+
+void decr_dyn_list(list_node* n){
+    if (!n) return;
+
+    if (--n->ref > 0)
+        return;
+
+    decr_ref(n->elem, n->type);
+    decr_dyn_list(n->next);
+    free(n);
+}
+
+void incr_dyn_list(list_node* n){
+    if (!n) return;
+    n->ref++;
+    incr_dyn_list(n->next);
+}
+
+list_node* remove_at(list_node* list, int index){
+    if (!list) abort();
+    if (index == 0)
+        return list->next;  // share tail
+
+    return cons(
+        list->elem,
+        list->type,
+        remove_at(list->next, index - 1)
+    );
+}
+
+list_node* append(list_node* list, void* elem, int type){
+    if (!list)
+        return cons(elem, type, NULL);
+
+    return cons(
+        list->elem,
+        list->type,
+        append(list->next, elem, type)
+    );
+}
+
+list_node* concat(list_node* a, list_node* b){
+    if (!a) {
+        if (b) b->ref++;
+        return b;
     }
-    return head;
+
+    return cons(
+        a->elem,
+        a->type,
+        concat(a->next, b)
+    );
 }
-
-struct list_node* index_dyn_node(struct list_node* head, int index){
-    if (head == NULL){
-        fprintf(stderr, "Error: List index %d out of bounds", index);
-        exit(1);
-    }
-    struct list_node* curr = head;
-    for (int i = 0; i < index; i++){
-        if (!curr->next){
-            fprintf(stderr, "Error: List index %d out of bounds", index);
-            exit(1);
-        }
-        curr = curr->next;
-    }
-    return curr;
-}
-
-struct Object* index_dyn_list(struct list_node* head, int index){
-    struct list_node* temp = index_dyn_node(head, index);
-    return temp->elem;
-}
-
-void decr_dyn_index(struct list_node* head, int index){
-    struct list_node* curr = head;
-    curr->ref--;
-    if (curr->ref == 0){
-
-        if (index > 0){
-            struct list_node* prev = index_dyn_node(head, index-1);
-            prev->next = curr->next;
-        }
-        decr_ref(curr->elem);
-        free(curr);
-    }
-}
-
-void decr_dyn_list(struct list_node* head){
-    struct list_node* prev = NULL;
-    struct list_node* curr = head;
-    while (curr){
-        curr->ref--;
-        if (curr->ref == 0){
-            if (prev) prev->next = curr->next;
-            struct list_node* temp = curr;
-            curr = curr->next;
-
-            decr_ref(temp->elem);
-            free(temp);
-        }
-        else {
-            prev = curr;
-            curr = curr->next;
-        }
-    }
-}
-
-
-void incr_dyn_list(struct list_node* head){
-    struct list_node* curr = head;
-    while (curr){
-        curr->ref++;
-        curr = curr->next;
-    }
-}
-
-struct list_node* copy_dyn_list(struct list_node* src){
-    if (!src) return NULL;
-
-    struct list_node* curr = src;
-
-    struct list_node* head = NULL;
-    struct list_node* prev = NULL;
-    while (curr){
-        struct list_node* temp = malloc(sizeof(struct list_node));
-        if (!head) head = temp;
-
-        temp->elem = curr->elem;
-        temp->ref = 1;
-        temp->next = NULL;
-        
-        if (prev) prev->next = temp;
-        prev = temp;
-    }
-    return head;
-}
-
-struct list_node* dyn_list_concat(struct list_node* head, struct list_node* tail){
-    if (!head) return copy_dyn_list(tail);
-
-    struct list_node* h_copy = copy_dyn_list(head);
-    struct list_node* curr = h_copy;
-    while (curr->next) curr = curr->next;
-    curr->next = tail;
-
-    incr_dyn_list(tail);
-    return h_copy;
-}
-
-// static list for later optimizations
-
-// struct Object* allocate_stc_list(size_t elem, int len){
-//     struct Object* container = allocate_obj(elem * len);
-//     return container;
-// }
-
-
-
-

@@ -225,6 +225,30 @@ src/flowcheck.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/flowcheck.cpp.s
 .PHONY : src/flowcheck.cpp.s
 
+src/ir_lower.o: src/ir_lower.cpp.o
+.PHONY : src/ir_lower.o
+
+# target to build an object file
+src/ir_lower.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/ir_lower.cpp.o
+.PHONY : src/ir_lower.cpp.o
+
+src/ir_lower.i: src/ir_lower.cpp.i
+.PHONY : src/ir_lower.i
+
+# target to preprocess a source file
+src/ir_lower.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/ir_lower.cpp.i
+.PHONY : src/ir_lower.cpp.i
+
+src/ir_lower.s: src/ir_lower.cpp.s
+.PHONY : src/ir_lower.s
+
+# target to generate assembly for a file
+src/ir_lower.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/ir_lower.cpp.s
+.PHONY : src/ir_lower.cpp.s
+
 src/semerror.o: src/semerror.cpp.o
 .PHONY : src/semerror.o
 
@@ -318,6 +342,9 @@ help:
 	@echo "... src/flowcheck.o"
 	@echo "... src/flowcheck.i"
 	@echo "... src/flowcheck.s"
+	@echo "... src/ir_lower.o"
+	@echo "... src/ir_lower.i"
+	@echo "... src/ir_lower.s"
 	@echo "... src/semerror.o"
 	@echo "... src/semerror.i"
 	@echo "... src/semerror.s"
