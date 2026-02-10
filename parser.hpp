@@ -453,6 +453,7 @@ namespace yy {
       char dummy15[sizeof (list_ptr)];
 
       // literal
+      // size_pattern
       // pattern
       // enum_lit
       // list_pattern
@@ -754,49 +755,50 @@ namespace yy {
         S_patterns = 96,                         // patterns
         S_pattern_branch = 97,                   // pattern_branch
         S_literal = 98,                          // literal
-        S_pattern = 99,                          // pattern
-        S_enum_lit = 100,                        // enum_lit
-        S_list_pattern = 101,                    // list_pattern
-        S_string_expr = 102,                     // string_expr
-        S_list_size_pattern = 103,               // list_size_pattern
-        S_list_vars = 104,                       // list_vars
-        S_struct_size_pattern = 105,             // struct_size_pattern
-        S_struct_vars = 106,                     // struct_vars
-        S_return_expr = 107,                     // return_expr
-        S_helpers = 108,                         // helpers
-        S_helper_expr = 109,                     // helper_expr
-        S_print_expr = 110,                      // print_expr
-        S_read_expr = 111,                       // read_expr
-        S_assign_expr = 112,                     // assign_expr
-        S_int_lit = 113,                         // int_lit
-        S_float_lit = 114,                       // float_lit
-        S_bool_lit = 115,                        // bool_lit
-        S_char_lit = 116,                        // char_lit
-        S_bool_op = 117,                         // bool_op
-        S_comp_op = 118,                         // comp_op
-        S_bitwise_op = 119,                      // bitwise_op
-        S_shift_op = 120,                        // shift_op
-        S_additive_op = 121,                     // additive_op
-        S_mult_op = 122,                         // mult_op
-        S_unary_op = 123,                        // unary_op
-        S_nominal_expr = 124,                    // nominal_expr
-        S_list_expr = 125,                       // list_expr
-        S_empty_list = 126,                      // empty_list
-        S_list_con = 127,                        // list_con
-        S_expr_list = 128,                       // expr_list
-        S_call_expr = 129,                       // call_expr
-        S_struct_expr = 130,                     // struct_expr
-        S_value_expr = 131,                      // value_expr
-        S_bool_expr = 132,                       // bool_expr
-        S_comp_expr = 133,                       // comp_expr
-        S_bitwise_expr = 134,                    // bitwise_expr
-        S_shift_expr = 135,                      // shift_expr
-        S_additive_expr = 136,                   // additive_expr
-        S_mult_expr = 137,                       // mult_expr
-        S_pow_expr = 138,                        // pow_expr
-        S_unary_expr = 139,                      // unary_expr
-        S_postfix_expr = 140,                    // postfix_expr
-        S_literal_expr = 141                     // literal_expr
+        S_size_pattern = 99,                     // size_pattern
+        S_pattern = 100,                         // pattern
+        S_enum_lit = 101,                        // enum_lit
+        S_list_pattern = 102,                    // list_pattern
+        S_string_expr = 103,                     // string_expr
+        S_list_size_pattern = 104,               // list_size_pattern
+        S_list_vars = 105,                       // list_vars
+        S_struct_size_pattern = 106,             // struct_size_pattern
+        S_struct_vars = 107,                     // struct_vars
+        S_return_expr = 108,                     // return_expr
+        S_helpers = 109,                         // helpers
+        S_helper_expr = 110,                     // helper_expr
+        S_print_expr = 111,                      // print_expr
+        S_read_expr = 112,                       // read_expr
+        S_assign_expr = 113,                     // assign_expr
+        S_int_lit = 114,                         // int_lit
+        S_float_lit = 115,                       // float_lit
+        S_bool_lit = 116,                        // bool_lit
+        S_char_lit = 117,                        // char_lit
+        S_bool_op = 118,                         // bool_op
+        S_comp_op = 119,                         // comp_op
+        S_bitwise_op = 120,                      // bitwise_op
+        S_shift_op = 121,                        // shift_op
+        S_additive_op = 122,                     // additive_op
+        S_mult_op = 123,                         // mult_op
+        S_unary_op = 124,                        // unary_op
+        S_nominal_expr = 125,                    // nominal_expr
+        S_list_expr = 126,                       // list_expr
+        S_empty_list = 127,                      // empty_list
+        S_list_con = 128,                        // list_con
+        S_expr_list = 129,                       // expr_list
+        S_call_expr = 130,                       // call_expr
+        S_struct_expr = 131,                     // struct_expr
+        S_value_expr = 132,                      // value_expr
+        S_bool_expr = 133,                       // bool_expr
+        S_comp_expr = 134,                       // comp_expr
+        S_bitwise_expr = 135,                    // bitwise_expr
+        S_shift_expr = 136,                      // shift_expr
+        S_additive_expr = 137,                   // additive_expr
+        S_mult_expr = 138,                       // mult_expr
+        S_pow_expr = 139,                        // pow_expr
+        S_unary_expr = 140,                      // unary_expr
+        S_postfix_expr = 141,                    // postfix_expr
+        S_literal_expr = 142                     // literal_expr
       };
     };
 
@@ -919,6 +921,7 @@ namespace yy {
         break;
 
       case symbol_kind::S_literal: // literal
+      case symbol_kind::S_size_pattern: // size_pattern
       case symbol_kind::S_pattern: // pattern
       case symbol_kind::S_enum_lit: // enum_lit
       case symbol_kind::S_list_pattern: // list_pattern
@@ -1590,6 +1593,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_literal: // literal
+      case symbol_kind::S_size_pattern: // size_pattern
       case symbol_kind::S_pattern: // pattern
       case symbol_kind::S_enum_lit: // enum_lit
       case symbol_kind::S_list_pattern: // list_pattern
@@ -2914,7 +2918,7 @@ switch (yykind)
     // number is the opposite.  If YYTABLE_NINF, syntax error.
     static const unsigned char yytable_[];
 
-    static const short yycheck_[];
+    static const unsigned char yycheck_[];
 
     // YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
     // state STATE-NUM.
@@ -3157,7 +3161,7 @@ switch (yykind)
     enum
     {
       yylast_ = 248,     ///< Last index in yytable_.
-      yynnts_ = 76,  ///< Number of nonterminal symbols.
+      yynnts_ = 77,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
 
@@ -3315,6 +3319,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_literal: // literal
+      case symbol_kind::S_size_pattern: // size_pattern
       case symbol_kind::S_pattern: // pattern
       case symbol_kind::S_enum_lit: // enum_lit
       case symbol_kind::S_list_pattern: // list_pattern
@@ -3522,6 +3527,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_literal: // literal
+      case symbol_kind::S_size_pattern: // size_pattern
       case symbol_kind::S_pattern: // pattern
       case symbol_kind::S_enum_lit: // enum_lit
       case symbol_kind::S_list_pattern: // list_pattern
@@ -3679,7 +3685,7 @@ switch (yykind)
 
 #line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
 } // yy
-#line 3683 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
+#line 3689 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
 
 
 

@@ -16,11 +16,13 @@ struct ASTNode{
 
 struct ExpNode : ASTNode{
     type_ptr resolved_type;
+    virtual bool is_literal() { return false; }
 };
 
 struct LiteralNode : ExpNode{
     public: 
         virtual ~LiteralNode() = default;
+        bool is_literal() override { return true; }
 };
     
 struct DeclNode : ASTNode {
@@ -92,6 +94,7 @@ struct NominalNode : ExpNode {
 struct AccessNode : ExpNode {
     expr_ptr struct_expr;
     std::string field;
+    std::string sn;
     public: virtual void accept(Visitor& v) override;
 };
 
@@ -112,6 +115,7 @@ enum BinaryOp {
     BAND, BOR, // boolean
     CGT, CLT, CGEQ, CLEQ, CEQ, CNEQ, // comparitive
     CONCAT, INDEX, // list based
+    APPEND, PREPEND
 };
 
 struct BinaryNode : ExpNode{
@@ -124,12 +128,16 @@ struct BinaryNode : ExpNode{
 struct CallNode : ExpNode {
     std::string label;
     std::vector<expr_ptr> params;
+
+    std::vector<type_ptr> ptypes;
     public: virtual void accept(Visitor& v) override;
 };
 
 struct StructNode : ExpNode {
     std::string name;
     std::vector<expr_ptr> fields;
+
+    std::vector<type_ptr> ftypes;
     public: virtual void accept(Visitor& v) override;
 };
 
@@ -162,6 +170,7 @@ struct CaseBranchNode : ExpNode {
     literal_ptr pattern;
     prog_ptr body;
     bool reachable = true;
+    bool pattern_type; // struct or list pattern
     public: virtual void accept(Visitor& v) override;
 };
 
@@ -195,6 +204,7 @@ struct ListNode : ExpNode {
 struct StructDecl : DeclNode{
     std::string name;
     std::vector<Field> fields;
+
     public: virtual void accept(Visitor& v) override;
 };
 

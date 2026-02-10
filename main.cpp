@@ -22,11 +22,17 @@ int main() {
   tc::TypeChecker& tc = tc::TypeChecker::instance();
   tc.typecheck(*module_node);
 
+  std::cout << "[Kindred Compiler] : Typecheck Passed\n";
+
   fc::FlowChecker& fc = fc::FlowChecker::instance();
   fc.flowcheck(*module_node);
+
+  std::cout << "[Kindred Compiler] : Flowcheck Passed\n";
 
   ir::IR_Lowerer& ir = ir::IR_Lowerer::instance();
   ir.lower(*module_node);
 
+  std::cout << "[Kindred Compiler] : IR Generated\n";
+  ir.print_ir();
   return 0;
 }

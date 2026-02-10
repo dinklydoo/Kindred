@@ -2,6 +2,7 @@
 #define STRUCTS_H
 
 #include <stdlib.h>
+#include <memory.h>
 
 typedef struct struct_node {
     int ref;
@@ -12,6 +13,7 @@ typedef struct struct_node {
 typedef struct field_data {
     int type;
     size_t offset; // offset from payload base
+    size_t size;
 } field_data;
 
 typedef struct struct_layout {
@@ -25,5 +27,6 @@ void decr_struct(struct_node* ptr);
 void incr_struct(struct_node* ptr);
 
 void* access_field(struct_node* ptr, int field_id);
+bool struct_equals(struct_node* a, struct_node* b);
 
 #endif

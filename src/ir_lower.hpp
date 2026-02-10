@@ -1,22 +1,34 @@
 #include "types.hpp"
 #include "visitor.hpp"
 #include "tac_ir.hpp"
+#include <string>
 #include <unordered_map>
 #include <stack>
+
 namespace ir {
 
 using scope = std::unordered_map<std::string, unsigned int>;
-using function_map = std::unordered_map<std::string, std::vector<int>>;
-using struct_map = std::unordered_map<std::string, scope>;
+using label = std::unordered_map<std::string, std::string>; // map names to labels
+using function_map = std::unordered_map<std::string, label>; // map function names to asm labels
+using struct_map = std::unordered_map<std::string, scope>; // map struct fields and enumerables to id's
 
 struct FunctionMap {
     function_map mapping;
+    void add_mapping(std::string fn, std::string src, std::string lab){ mapping[fn][src] = lab; }
 };
 
+/*
+    Map constructors (structs/enums) to identifiers
+    - Enums are enumerated from 1...n in order of declaration
+    - Fields are indexed from 0 ... n-1 in order of declaration
+    ( Fields are indexed as we call them by index in structs.c )
+*/
 struct StructMap {
     struct_map mapping;
+    std::unordered_map<std::string, unsigned int> struct_id;
 
     void add_struct(std::string sn, std::vector<Field>& fields){
+        struct_id.emplace(sn, struct_id.size());
         scope temp = {};
         for (Field& f : fields){
             temp.emplace(f.name, temp.size());
@@ -36,22 +48,29 @@ struct StructMap {
     unsigned int get_field_id(std::string sn, std::string field){
         return mapping[sn][field];
     }
-    int struct_count(){ return mapping.size(); }
+    unsigned int get_struct_id(std::string sn){
+        return struct_id[sn];
+    }
+    int struct_count(){ return struct_id.size(); }
 };
 
+/*
+    Map variables to identifiers,
+    
+
+*/
 struct IDVarScope {
     std::vector<scope> stack;
-    static unsigned int ident_count;
+    unsigned int ident_count = 0;
 
     unsigned int get_ident(std::string label){
-        for (scope& s : stack){
-            if (s.contains(label)) return s[label];
+        for (auto it = stack.rbegin(); it != stack.rend(); it++){
+            if (it->contains(label)) return (*it)[label];
         }
         scope& top = stack.back();
         top[label] = ident_count++;
         return top[label];
     }
-
     void push_scope(){ stack.emplace_back(); }
     void pop_scope() { stack.pop_back(); }
 };
@@ -60,12 +79,65 @@ struct Closure {
     // track which parameters must be heap allocated for higher order functionality
 };
 
-struct FunctionIRBuilder {
-    static int function_count;
-    int block_count;
-
+struct ConsFunctionIR {
     FunctionIR function_ir;
+    int function_id;
+    int child_count = 0;
+    int reg_count = 0;
+    int block_count = 0;
+    int case_count = 0;
     std::stack<Operand> op_stack;
+    std::stack<std::string> label_stack;
+
+    void push_instruction(Instruction ins){ function_ir.blocks.back().ins.push_back(ins); }
+    void push_operand(Operand op){ op_stack.push(op); }
+    Operand get_register(){ return Operand::reg(reg_count++); }
+    Operand pop_operand(){ Operand temp = op_stack.top(); op_stack.pop(); return temp; }
+
+    std::string pop_label(){ std::string temp = label_stack.top(); label_stack.pop(); return temp; }
+    void push_block(){ function_ir.blocks.emplace_back(); block_count++; }
+    Block& get_block(){ return function_ir.blocks.back(); }
+};
+
+/*
+    Main function builder, for each function declaration
+    we must construct its respective IR
+
+*/
+struct FunctionIRBuilder {
+    int top_function_count = 0; // top level function count
+    int scratch_label_count = 0;
+
+    std::vector<ConsFunctionIR> stack;
+
+    FunctionIR& top_function(){ return stack.back().function_ir; }
+    void pop_function(){ stack.pop_back(); }
+    ConsFunctionIR& top_constructor(){ return stack.back(); }
+    void push_function(){
+        int id = 1;
+        if (!stack.empty()) id = ++top_constructor().child_count;
+        else top_function_count++;
+        stack.emplace_back();
+        top_constructor().function_id = id;
+
+        top_constructor().push_block();
+    }
+    std::string get_block_label(){ // meaningful block labels
+        if (stack.empty()) return "早上好中国， 今天我要冰淇凌， 我很喜欢吃冰淇凌";
+        std::string lab;
+        lab +=".L_F"+std::to_string(top_function_count);
+        for (int i = 0; i < stack.size(); i++){
+            lab +='_'+std::to_string(stack[i].function_id);
+        }
+        lab +="_B"+std::to_string(top_constructor().block_count);
+        return lab;
+    }
+    std::string get_scratch_label(){ return ".L_"+std::to_string(scratch_label_count++); }
+
+    std::string get_case_label(){
+        if (stack.empty()) return "早上好中国， 今天我要冰淇凌， 我很喜欢吃冰淇凌";
+        return get_block_label()+"_case"+std::to_string(top_constructor().case_count++)+'_';
+    }
 };
 
 struct IR_Lowerer : Visitor {
@@ -85,42 +157,72 @@ struct IR_Lowerer : Visitor {
     StructMap structInfo;
 
     std::vector<FunctionIR> IRprogram;
+    int global_blocks = 0;
+    std::unordered_map<std::string, int> JMPtable;
 
     void lower( ModuleNode& node );
     void generate_struct_file();
     void close_struct_file();
 
-    void visit( VarDecl& node) override {};
+    void cast_operand( Operand target, type_ptr fix, type_ptr cast );
+    void op_equals( Operand ptr1, Operand ptr2, type_ptr type);
+    void list_equals( Operand ptr1, Operand ptr2, type_ptr type);
+    void struct_equals( Operand ptr1, Operand ptr2, type_ptr type);
+    void increase_ref( Operand ptr, type_ptr type);
+    void generate_node( Operand elem, type_ptr ltype, type_ptr type);
+
+    void short_and( BinaryNode& );
+    void short_or( BinaryNode& );
+
+    void list_pattern_vars(LiteralNode& node);
+    void struct_pattern_vars(LiteralNode& node);
+
+    // visitor boilerplate
+    void visit( VarDecl& node) override ;
     void visit( FuncDecl& node) override ;
     void visit( EnumDecl& node) override ;
     void visit( StructDecl& node) override ;
-    void visit( UnaryNode& node) override {};
-    void visit( BinaryNode& node) override {};
-    void visit( CallNode& node) override {};
-    void visit( StructNode& node) override {};
-    void visit( AccessNode& node) override {};
-    void visit( NominalNode& node) override {};
-    void visit( CharLit& node) override {};
-    void visit( IntLit& node) override {};
-    void visit( FloatLit& node) override {};
-    void visit( BoolLit& node) override {};
-    void visit( ListPatternLit& node) override {};
-    void visit( StructPatternLit& node) override {};
-    void visit( EnumLit& node) override {};
-    void visit( DefaultLit& node) override {};
-    void visit( ElseLit& node) override {};
-    void visit( NilLit& node) override{};
-    void visit( EmptyLit& node) override{};
-    void visit( ReturnNode& node) override {};
-    void visit( CaseNode& node) override{};
-    void visit( CaseBranchNode& node) override{};
-    void visit( GuardNode& node) override{};
-    void visit( GuardBranchNode& node) override{};
-    void visit( ListNode& node) override {};
-    void visit( ProgramNode& node) override{};
+    void visit( UnaryNode& node) override ;
+    void visit( BinaryNode& node) override ;
+    void visit( CallNode& node) override ;
+    void visit( StructNode& node) override ;
+    void visit( AccessNode& node) override ;
+    void visit( NominalNode& node) override ;
+    void visit( CharLit& node) override ;
+    void visit( IntLit& node) override ;
+    void visit( FloatLit& node) override ;
+    void visit( BoolLit& node) override ;
+    void visit( EmptyLit& node) override ;
+    void visit( ListPatternLit& node) override ;
+    void visit( NilLit& node) override ;
+    void visit( StructPatternLit& node) override ;
+    void visit( EnumLit& node) override ;
+    void visit( DefaultLit& node) override ;
+    void visit( ElseLit& node) override ;
+    void visit( ReturnNode& node) override ;
+    void visit( CaseNode& node) override ;
+    void visit( CaseBranchNode& node) override ;
+    void visit( GuardNode& node) override ;
+    void visit( GuardBranchNode& node) override ;
+    void visit( ListNode& node) override ;
+    void visit( ProgramNode& node) override ;
     void visit( ModuleNode& node) override;
     void visit( ReadNode& node) override {};
     void visit( PrintNode& node) override {};
+
+    void print_ir(){
+        for (FunctionIR& ir : IRprogram){
+            ir.print_ir();
+            std::cout << '\n';
+        }
+    }
+
+    void gen_block(std::string label){
+        ConsFunctionIR& cons = builder.top_constructor();
+        cons.push_block();
+        JMPtable[label] = ++global_blocks;
+        cons.push_instruction({Operation::LABEL, DataType::EMPTY, {}, {}, {}, label});
+    }
 };
 
 }

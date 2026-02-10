@@ -1,5 +1,6 @@
 #include "structs.h"
 #include "mem.h"
+#include "lists.h"
 
 extern const struct_layout STRUCT_DATA[];
 
@@ -9,6 +10,7 @@ struct_node* allocate_struct(int struct_id){
     node->struct_id = struct_id;
     node->ref = 1;
     node->payload = malloc(layout.payload_size);
+    memset(node->payload, 0, layout.payload_size);
 
     return node;
 }
@@ -43,4 +45,27 @@ void* access_field(struct_node* ptr, int field_id){
     payload_ptr += fd.offset;
     
     return (void*)payload_ptr;
+}
+
+bool struct_equals(struct_node *a, struct_node *b){
+    if (a==b) return true;
+
+    struct_layout layout = STRUCT_DATA[a->struct_id];
+
+    for (int i = 0; i < layout.field_count; i++){
+        field_data fd = layout.fields[i];
+        void* a_field = (char*)a->payload + fd.offset;
+        void* b_field = (char*)b->payload + fd.offset;
+
+        if (fd.type == LITERAL){
+            unsigned char* a_elem = (unsigned char*)a_field;
+            unsigned char* b_elem = (unsigned char*)b_field;
+            for (int j = 0; j < fd.size; j++){
+                if (*a_elem != *b_elem) return false;
+            }
+        }
+        else if (fd.type == STRUCT){ if (!struct_equals((struct_node*)a_field, (struct_node*)b_field)) return false; }
+        else { if (!list_equals((list_node*)a_field, (list_node*)b_field)) return false; }
+    }
+    return true;
 }

@@ -121,6 +121,7 @@ struct TypeChecker : Visitor{
 
     type_ptr cast_strongest(type_ptr a, type_ptr b);
     type_ptr cast_fixed(type_ptr fix, type_ptr castable);
+    bool type_equal(type_ptr a, type_ptr b);
     
     bool push_var_safe(std::string label, type_ptr type, Source& loc);
 };

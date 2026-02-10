@@ -128,6 +128,7 @@
 %type <literal_ptr> pattern;
 %type <literal_ptr> list_pattern;
 %type <literal_ptr> list_size_pattern;
+%type <literal_ptr> size_pattern
 %type <std::vector<std::string>> list_vars;
 
 %type <literal_ptr> struct_size_pattern
@@ -431,6 +432,16 @@ pattern_branch
         {
             $$ = std::make_unique<CaseBranchNode>();
             $$->pattern = std::move($1);
+            $$->pattern_type = false;
+            $$->body = std::move($3);
+
+            $$->location = floc_to_loc(@1);
+        }
+    | size_pattern ARROW program
+        {
+            $$ = std::make_unique<CaseBranchNode>();
+            $$->pattern = std::move($1);
+            $$->pattern_type = true;
             $$->body = std::move($3);
 
             $$->location = floc_to_loc(@1);
@@ -446,10 +457,12 @@ literal
     | list_pattern { $$ = std::move($1); }
     ;
 
+size_pattern
+    : list_size_pattern { $$ = std::move($1); }
+    | struct_size_pattern { $$ = std::move($1); }
+
 pattern
     : literal { $$ = std::move($1); }
-    | list_size_pattern { $$ = std::move($1); }
-    | struct_size_pattern { $$ = std::move($1); }
     | DEFAULT { $$ = std::make_unique<DefaultLit>(); $$->location = floc_to_loc(@1);}
     | NIL { $$ = std::make_unique<NilLit>(); $$->location = floc_to_loc(@1);}
     ;

@@ -116,7 +116,7 @@ void ErrorList::report_errors(){
             std::to_string(err.location.col)+"): "<< err.message << std::endl;
         }
         std::cerr << std::endl; // flush buffer
-        return;
+        exit(1);
     }
 }
 

@@ -8,6 +8,10 @@ struct Tree (
     val : int
 )
 
+func list_check(a: [int], b: [int]): int
+    c: [int] = []++a++b
+    return 0
+
 func get_val(node: Tree): int
     mark node of:
         nil => return 0,
@@ -16,7 +20,7 @@ func get_val(node: Tree): int
 
 func factorial(n: int): int
     case of:
-        | (n > 1) => return n * factorial(n-1),
+        | (n > 1 && n < 10) => return n * factorial(n-1),
         | else => return 1
     ;
 

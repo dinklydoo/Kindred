@@ -85,7 +85,7 @@ type_ptr TypeChecker::cast_strongest(type_ptr a, type_ptr b){
     if (a->kind == Type::Kind::Nil && b->kind == Type::Kind::Struct) return b;
     if (b->kind == Type::Kind::Nil && a->kind == Type::Kind::Struct) return a;
 
-    // recursively cast for list types
+    // recursively cast for list types (UNUSED)
     if (a->kind == Type::Kind::List && b->kind == Type::Kind::List){
         auto al = std::static_pointer_cast<ListType>(a);
         auto bl = std::static_pointer_cast<ListType>(b);
@@ -113,6 +113,24 @@ type_ptr TypeChecker::cast_strongest(type_ptr a, type_ptr b){
 type_ptr TypeChecker::cast_fixed(type_ptr fix, type_ptr castable){
     if (fix == cast_strongest(fix, castable)) return fix;
     return nullptr;
+}
+
+bool TypeChecker::type_equal(type_ptr a, type_ptr b){
+    if (a == b) return true;
+    // generics can morph any type
+    if (a->kind == Type::Kind::GENERIC || b->kind == Type::Kind::GENERIC) return true;
+    if (a->kind != b->kind) return false;
+    if (a->kind == Type::Kind::List){
+        auto al = std::static_pointer_cast<ListType>(a);
+        auto bl = std::static_pointer_cast<ListType>(b);
+        return type_equal(al->elem, bl->elem);
+    }
+    if (a->kind == Type::Kind::Struct || a->kind == Type::Kind::Enum){
+        auto al = std::static_pointer_cast<NominalType>(a);
+        auto bl = std::static_pointer_cast<NominalType>(b);
+        return al->name == bl->name;
+    }
+    return true;
 }
 
 /* ============================================================================================================================================================
@@ -184,6 +202,7 @@ void TypeChecker::visit( VarDecl& node){
             type_to_string(node.r_val->resolved_type) + " instead",*node.r_val
         );
     }
+    if (node.r_val->is_literal()) node.r_val->resolved_type = node.type;
 }
 
 void TypeChecker::visit( ProgramNode& node){
@@ -205,6 +224,7 @@ void TypeChecker::visit( ReturnNode& node){
             type_to_string(node.rexp->resolved_type), node);
         return;
     }
+    node.resolved_type = rtype;
 }
 
 void TypeChecker::visit( CaseNode& node){
@@ -230,7 +250,8 @@ void TypeChecker::visit(CaseBranchNode& node){
         errors.type_error("Pattern matching requires pattern to share a type with match value", *node.pattern);
     }
     else {
-        node.pattern->resolved_type = exp;
+        if (node.pattern->resolved_type->kind != Type::Kind::GENERIC)
+            node.pattern->resolved_type = exp;
         
         // pop pattern type to reveal return type for return expr
         type_ptr pat_type = typeprop.unprop_type();
@@ -364,32 +385,42 @@ void TypeChecker::visit(BinaryNode& node){
         case BinaryOp::CONCAT : {
             if (l_kind != Type::Kind::List && r_kind != Type::Kind::List){
                 errors.type_error("List concatenation requires at least one list operand", node);
+                return;
             }
-            else {
-                if (node.l_exp->resolved_type == node.r_exp->resolved_type){
-                    node.resolved_type = node.l_exp->resolved_type;
+            if (node.l_exp->resolved_type == node.r_exp->resolved_type){
+                node.resolved_type = node.l_exp->resolved_type;
+                return;
+            }
+            // concat two lists -> check if lists are of the same type (cast as generic can cause equality)
+            if (l_kind == Type::Kind::List && r_kind == Type::Kind::List){
+                if (!type_equal(node.l_exp->resolved_type, node.r_exp->resolved_type)){
+                    errors.type_error("List concatenation requires lists of the same element type", node);
                     return;
                 }
-                type_ptr internal = nullptr;
-                type_ptr casted = nullptr;
-                if (l_kind == Type::Kind::List){
-                    internal = 
-                        std::static_pointer_cast<ListType>(node.l_exp->resolved_type)->elem;
-                    if (!(casted = cast_strongest(internal, node.r_exp->resolved_type))){
-                        errors.type_error("List concatenation requires operands of the same element type", node);
-                        return;
-                    }
-                    node.resolved_type = node.l_exp->resolved_type;
+                node.resolved_type = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
+                return;
+            }
+            type_ptr internal = nullptr;
+            type_ptr casted = nullptr;
+            if (l_kind == Type::Kind::List){ // concat [l_exp : list] [r_exp : value]
+                internal = 
+                    std::static_pointer_cast<ListType>(node.l_exp->resolved_type)->elem;
+                if (!(casted = cast_fixed(internal, node.r_exp->resolved_type))){
+                    errors.type_error("List concatenation requires operands of the same element type", node);
+                    return;
                 }
-                if (r_kind == Type::Kind::List){
-                    internal =
-                        std::static_pointer_cast<ListType>(node.r_exp->resolved_type)->elem;
-                    if (!(casted = cast_strongest(internal, node.l_exp->resolved_type))){
-                        errors.type_error("List concatenation requires operands of the same element type", node);
-                        return;
-                    }
-                    node.resolved_type = node.r_exp->resolved_type;
+                node.op = BinaryOp::APPEND;
+                node.resolved_type = type_s.list_type(cast_strongest(internal, node.r_exp->resolved_type));
+            }
+            if (r_kind == Type::Kind::List){ // concat [l_exp : val] [r_exp : list]
+                internal =
+                    std::static_pointer_cast<ListType>(node.r_exp->resolved_type)->elem;
+                if (!(casted = cast_fixed(internal, node.l_exp->resolved_type))){
+                    errors.type_error("List concatenation requires operands of the same element type", node);
+                    return;
                 }
+                node.op = BinaryOp::PREPEND;
+                node.resolved_type = type_s.list_type(cast_strongest(internal, node.l_exp->resolved_type));
             }
             return;
         }
@@ -474,6 +505,7 @@ void TypeChecker::visit(StructNode& node){
             );
             return;
         }
+        node.ftypes.push_back(fields[i].type);
     }
     node.resolved_type = defn;
 }
@@ -517,6 +549,7 @@ void TypeChecker::visit(CallNode& node){
             return;
         }
     }
+    node.ptypes = func_defn->args;
     node.resolved_type = func_defn->ret;
 }
 
@@ -547,6 +580,7 @@ void TypeChecker::visit(AccessNode& node){
         errors.access_error("struct "+sdefn->name+" has no field labelled "+node.field, node);
         return;
     }
+    node.sn = sdefn->name;
     node.resolved_type = ftype;
 };
 
