@@ -201,6 +201,30 @@ parser.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/parser.cpp.s
 .PHONY : parser.cpp.s
 
+src/closure.o: src/closure.cpp.o
+.PHONY : src/closure.o
+
+# target to build an object file
+src/closure.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/closure.cpp.o
+.PHONY : src/closure.cpp.o
+
+src/closure.i: src/closure.cpp.i
+.PHONY : src/closure.i
+
+# target to preprocess a source file
+src/closure.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/closure.cpp.i
+.PHONY : src/closure.cpp.i
+
+src/closure.s: src/closure.cpp.s
+.PHONY : src/closure.s
+
+# target to generate assembly for a file
+src/closure.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/closure.cpp.s
+.PHONY : src/closure.cpp.s
+
 src/flowcheck.o: src/flowcheck.cpp.o
 .PHONY : src/flowcheck.o
 
@@ -339,6 +363,9 @@ help:
 	@echo "... parser.o"
 	@echo "... parser.i"
 	@echo "... parser.s"
+	@echo "... src/closure.o"
+	@echo "... src/closure.i"
+	@echo "... src/closure.s"
 	@echo "... src/flowcheck.o"
 	@echo "... src/flowcheck.i"
 	@echo "... src/flowcheck.s"

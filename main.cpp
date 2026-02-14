@@ -1,7 +1,9 @@
-#include "src/flowcheck.hpp"
 #include "parser.hpp"
 #include "src/typecheck.hpp"
+#include "src/flowcheck.hpp"
 #include "src/ir_lower.hpp"
+#include "src/closure.hpp"
+
 #include <string>
 
 void yy::parser::error(const yy::location& loc,const std::string& msg) {
@@ -28,6 +30,10 @@ int main() {
   fc.flowcheck(*module_node);
 
   std::cout << "[Kindred Compiler] : Flowcheck Passed\n";
+
+  cs::ClosureGen& cg = cs::ClosureGen::instance();
+  cg.generate(*module_node);
+  std::cout << "[Kindred Compiler] : Closures Generated \n";
 
   ir::IR_Lowerer& ir = ir::IR_Lowerer::instance();
   ir.lower(*module_node);

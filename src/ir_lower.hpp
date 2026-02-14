@@ -7,15 +7,11 @@
 
 namespace ir {
 
-using scope = std::unordered_map<std::string, unsigned int>;
-using label = std::unordered_map<std::string, std::string>; // map names to labels
-using function_map = std::unordered_map<std::string, label>; // map function names to asm labels
-using struct_map = std::unordered_map<std::string, scope>; // map struct fields and enumerables to id's
-
-struct FunctionMap {
-    function_map mapping;
-    void add_mapping(std::string fn, std::string src, std::string lab){ mapping[fn][src] = lab; }
-};
+using id_map = std::unordered_map<std::string, unsigned int>;
+using struct_map = std::unordered_map<std::string, id_map>; // map struct fields and enumerables to id's
+using env_map = std::unordered_map<std::string, id_map>;
+using scope = std::unordered_map<std::string, std::pair<int, type_ptr>>; // map vars 
+using layout_info = std::vector<std::vector<std::string>>;
 
 /*
     Map constructors (structs/enums) to identifiers
@@ -29,14 +25,14 @@ struct StructMap {
 
     void add_struct(std::string sn, std::vector<Field>& fields){
         struct_id.emplace(sn, struct_id.size());
-        scope temp = {};
+        id_map temp = {};
         for (Field& f : fields){
             temp.emplace(f.name, temp.size());
         }
         mapping[sn] = temp;
     }
     void add_enum(std::string en, std::vector<std::string>& enums){
-        scope temp = {};
+        id_map temp = {};
         for (std::string& e : enums){
             temp.emplace(e, temp.size() + 1);
         }
@@ -55,28 +51,64 @@ struct StructMap {
 };
 
 /*
+    Environments are literally just glorified structs
+*/
+struct EnvMap {
+    env_map mapping;
+    std::unordered_map<std::string, unsigned int> env_id;
+
+    void add_env(std::string fn, std::set<var>& vars){
+        env_id.emplace(fn, env_id.size());
+        id_map temp = {};
+        for (var v : vars){
+            temp.emplace(v.first, temp.size());
+        }
+        mapping[fn] = temp;
+    }
+    unsigned int get_env_id(std::string fn){
+        return env_id[fn];
+    }
+    unsigned int get_var_id(std::string fn, std::string vn){
+        return mapping[fn][vn];
+    }
+    int env_count(){ return env_id.size(); }
+};
+
+/*
     Map variables to identifiers,
     
 
 */
+#define ENCLOSED 1
+#define IDENT 0
+#define NOT_FOUND -1
+struct Scope {
+    scope closure_id; // map variables in env to pair of {env_var_id, type}
+    scope stack; // map generic variables to ids
+
+    int contains(std::string var){
+        if (closure_id.contains(var)) return ENCLOSED;
+        if (stack.contains(var)) return IDENT;
+        return NOT_FOUND;
+    }
+
+    std::pair<int, type_ptr>& get_enclosed(std::string var){ return closure_id[var]; }
+    int get_ident(std::string var){ return stack[var].first; }
+
+    void push_ident(std::string var, int id, type_ptr type){ stack[var] = {id, type}; }
+    void push_enclosed(std::string var, int id, type_ptr type){ stack[var] = {id, type}; }
+};
 struct IDVarScope {
-    std::vector<scope> stack;
+    std::vector<Scope> stack;
     unsigned int ident_count = 0;
 
-    unsigned int get_ident(std::string label){
-        for (auto it = stack.rbegin(); it != stack.rend(); it++){
-            if (it->contains(label)) return (*it)[label];
-        }
-        scope& top = stack.back();
-        top[label] = ident_count++;
-        return top[label];
-    }
+    void get_var(std::string label); // pushes register with variable on stack
+
+    void push_ident(std::string label, type_ptr type){ stack.back().push_ident(label, ident_count++, type); }
+    void push_enclosed(std::string label, type_ptr type){ stack.back().push_enclosed(label, ident_count++, type); }
+
     void push_scope(){ stack.emplace_back(); }
     void pop_scope() { stack.pop_back(); }
-};
-
-struct Closure {
-    // track which parameters must be heap allocated for higher order functionality
 };
 
 struct ConsFunctionIR {
@@ -153,16 +185,19 @@ struct IR_Lowerer : Visitor {
     // label blocks as function scope and block id
     // L_F1_B1 (first block of top level function)
     // L_F2_3_B1 (first block of nested function)
-    FunctionMap functionID;
     StructMap structInfo;
+    EnvMap envInfo;
 
     std::vector<FunctionIR> IRprogram;
     int global_blocks = 0;
     std::unordered_map<std::string, int> JMPtable;
 
     void lower( ModuleNode& node );
-    void generate_struct_file();
-    void close_struct_file();
+    void generate_layout_file();
+    void generate_layout(std::vector<type_ptr>, int id, int kind);
+    void close_layout_file();
+
+    void construct_env(std::string fn, type_ptr ftype, varset& enc);
 
     void cast_operand( Operand target, type_ptr fix, type_ptr cast );
     void op_equals( Operand ptr1, Operand ptr2, type_ptr type);

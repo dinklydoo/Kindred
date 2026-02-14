@@ -56,7 +56,7 @@ enum class Operation {
     // control flow
     JMP, JMP_IF, RET, LABEL,
     // functional
-    CALL, PARAM,
+    CALL, PARAM, CALL_CLOSURE,
     // mem
     LOAD, STORE
 };
@@ -106,6 +106,7 @@ struct Instruction {
             case (Operation::STORE) : std::cout << "store"; break;
             case (Operation::PARAM) : std::cout << "param"; break;
             case (Operation::CALL) : std::cout << "call"; break;
+            case (Operation::CALL_CLOSURE) : std::cout << "call_higher"; break;
             case (Operation::JMP) : std::cout << "jmp"; break;
             case (Operation::RET) : std::cout << "ret"; break;
             case (Operation::LABEL) : std::cout << target<<'\n'; return;
@@ -121,6 +122,7 @@ struct Instruction {
             case (Operation::STORE) : std::cout<<' '<<dst.op_str()<<' '<<src1.op_str()<<' '<<src2.op_str()<<'\n'; break;
             case (Operation::MOV) : case (Operation::NEG) : case (Operation::NOT) : 
             case (Operation::CST_I32) : case (Operation::CST_I64) : case (Operation::CST_F32) : 
+            case (Operation::CALL_CLOSURE) :
             case (Operation::CST_F64) : std::cout<<' '<<dst.op_str()<<' '<<src1.op_str()<<'\n'; break;
             case (Operation::JMP_IF) : std::cout<<' '<<src1.op_str()<<' '<<target<<'\n'; break;
             case (Operation::RET) :

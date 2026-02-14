@@ -37,7 +37,7 @@
 
 
 // First part of user prologue.
-#line 6 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 6 "src/parser.y"
 
     #include <iostream>
     #include "parser.hpp"
@@ -66,10 +66,10 @@
     module_ptr module_node;
     extern yy::parser::symbol_type yylex();
 
-#line 70 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 70 "parser.tab.cc"
 
 
-#include "parser.hpp"
+#include "parser.tab.hh"
 
 
 
@@ -162,9 +162,9 @@
 #define YYERROR         goto yyerrorlab
 #define YYRECOVERING()  (!!yyerrstatus_)
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "src/parser.y"
 namespace yy {
-#line 168 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 168 "parser.tab.cc"
 
   /// Build a parser object.
   parser::parser ()
@@ -1425,211 +1425,211 @@ namespace yy {
           switch (yyn)
             {
   case 2: // module: definitions KEOF
-#line 187 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 187 "src/parser.y"
         { 
             yylhs.value.as < module_ptr > () = std::make_unique<ModuleNode>();
             yylhs.value.as < module_ptr > ()->decl = std::move(yystack_[1].value.as < std::vector<decl_ptr> > ());
             module_node = std::move(yylhs.value.as < module_ptr > ());
         }
-#line 1435 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1435 "parser.tab.cc"
     break;
 
   case 3: // definitions: %empty
-#line 196 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 196 "src/parser.y"
         { yylhs.value.as < std::vector<decl_ptr> > () = std::vector<decl_ptr>{}; }
-#line 1441 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1441 "parser.tab.cc"
     break;
 
   case 4: // definitions: definitions definition
-#line 198 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 198 "src/parser.y"
         { 
             yystack_[1].value.as < std::vector<decl_ptr> > ().push_back(std::move(yystack_[0].value.as < decl_ptr > ()));
             yylhs.value.as < std::vector<decl_ptr> > () = std::move(yystack_[1].value.as < std::vector<decl_ptr> > ());
         }
-#line 1450 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1450 "parser.tab.cc"
     break;
 
   case 5: // definition: function_def
-#line 205 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 205 "src/parser.y"
                   { yylhs.value.as < decl_ptr > () = std::move(yystack_[0].value.as < func_decl_ptr > ()); }
-#line 1456 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1456 "parser.tab.cc"
     break;
 
   case 6: // definition: struct_def
-#line 206 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 206 "src/parser.y"
                 { yylhs.value.as < decl_ptr > () = std::move(yystack_[0].value.as < struct_decl_ptr > ()); }
-#line 1462 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1462 "parser.tab.cc"
     break;
 
   case 7: // definition: enum_def
-#line 207 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 207 "src/parser.y"
               { yylhs.value.as < decl_ptr > () = std::move(yystack_[0].value.as < enum_decl_ptr > ()); }
-#line 1468 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1468 "parser.tab.cc"
     break;
 
   case 8: // opt_types: %empty
-#line 210 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 210 "src/parser.y"
              { yylhs.value.as < std::vector<type_ptr> > () = std::vector<type_ptr>{}; }
-#line 1474 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1474 "parser.tab.cc"
     break;
 
   case 9: // opt_types: types
-#line 211 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 211 "src/parser.y"
             { yylhs.value.as < std::vector<type_ptr> > () = std::move(yystack_[0].value.as < std::vector<type_ptr> > ()); }
-#line 1480 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1480 "parser.tab.cc"
     break;
 
   case 10: // types: type
-#line 214 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 214 "src/parser.y"
            { yylhs.value.as < std::vector<type_ptr> > () = std::vector<type_ptr>{yystack_[0].value.as < type_ptr > ()}; }
-#line 1486 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1486 "parser.tab.cc"
     break;
 
   case 11: // types: types COMMA type
-#line 215 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 215 "src/parser.y"
                        {
         yystack_[2].value.as < std::vector<type_ptr> > ().push_back(std::move(yystack_[0].value.as < type_ptr > ()));
         yylhs.value.as < std::vector<type_ptr> > () = std::move(yystack_[2].value.as < std::vector<type_ptr> > ());
     }
-#line 1495 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1495 "parser.tab.cc"
     break;
 
   case 12: // non_function_type: literal_type
-#line 221 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 221 "src/parser.y"
                    { yylhs.value.as < type_ptr > () = std::move(yystack_[0].value.as < type_ptr > ()); }
-#line 1501 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1501 "parser.tab.cc"
     break;
 
   case 13: // non_function_type: list_type
-#line 222 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 222 "src/parser.y"
                 { yylhs.value.as < type_ptr > () = std::move(yystack_[0].value.as < type_ptr > ()); }
-#line 1507 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1507 "parser.tab.cc"
     break;
 
   case 14: // non_function_type: nominal_type
-#line 223 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 223 "src/parser.y"
                    { yylhs.value.as < type_ptr > () = std::move(yystack_[0].value.as < type_ptr > ()); }
-#line 1513 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1513 "parser.tab.cc"
     break;
 
   case 15: // type: non_function_type
-#line 227 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 227 "src/parser.y"
                         { yylhs.value.as < type_ptr > () = std::move(yystack_[0].value.as < type_ptr > ()); }
-#line 1519 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1519 "parser.tab.cc"
     break;
 
   case 16: // type: func_type
-#line 228 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 228 "src/parser.y"
                 { yylhs.value.as < type_ptr > () = std::move(yystack_[0].value.as < type_ptr > ()); }
-#line 1525 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1525 "parser.tab.cc"
     break;
 
   case 17: // literal_type: T_CHAR
-#line 232 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 232 "src/parser.y"
              { yylhs.value.as < type_ptr > () = type_s.char_type(); }
-#line 1531 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1531 "parser.tab.cc"
     break;
 
   case 18: // literal_type: T_BOOL
-#line 233 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 233 "src/parser.y"
              { yylhs.value.as < type_ptr > () = type_s.bool_type(); }
-#line 1537 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1537 "parser.tab.cc"
     break;
 
   case 19: // literal_type: int_lit_type
-#line 234 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 234 "src/parser.y"
                    { yylhs.value.as < type_ptr > () = std::move(yystack_[0].value.as < type_ptr > ()); }
-#line 1543 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1543 "parser.tab.cc"
     break;
 
   case 20: // literal_type: float_lit_type
-#line 235 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 235 "src/parser.y"
                      { yylhs.value.as < type_ptr > () = std::move(yystack_[0].value.as < type_ptr > ()); }
-#line 1549 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1549 "parser.tab.cc"
     break;
 
   case 21: // int_lit_type: T_INT
-#line 239 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 239 "src/parser.y"
             { yylhs.value.as < type_ptr > () = type_s.int_type(); }
-#line 1555 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1555 "parser.tab.cc"
     break;
 
   case 22: // int_lit_type: T_LONG
-#line 240 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 240 "src/parser.y"
              { yylhs.value.as < type_ptr > () = type_s.long_type(); }
-#line 1561 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1561 "parser.tab.cc"
     break;
 
   case 23: // float_lit_type: T_FLOAT
-#line 243 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 243 "src/parser.y"
               { yylhs.value.as < type_ptr > () = type_s.float_type(); }
-#line 1567 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1567 "parser.tab.cc"
     break;
 
   case 24: // float_lit_type: T_DOUBLE
-#line 244 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 244 "src/parser.y"
                { yylhs.value.as < type_ptr > () = type_s.double_type(); }
-#line 1573 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1573 "parser.tab.cc"
     break;
 
   case 25: // list_type: SQ_LBRA type SQ_RBRA
-#line 247 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 247 "src/parser.y"
                            { yylhs.value.as < type_ptr > () = type_s.list_type(yystack_[1].value.as < type_ptr > ()); }
-#line 1579 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1579 "parser.tab.cc"
     break;
 
   case 26: // func_type: LBRA opt_types RBRA PROD type
-#line 250 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 250 "src/parser.y"
                                     { yylhs.value.as < type_ptr > () = type_s.func_type(yystack_[3].value.as < std::vector<type_ptr> > (), yystack_[0].value.as < type_ptr > ()); }
-#line 1585 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1585 "parser.tab.cc"
     break;
 
   case 27: // nominal_type: LABEL
-#line 253 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 253 "src/parser.y"
             { yylhs.value.as < type_ptr > () = type_s.nominal_type(yystack_[0].value.as < std::string > ()); }
-#line 1591 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1591 "parser.tab.cc"
     break;
 
   case 28: // opt_params: TSEP
-#line 256 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 256 "src/parser.y"
            { yylhs.value.as < std::vector<Param> > () = std::vector<Param>{}; }
-#line 1597 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1597 "parser.tab.cc"
     break;
 
   case 29: // opt_params: params
-#line 257 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 257 "src/parser.y"
              { yylhs.value.as < std::vector<Param> > () = std::move(yystack_[0].value.as < std::vector<Param> > ()); }
-#line 1603 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1603 "parser.tab.cc"
     break;
 
   case 30: // params: param
-#line 260 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 260 "src/parser.y"
             { yylhs.value.as < std::vector<Param> > () = std::vector<Param>{yystack_[0].value.as < Param > ()}; }
-#line 1609 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1609 "parser.tab.cc"
     break;
 
   case 31: // params: params COMMA param
-#line 262 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 262 "src/parser.y"
         {
             yystack_[2].value.as < std::vector<Param> > ().push_back(std::move(yystack_[0].value.as < Param > ()));
             yylhs.value.as < std::vector<Param> > () = std::move(yystack_[2].value.as < std::vector<Param> > ());
         }
-#line 1618 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1618 "parser.tab.cc"
     break;
 
   case 32: // param: LABEL TSEP type
-#line 269 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 269 "src/parser.y"
         { 
             yylhs.value.as < Param > () = Param(); 
             yylhs.value.as < Param > ().name = std::move(yystack_[2].value.as < std::string > ());
             yylhs.value.as < Param > ().type = std::move(yystack_[0].value.as < type_ptr > ());
             yylhs.value.as < Param > ().location = floc_to_loc(yystack_[2].location);
         }
-#line 1629 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1629 "parser.tab.cc"
     break;
 
   case 33: // function_def: FUNC LABEL LBRA opt_params RBRA TSEP type program
-#line 279 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 279 "src/parser.y"
         {   
             yylhs.value.as < func_decl_ptr > () = std::make_unique<FuncDecl>();
             yylhs.value.as < func_decl_ptr > ()->name = std::move(yystack_[6].value.as < std::string > ());
@@ -1639,26 +1639,26 @@ namespace yy {
 
             yylhs.value.as < func_decl_ptr > ()->location = floc_to_loc(yystack_[7].location);
         }
-#line 1643 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1643 "parser.tab.cc"
     break;
 
   case 34: // fields: field
-#line 292 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 292 "src/parser.y"
         {   yylhs.value.as < std::vector<Field> > () = std::vector<Field>{}; yylhs.value.as < std::vector<Field> > ().push_back(std::move(yystack_[0].value.as < Field > ())); }
-#line 1649 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1649 "parser.tab.cc"
     break;
 
   case 35: // fields: fields COMMA field
-#line 294 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 294 "src/parser.y"
         { 
             yystack_[2].value.as < std::vector<Field> > ().push_back(std::move(yystack_[0].value.as < Field > ()));
             yylhs.value.as < std::vector<Field> > () = std::move(yystack_[2].value.as < std::vector<Field> > ());
         }
-#line 1658 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1658 "parser.tab.cc"
     break;
 
   case 36: // field: LABEL TSEP type
-#line 302 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 302 "src/parser.y"
         {
             yylhs.value.as < Field > () = Field();
             yylhs.value.as < Field > ().name = std::move(yystack_[2].value.as < std::string > ());
@@ -1666,11 +1666,11 @@ namespace yy {
 
             yylhs.value.as < Field > ().location = floc_to_loc(yystack_[2].location);
         }
-#line 1670 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1670 "parser.tab.cc"
     break;
 
   case 37: // struct_def: STRUCT LABEL LBRA fields RBRA
-#line 312 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 312 "src/parser.y"
         {
             yylhs.value.as < struct_decl_ptr > () = std::make_unique<StructDecl>();
             yylhs.value.as < struct_decl_ptr > ()->name = std::move(yystack_[3].value.as < std::string > ());
@@ -1678,32 +1678,32 @@ namespace yy {
 
             yylhs.value.as < struct_decl_ptr > ()->location = floc_to_loc(yystack_[4].location);
         }
-#line 1682 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1682 "parser.tab.cc"
     break;
 
   case 38: // evar: LABEL
-#line 322 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 322 "src/parser.y"
             { yylhs.value.as < std::string > () = std::move(yystack_[0].value.as < std::string > ()); }
-#line 1688 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1688 "parser.tab.cc"
     break;
 
   case 39: // evars: evar
-#line 325 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 325 "src/parser.y"
            { yylhs.value.as < std::vector<std::string> > () = std::vector<std::string>{yystack_[0].value.as < std::string > ()}; }
-#line 1694 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1694 "parser.tab.cc"
     break;
 
   case 40: // evars: evars COMMA evar
-#line 327 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 327 "src/parser.y"
         {
             yystack_[2].value.as < std::vector<std::string> > ().push_back(std::move(yystack_[0].value.as < std::string > ()));
             yylhs.value.as < std::vector<std::string> > () = std::move(yystack_[2].value.as < std::vector<std::string> > ());
         }
-#line 1703 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1703 "parser.tab.cc"
     break;
 
   case 41: // enum_def: ENUM LABEL LBRA evars RBRA
-#line 335 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 335 "src/parser.y"
         { 
             yylhs.value.as < enum_decl_ptr > () = std::make_unique<EnumDecl>(); 
             yylhs.value.as < enum_decl_ptr > ()->name = std::move(yystack_[3].value.as < std::string > ());
@@ -1711,68 +1711,68 @@ namespace yy {
 
             yylhs.value.as < enum_decl_ptr > ()->location = floc_to_loc(yystack_[4].location);
         }
-#line 1715 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1715 "parser.tab.cc"
     break;
 
   case 42: // program: helpers branch_expr
-#line 346 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 346 "src/parser.y"
         {
             yylhs.value.as < prog_ptr > () = std::make_unique<ProgramNode>();
             yylhs.value.as < prog_ptr > ()->decl = std::move(yystack_[1].value.as < std::vector<decl_ptr> > ());
             yylhs.value.as < prog_ptr > ()->body = std::move(yystack_[0].value.as < expr_ptr > ());
         }
-#line 1725 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1725 "parser.tab.cc"
     break;
 
   case 43: // branch_expr: return_expr
-#line 354 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 354 "src/parser.y"
                   { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 1731 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1731 "parser.tab.cc"
     break;
 
   case 44: // branch_expr: guard_expr
-#line 355 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 355 "src/parser.y"
                  { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < guard_ptr > ()); }
-#line 1737 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1737 "parser.tab.cc"
     break;
 
   case 45: // branch_expr: case_expr
-#line 356 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 356 "src/parser.y"
                 { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < case_ptr > ()); }
-#line 1743 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1743 "parser.tab.cc"
     break;
 
   case 46: // guard_expr: CASE OF TSEP guards PEND
-#line 361 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 361 "src/parser.y"
         {
             yylhs.value.as < guard_ptr > () = std::make_unique<GuardNode>();
             yylhs.value.as < guard_ptr > ()->branches = std::move(yystack_[1].value.as < std::vector<g_branch_ptr> > ());
 
             yylhs.value.as < guard_ptr > ()->location = floc_to_loc(yystack_[2].location);
         }
-#line 1754 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1754 "parser.tab.cc"
     break;
 
   case 47: // guards: guard
-#line 371 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 371 "src/parser.y"
         { 
             yylhs.value.as < std::vector<g_branch_ptr> > () = std::vector<g_branch_ptr>{}; 
             yylhs.value.as < std::vector<g_branch_ptr> > ().push_back(std::move(yystack_[0].value.as < g_branch_ptr > ()));
         }
-#line 1763 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1763 "parser.tab.cc"
     break;
 
   case 48: // guards: guards COMMA guard
-#line 376 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 376 "src/parser.y"
         {
             yystack_[2].value.as < std::vector<g_branch_ptr> > ().push_back(std::move(yystack_[0].value.as < g_branch_ptr > ()));
             yylhs.value.as < std::vector<g_branch_ptr> > () = std::move(yystack_[2].value.as < std::vector<g_branch_ptr> > ());
         }
-#line 1772 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1772 "parser.tab.cc"
     break;
 
   case 49: // guard: BAR value_expr ARROW program
-#line 384 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 384 "src/parser.y"
         {
             yylhs.value.as < g_branch_ptr > () = std::make_unique<GuardBranchNode>();
             yylhs.value.as < g_branch_ptr > ()->match = std::move(yystack_[2].value.as < expr_ptr > ());
@@ -1780,11 +1780,11 @@ namespace yy {
 
             yylhs.value.as < g_branch_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 1784 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1784 "parser.tab.cc"
     break;
 
   case 50: // guard: BAR ELSE ARROW program
-#line 392 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 392 "src/parser.y"
         {
             yylhs.value.as < g_branch_ptr > () = std::make_unique<GuardBranchNode>();
             //auto temp = std::make_unique<BoolLit>();
@@ -1797,11 +1797,11 @@ namespace yy {
 
             yylhs.value.as < g_branch_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 1801 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1801 "parser.tab.cc"
     break;
 
   case 51: // case_expr: MARK value_expr OF TSEP patterns PEND
-#line 408 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 408 "src/parser.y"
         {
             yylhs.value.as < case_ptr > () = std::make_unique<CaseNode>();
             yylhs.value.as < case_ptr > ()->target = std::move(yystack_[4].value.as < expr_ptr > ());
@@ -1809,29 +1809,29 @@ namespace yy {
 
             yylhs.value.as < case_ptr > ()->location = floc_to_loc(yystack_[3].location);
         }
-#line 1813 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1813 "parser.tab.cc"
     break;
 
   case 52: // patterns: pattern_branch
-#line 419 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 419 "src/parser.y"
         { 
             yylhs.value.as < std::vector<c_branch_ptr> > () = std::vector<c_branch_ptr>{}; 
             yylhs.value.as < std::vector<c_branch_ptr> > ().push_back(std::move(yystack_[0].value.as < c_branch_ptr > ())); 
         }
-#line 1822 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1822 "parser.tab.cc"
     break;
 
   case 53: // patterns: patterns COMMA pattern_branch
-#line 424 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 424 "src/parser.y"
         {
             yystack_[2].value.as < std::vector<c_branch_ptr> > ().push_back(std::move(yystack_[0].value.as < c_branch_ptr > ()));
             yylhs.value.as < std::vector<c_branch_ptr> > () = std::move(yystack_[2].value.as < std::vector<c_branch_ptr> > ());
         }
-#line 1831 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1831 "parser.tab.cc"
     break;
 
   case 54: // pattern_branch: pattern ARROW program
-#line 432 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 432 "src/parser.y"
         {
             yylhs.value.as < c_branch_ptr > () = std::make_unique<CaseBranchNode>();
             yylhs.value.as < c_branch_ptr > ()->pattern = std::move(yystack_[2].value.as < literal_ptr > ());
@@ -1840,11 +1840,11 @@ namespace yy {
 
             yylhs.value.as < c_branch_ptr > ()->location = floc_to_loc(yystack_[2].location);
         }
-#line 1844 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1844 "parser.tab.cc"
     break;
 
   case 55: // pattern_branch: size_pattern ARROW program
-#line 441 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 441 "src/parser.y"
         {
             yylhs.value.as < c_branch_ptr > () = std::make_unique<CaseBranchNode>();
             yylhs.value.as < c_branch_ptr > ()->pattern = std::move(yystack_[2].value.as < literal_ptr > ());
@@ -1853,77 +1853,77 @@ namespace yy {
 
             yylhs.value.as < c_branch_ptr > ()->location = floc_to_loc(yystack_[2].location);
         }
-#line 1857 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1857 "parser.tab.cc"
     break;
 
   case 56: // literal: char_lit
-#line 452 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 452 "src/parser.y"
                { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1863 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1863 "parser.tab.cc"
     break;
 
   case 57: // literal: int_lit
-#line 453 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 453 "src/parser.y"
               { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1869 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1869 "parser.tab.cc"
     break;
 
   case 58: // literal: float_lit
-#line 454 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 454 "src/parser.y"
                 { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1875 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1875 "parser.tab.cc"
     break;
 
   case 59: // literal: bool_lit
-#line 455 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 455 "src/parser.y"
                { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1881 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1881 "parser.tab.cc"
     break;
 
   case 60: // literal: enum_lit
-#line 456 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 456 "src/parser.y"
                { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1887 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1887 "parser.tab.cc"
     break;
 
   case 61: // literal: list_pattern
-#line 457 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 457 "src/parser.y"
                    { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1893 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1893 "parser.tab.cc"
     break;
 
   case 62: // size_pattern: list_size_pattern
-#line 461 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 461 "src/parser.y"
                         { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1899 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1899 "parser.tab.cc"
     break;
 
   case 63: // size_pattern: struct_size_pattern
-#line 462 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 462 "src/parser.y"
                           { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1905 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1905 "parser.tab.cc"
     break;
 
   case 64: // pattern: literal
-#line 465 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 465 "src/parser.y"
               { yylhs.value.as < literal_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 1911 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1911 "parser.tab.cc"
     break;
 
   case 65: // pattern: DEFAULT
-#line 466 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 466 "src/parser.y"
               { yylhs.value.as < literal_ptr > () = std::make_unique<DefaultLit>(); yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);}
-#line 1917 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1917 "parser.tab.cc"
     break;
 
   case 66: // pattern: NIL
-#line 467 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 467 "src/parser.y"
           { yylhs.value.as < literal_ptr > () = std::make_unique<NilLit>(); yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);}
-#line 1923 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1923 "parser.tab.cc"
     break;
 
   case 67: // enum_lit: LABEL
-#line 472 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 472 "src/parser.y"
         { 
             auto temp = std::make_unique<EnumLit>();
             temp->elem = std::move(yystack_[0].value.as < std::string > ()); 
@@ -1931,27 +1931,27 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 1935 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1935 "parser.tab.cc"
     break;
 
   case 68: // list_pattern: SQ_LBRA SQ_RBRA
-#line 482 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 482 "src/parser.y"
         { 
             yylhs.value.as < literal_ptr > () = std::make_unique<EmptyLit>();
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 1945 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1945 "parser.tab.cc"
     break;
 
   case 69: // string_expr: STRING
-#line 490 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 490 "src/parser.y"
              {yylhs.value.as < expr_ptr > () = str_to_chlist(yystack_[0].value.as < std::string > ()); yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[0].location); }
-#line 1951 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1951 "parser.tab.cc"
     break;
 
   case 70: // list_size_pattern: list_vars
-#line 495 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 495 "src/parser.y"
         {
             auto temp = std::make_unique<ListPatternLit>(); 
             temp->patterns = std::move(yystack_[0].value.as < std::vector<std::string> > ());
@@ -1959,30 +1959,30 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 1963 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1963 "parser.tab.cc"
     break;
 
   case 71: // list_vars: LABEL TSEP LABEL
-#line 506 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 506 "src/parser.y"
         { 
             yylhs.value.as < std::vector<std::string> > () = std::vector<std::string>{};
             yylhs.value.as < std::vector<std::string> > ().push_back(std::move(yystack_[2].value.as < std::string > ()));
             yylhs.value.as < std::vector<std::string> > ().push_back(std::move(yystack_[0].value.as < std::string > ())); 
         }
-#line 1973 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1973 "parser.tab.cc"
     break;
 
   case 72: // list_vars: list_vars TSEP LABEL
-#line 512 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 512 "src/parser.y"
         {
             yystack_[2].value.as < std::vector<std::string> > ().push_back(std::move(yystack_[0].value.as < std::string > ()));
             yylhs.value.as < std::vector<std::string> > () = std::move(yystack_[2].value.as < std::vector<std::string> > ());
         }
-#line 1982 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1982 "parser.tab.cc"
     break;
 
   case 73: // struct_size_pattern: LABEL C_LBRA struct_vars C_RBRA
-#line 520 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 520 "src/parser.y"
         {
             auto temp = std::make_unique<StructPatternLit>();
             temp->name = std::move(yystack_[3].value.as < std::string > ());
@@ -1991,35 +1991,35 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[3].location);
         }
-#line 1995 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 1995 "parser.tab.cc"
     break;
 
   case 74: // struct_vars: LABEL
-#line 531 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 531 "src/parser.y"
            { yylhs.value.as < std::vector<std::string> > () = std::vector<std::string>{}; yylhs.value.as < std::vector<std::string> > ().push_back(std::move(yystack_[0].value.as < std::string > ()));}
-#line 2001 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2001 "parser.tab.cc"
     break;
 
   case 75: // struct_vars: NIL
-#line 532 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 532 "src/parser.y"
          { yylhs.value.as < std::vector<std::string> > () = std::vector<std::string>{}; yylhs.value.as < std::vector<std::string> > ().push_back("");}
-#line 2007 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2007 "parser.tab.cc"
     break;
 
   case 76: // struct_vars: struct_vars COMMA LABEL
-#line 533 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 533 "src/parser.y"
                               { yystack_[2].value.as < std::vector<std::string> > ().push_back(std::move(yystack_[0].value.as < std::string > ())); yylhs.value.as < std::vector<std::string> > () = std::move(yystack_[2].value.as < std::vector<std::string> > ()); }
-#line 2013 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2013 "parser.tab.cc"
     break;
 
   case 77: // struct_vars: struct_vars COMMA NIL
-#line 534 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 534 "src/parser.y"
                             { yystack_[2].value.as < std::vector<std::string> > ().push_back(std::move("")); yylhs.value.as < std::vector<std::string> > () = std::move(yystack_[2].value.as < std::vector<std::string> > ()); }
-#line 2019 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2019 "parser.tab.cc"
     break;
 
   case 78: // return_expr: RETURN value_expr
-#line 539 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 539 "src/parser.y"
         { 
             auto temp = std::make_unique<ReturnNode>();
             temp->rexp = std::move(yystack_[0].value.as < expr_ptr > ()); 
@@ -2027,64 +2027,64 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2031 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2031 "parser.tab.cc"
     break;
 
   case 79: // helpers: %empty
-#line 549 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 549 "src/parser.y"
              { yylhs.value.as < std::vector<decl_ptr> > () = std::vector<decl_ptr>{}; }
-#line 2037 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2037 "parser.tab.cc"
     break;
 
   case 80: // helpers: helpers helper_expr
-#line 551 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 551 "src/parser.y"
         {
             yystack_[1].value.as < std::vector<decl_ptr> > ().push_back(std::move(yystack_[0].value.as < decl_ptr > ()));
             yylhs.value.as < std::vector<decl_ptr> > () = std::move(yystack_[1].value.as < std::vector<decl_ptr> > ());
         }
-#line 2046 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2046 "parser.tab.cc"
     break;
 
   case 81: // helper_expr: assign_expr
-#line 558 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 558 "src/parser.y"
                   { yylhs.value.as < decl_ptr > () = std::move(yystack_[0].value.as < decl_ptr > ()); }
-#line 2052 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2052 "parser.tab.cc"
     break;
 
   case 82: // helper_expr: print_expr
-#line 559 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 559 "src/parser.y"
                  { yylhs.value.as < decl_ptr > () = std::move(yystack_[0].value.as < print_ptr > ()); }
-#line 2058 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2058 "parser.tab.cc"
     break;
 
   case 83: // print_expr: PRINT LBRA value_expr RBRA
-#line 564 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 564 "src/parser.y"
         { 
             yylhs.value.as < print_ptr > () = std::make_unique<PrintNode>();
             yylhs.value.as < print_ptr > ()->msg = std::move(yystack_[1].value.as < expr_ptr > ());
 
             yylhs.value.as < print_ptr > ()->location = floc_to_loc(yystack_[3].location);
         }
-#line 2069 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2069 "parser.tab.cc"
     break;
 
   case 84: // assign_val_expr: value_expr
-#line 573 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 573 "src/parser.y"
                  { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2075 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2075 "parser.tab.cc"
     break;
 
   case 85: // assign_val_expr: READ LBRA RBRA
-#line 574 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
-                     {
-        yylhs.value.as < expr_ptr > () = std::make_unique<ReadNode>(); 
+#line 574 "src/parser.y"
+                     { 
+        yylhs.value.as < expr_ptr > () = std::make_unique<ReadNode>; 
         yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[2].location);
     }
-#line 2084 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2084 "parser.tab.cc"
     break;
 
   case 86: // assign_expr: LABEL TSEP LBRA opt_params RBRA PROD type LBRA program RBRA
-#line 581 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 581 "src/parser.y"
         { 
             auto temp = std::make_unique<FuncDecl>();
             temp->name = std::move(yystack_[9].value.as < std::string > ());
@@ -2095,11 +2095,11 @@ namespace yy {
 
             yylhs.value.as < decl_ptr > ()->location = floc_to_loc(yystack_[9].location);
         }
-#line 2099 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2099 "parser.tab.cc"
     break;
 
   case 87: // assign_expr: LABEL TSEP type ASSGN assign_val_expr
-#line 592 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 592 "src/parser.y"
         {
             auto temp = std::make_unique<VarDecl>();
             temp->name = std::move(yystack_[4].value.as < std::string > ());
@@ -2108,11 +2108,11 @@ namespace yy {
             yylhs.value.as < decl_ptr > () = std::move(temp);
             yylhs.value.as < decl_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2112 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2112 "parser.tab.cc"
     break;
 
   case 88: // int_lit: INT
-#line 604 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 604 "src/parser.y"
         { 
             auto temp = std::make_unique<IntLit>();
             temp->value = yystack_[0].value.as < uint64_t > ();
@@ -2120,11 +2120,11 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2124 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2124 "parser.tab.cc"
     break;
 
   case 89: // float_lit: FLOAT
-#line 614 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 614 "src/parser.y"
         {
             auto temp = std::make_unique<IntLit>();
             temp->value = yystack_[0].value.as < double > ();
@@ -2132,11 +2132,11 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2136 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2136 "parser.tab.cc"
     break;
 
   case 90: // bool_lit: TRUE
-#line 624 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 624 "src/parser.y"
         { 
             auto temp = std::make_unique<BoolLit>();
             temp->value = true;
@@ -2144,11 +2144,11 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2148 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2148 "parser.tab.cc"
     break;
 
   case 91: // bool_lit: FALSE
-#line 632 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 632 "src/parser.y"
         { 
             auto temp = std::make_unique<BoolLit>();
             temp->value = false;
@@ -2156,11 +2156,11 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2160 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2160 "parser.tab.cc"
     break;
 
   case 92: // char_lit: CHAR
-#line 643 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 643 "src/parser.y"
         { 
             auto temp = std::make_unique<CharLit>();
             temp->value = yystack_[0].value.as < char > ();
@@ -2168,216 +2168,216 @@ namespace yy {
 
             yylhs.value.as < literal_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2172 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2172 "parser.tab.cc"
     break;
 
   case 93: // bool_op: BOR
-#line 652 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 652 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::BOR; }
-#line 2178 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2178 "parser.tab.cc"
     break;
 
   case 94: // bool_op: BAND
-#line 653 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 653 "src/parser.y"
            { yylhs.value.as < BinaryOp > () = BinaryOp::BAND; }
-#line 2184 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2184 "parser.tab.cc"
     break;
 
   case 95: // comp_op: CEQ
-#line 657 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 657 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::CEQ; }
-#line 2190 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2190 "parser.tab.cc"
     break;
 
   case 96: // comp_op: CNEQ
-#line 658 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 658 "src/parser.y"
            { yylhs.value.as < BinaryOp > () = BinaryOp::CNEQ; }
-#line 2196 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2196 "parser.tab.cc"
     break;
 
   case 97: // comp_op: CGT
-#line 659 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 659 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::CGT; }
-#line 2202 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2202 "parser.tab.cc"
     break;
 
   case 98: // comp_op: CLT
-#line 660 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 660 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::CLT; }
-#line 2208 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2208 "parser.tab.cc"
     break;
 
   case 99: // comp_op: CGEQ
-#line 661 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 661 "src/parser.y"
            { yylhs.value.as < BinaryOp > () = BinaryOp::CGEQ; }
-#line 2214 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2214 "parser.tab.cc"
     break;
 
   case 100: // comp_op: CLEQ
-#line 662 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 662 "src/parser.y"
            { yylhs.value.as < BinaryOp > () = BinaryOp::CLEQ; }
-#line 2220 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2220 "parser.tab.cc"
     break;
 
   case 101: // bitwise_op: LAND
-#line 666 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 666 "src/parser.y"
            { yylhs.value.as < BinaryOp > () = BinaryOp::LAND; }
-#line 2226 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2226 "parser.tab.cc"
     break;
 
   case 102: // bitwise_op: BAR
-#line 667 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 667 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::LOR; }
-#line 2232 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2232 "parser.tab.cc"
     break;
 
   case 103: // bitwise_op: LXOR
-#line 668 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 668 "src/parser.y"
            { yylhs.value.as < BinaryOp > () = BinaryOp::LXOR; }
-#line 2238 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2238 "parser.tab.cc"
     break;
 
   case 104: // shift_op: LSL
-#line 671 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 671 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::LSL; }
-#line 2244 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2244 "parser.tab.cc"
     break;
 
   case 105: // shift_op: LSR
-#line 672 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 672 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::LSR; }
-#line 2250 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2250 "parser.tab.cc"
     break;
 
   case 106: // additive_op: ADD
-#line 675 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 675 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::ADD; }
-#line 2256 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2256 "parser.tab.cc"
     break;
 
   case 107: // additive_op: SUB
-#line 676 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 676 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::SUB; }
-#line 2262 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2262 "parser.tab.cc"
     break;
 
   case 108: // additive_op: CONCAT
-#line 677 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 677 "src/parser.y"
              { yylhs.value.as < BinaryOp > () = BinaryOp::CONCAT; }
-#line 2268 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2268 "parser.tab.cc"
     break;
 
   case 109: // mult_op: MUL
-#line 681 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 681 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::MUL; }
-#line 2274 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2274 "parser.tab.cc"
     break;
 
   case 110: // mult_op: DIV
-#line 682 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 682 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::DIV; }
-#line 2280 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2280 "parser.tab.cc"
     break;
 
   case 111: // mult_op: MOD
-#line 683 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 683 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::MOD; }
-#line 2286 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2286 "parser.tab.cc"
     break;
 
   case 112: // mult_op: FLR
-#line 684 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 684 "src/parser.y"
           { yylhs.value.as < BinaryOp > () = BinaryOp::FLR; }
-#line 2292 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2292 "parser.tab.cc"
     break;
 
   case 113: // unary_op: BNOT
-#line 688 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 688 "src/parser.y"
            { yylhs.value.as < UnaryOp > () = UnaryOp::BNOT; }
-#line 2298 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2298 "parser.tab.cc"
     break;
 
   case 114: // unary_op: LNEG
-#line 689 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 689 "src/parser.y"
            { yylhs.value.as < UnaryOp > () = UnaryOp::LNEG; }
-#line 2304 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2304 "parser.tab.cc"
     break;
 
   case 115: // unary_op: SUB
-#line 690 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 690 "src/parser.y"
           { yylhs.value.as < UnaryOp > () = UnaryOp::MINUS; }
-#line 2310 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2310 "parser.tab.cc"
     break;
 
   case 116: // nominal_expr: LABEL
-#line 695 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 695 "src/parser.y"
         { 
             auto temp = std::make_unique<NominalNode>();
             temp->label = std::move(yystack_[0].value.as < std::string > ()); 
             yylhs.value.as < expr_ptr > () = std::move(temp);
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2321 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2321 "parser.tab.cc"
     break;
 
   case 117: // list_expr: empty_list
-#line 703 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 703 "src/parser.y"
                  { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < list_ptr > ()); }
-#line 2327 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2327 "parser.tab.cc"
     break;
 
   case 118: // list_expr: list_con
-#line 704 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 704 "src/parser.y"
                { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < list_ptr > ()); }
-#line 2333 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2333 "parser.tab.cc"
     break;
 
   case 119: // list_expr: string_expr
-#line 705 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 705 "src/parser.y"
                   { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2339 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2339 "parser.tab.cc"
     break;
 
   case 120: // empty_list: SQ_LBRA SQ_RBRA
-#line 710 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 710 "src/parser.y"
         { 
             yylhs.value.as < list_ptr > () = std::make_unique<ListNode>(); 
             yylhs.value.as < list_ptr > ()->elems = std::vector<expr_ptr>{}; 
             yylhs.value.as < list_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2349 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2349 "parser.tab.cc"
     break;
 
   case 121: // list_con: SQ_LBRA expr_list SQ_RBRA
-#line 719 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 719 "src/parser.y"
         { 
             yylhs.value.as < list_ptr > () = std::make_unique<ListNode>(); 
             yylhs.value.as < list_ptr > ()->elems = std::move(yystack_[1].value.as < std::vector<expr_ptr> > ()); 
             yylhs.value.as < list_ptr > ()->location = floc_to_loc(yystack_[2].location);
         }
-#line 2359 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2359 "parser.tab.cc"
     break;
 
   case 122: // expr_list: value_expr
-#line 728 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 728 "src/parser.y"
         { 
             yylhs.value.as < std::vector<expr_ptr> > () = std::vector<expr_ptr>{};
             yylhs.value.as < std::vector<expr_ptr> > ().push_back(std::move(yystack_[0].value.as < expr_ptr > ())); 
         }
-#line 2368 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2368 "parser.tab.cc"
     break;
 
   case 123: // expr_list: expr_list COMMA value_expr
-#line 733 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 733 "src/parser.y"
         {
             yystack_[2].value.as < std::vector<expr_ptr> > ().push_back(std::move(yystack_[0].value.as < expr_ptr > ()));
             yylhs.value.as < std::vector<expr_ptr> > () = std::move(yystack_[2].value.as < std::vector<expr_ptr> > ());
         }
-#line 2377 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2377 "parser.tab.cc"
     break;
 
   case 124: // call_expr: LABEL LBRA RBRA
-#line 741 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 741 "src/parser.y"
         {
             auto temp = std::make_unique<CallNode>();
             temp->label = std::move(yystack_[2].value.as < std::string > ());
@@ -2387,11 +2387,11 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[2].location);
         }
-#line 2391 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2391 "parser.tab.cc"
     break;
 
   case 125: // call_expr: LABEL LBRA expr_list RBRA
-#line 751 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 751 "src/parser.y"
         {
             auto temp = std::make_unique<CallNode>(); 
             temp->label = std::move(yystack_[3].value.as < std::string > ());
@@ -2401,11 +2401,11 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[3].location);
         }
-#line 2405 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2405 "parser.tab.cc"
     break;
 
   case 126: // call_expr: call_expr LBRA RBRA
-#line 761 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 761 "src/parser.y"
         {
             auto temp = std::make_unique<CallNode>();
             temp->label = "";
@@ -2415,11 +2415,11 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[2].location);
         }
-#line 2419 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2419 "parser.tab.cc"
     break;
 
   case 127: // call_expr: call_expr LBRA expr_list RBRA
-#line 771 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 771 "src/parser.y"
         {
             auto temp = std::make_unique<CallNode>(); 
             temp->label = "";
@@ -2429,11 +2429,11 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[3].location);
         }
-#line 2433 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2433 "parser.tab.cc"
     break;
 
   case 128: // struct_expr: LABEL C_LBRA expr_list C_RBRA
-#line 784 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 784 "src/parser.y"
         {
             auto temp = std::make_unique<StructNode>();
             temp->name = std::move(yystack_[3].value.as < std::string > ());
@@ -2442,32 +2442,32 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[3].location);
         }
-#line 2446 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2446 "parser.tab.cc"
     break;
 
   case 129: // struct_expr: NIL
-#line 793 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 793 "src/parser.y"
         {
             yylhs.value.as < expr_ptr > () = std::make_unique<NilLit>();
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[0].location);
         }
-#line 2455 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2455 "parser.tab.cc"
     break;
 
   case 130: // value_expr: bool_expr
-#line 799 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 799 "src/parser.y"
                 { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2461 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2461 "parser.tab.cc"
     break;
 
   case 131: // bool_expr: comp_expr
-#line 802 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 802 "src/parser.y"
                 { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2467 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2467 "parser.tab.cc"
     break;
 
   case 132: // bool_expr: bool_expr bool_op comp_expr
-#line 804 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 804 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = yystack_[1].value.as < BinaryOp > ();
@@ -2477,17 +2477,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2481 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2481 "parser.tab.cc"
     break;
 
   case 133: // comp_expr: bitwise_expr
-#line 816 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 816 "src/parser.y"
                    { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2487 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2487 "parser.tab.cc"
     break;
 
   case 134: // comp_expr: bitwise_expr comp_op bitwise_expr
-#line 818 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 818 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = yystack_[1].value.as < BinaryOp > ();
@@ -2497,17 +2497,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2501 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2501 "parser.tab.cc"
     break;
 
   case 135: // bitwise_expr: shift_expr
-#line 830 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 830 "src/parser.y"
                  { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2507 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2507 "parser.tab.cc"
     break;
 
   case 136: // bitwise_expr: bitwise_expr bitwise_op shift_expr
-#line 832 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 832 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = yystack_[1].value.as < BinaryOp > ();
@@ -2517,17 +2517,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2521 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2521 "parser.tab.cc"
     break;
 
   case 137: // shift_expr: additive_expr
-#line 844 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 844 "src/parser.y"
                     { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2527 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2527 "parser.tab.cc"
     break;
 
   case 138: // shift_expr: shift_expr shift_op additive_expr
-#line 846 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 846 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = yystack_[1].value.as < BinaryOp > ();
@@ -2537,17 +2537,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2541 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2541 "parser.tab.cc"
     break;
 
   case 139: // additive_expr: mult_expr
-#line 858 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 858 "src/parser.y"
                 { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2547 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2547 "parser.tab.cc"
     break;
 
   case 140: // additive_expr: additive_expr additive_op mult_expr
-#line 860 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 860 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = yystack_[1].value.as < BinaryOp > ();
@@ -2557,17 +2557,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2561 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2561 "parser.tab.cc"
     break;
 
   case 141: // mult_expr: pow_expr
-#line 872 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 872 "src/parser.y"
                { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2567 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2567 "parser.tab.cc"
     break;
 
   case 142: // mult_expr: mult_expr mult_op pow_expr
-#line 874 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 874 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = yystack_[1].value.as < BinaryOp > ();
@@ -2577,17 +2577,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2581 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2581 "parser.tab.cc"
     break;
 
   case 143: // pow_expr: unary_expr
-#line 886 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 886 "src/parser.y"
                  { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2587 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2587 "parser.tab.cc"
     break;
 
   case 144: // pow_expr: unary_expr POW pow_expr
-#line 888 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 888 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = BinaryOp::POW;
@@ -2597,17 +2597,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2601 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2601 "parser.tab.cc"
     break;
 
   case 145: // unary_expr: postfix_expr
-#line 900 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 900 "src/parser.y"
                    { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2607 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2607 "parser.tab.cc"
     break;
 
   case 146: // unary_expr: unary_op postfix_expr
-#line 902 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 902 "src/parser.y"
         {
             auto temp = std::make_unique<UnaryNode>();
             temp->op = yystack_[1].value.as < UnaryOp > ();
@@ -2616,17 +2616,17 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2620 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2620 "parser.tab.cc"
     break;
 
   case 147: // postfix_expr: literal_expr
-#line 913 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 913 "src/parser.y"
                    { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2626 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2626 "parser.tab.cc"
     break;
 
   case 148: // postfix_expr: postfix_expr SQ_LBRA value_expr SQ_RBRA
-#line 915 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 915 "src/parser.y"
         {
             auto temp = std::make_unique<BinaryNode>();
             temp->op = BinaryOp::INDEX;
@@ -2636,11 +2636,11 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[2].location);
         }
-#line 2640 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2640 "parser.tab.cc"
     break;
 
   case 149: // postfix_expr: postfix_expr DOT LABEL
-#line 925 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 925 "src/parser.y"
         {
             auto temp = std::make_unique<AccessNode>();
             temp->field = std::move(yystack_[0].value.as < std::string > ());
@@ -2649,65 +2649,65 @@ namespace yy {
 
             yylhs.value.as < expr_ptr > ()->location = floc_to_loc(yystack_[1].location);
         }
-#line 2653 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2653 "parser.tab.cc"
     break;
 
   case 150: // literal_expr: int_lit
-#line 936 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 936 "src/parser.y"
               { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 2659 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2659 "parser.tab.cc"
     break;
 
   case 151: // literal_expr: float_lit
-#line 937 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 937 "src/parser.y"
                 { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 2665 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2665 "parser.tab.cc"
     break;
 
   case 152: // literal_expr: char_lit
-#line 938 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 938 "src/parser.y"
                { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 2671 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2671 "parser.tab.cc"
     break;
 
   case 153: // literal_expr: bool_lit
-#line 939 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 939 "src/parser.y"
                { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < literal_ptr > ()); }
-#line 2677 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2677 "parser.tab.cc"
     break;
 
   case 154: // literal_expr: list_expr
-#line 940 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 940 "src/parser.y"
                 { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2683 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2683 "parser.tab.cc"
     break;
 
   case 155: // literal_expr: nominal_expr
-#line 941 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 941 "src/parser.y"
                    { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2689 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2689 "parser.tab.cc"
     break;
 
   case 156: // literal_expr: call_expr
-#line 942 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 942 "src/parser.y"
                 { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2695 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2695 "parser.tab.cc"
     break;
 
   case 157: // literal_expr: struct_expr
-#line 943 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 943 "src/parser.y"
                   { yylhs.value.as < expr_ptr > () = std::move(yystack_[0].value.as < expr_ptr > ()); }
-#line 2701 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2701 "parser.tab.cc"
     break;
 
   case 158: // literal_expr: LBRA value_expr RBRA
-#line 944 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 944 "src/parser.y"
                            { yylhs.value.as < expr_ptr > () = std::move(yystack_[1].value.as < expr_ptr > ()); }
-#line 2707 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2707 "parser.tab.cc"
     break;
 
 
-#line 2711 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 2711 "parser.tab.cc"
 
             default:
               break;
@@ -3217,7 +3217,7 @@ namespace yy {
 #endif // YYDEBUG
 
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "src/parser.y"
 } // yy
-#line 3223 "/Users/huangyugen/Documents/cs projects/Kindred/parser.cpp"
+#line 3223 "parser.tab.cc"
 

@@ -1,7 +1,7 @@
 #include "mem.h"
 #include "structs.h"
 
-static struct_layout STRUCT_1_LAYOUT = {
+static struct_layout STRUCT_0_LAYOUT = {
 	.payload_size = 24,
 	.field_count = 3,
 	.fields = {
@@ -11,5 +11,5 @@ static struct_layout STRUCT_1_LAYOUT = {
 	}
 };
 static struct_layout STRUCT_DATA[] {
-	STRUCT_1_LAYOUT,
+	STRUCT_0_LAYOUT,
 };

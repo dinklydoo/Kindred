@@ -32,6 +32,7 @@ add_executable(main
     src/typecheck.cpp
     src/flowcheck.cpp
     src/ir_lower.cpp
+    src/closure.cpp
     ${BISON_Parser_OUTPUTS}
     ${FLEX_Lexer_OUTPUTS}
 )

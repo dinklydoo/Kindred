@@ -1,6 +1,6 @@
 #include "mem.h"
 
-#include "object.h"
+#include "closure.h"
 #include "lists.h"
 #include "structs.h"
 

@@ -32,7 +32,7 @@
 
 
 /**
- ** \file /Users/huangyugen/Documents/cs projects/Kindred/parser.hpp
+ ** \file parser.tab.hh
  ** Define the yy::parser class.
  */
 
@@ -42,15 +42,15 @@
 // especially those whose name start with YY_ or yy_.  They are
 // private implementation details that can be changed or removed.
 
-#ifndef YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_PARSER_HPP_INCLUDED
-# define YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_PARSER_HPP_INCLUDED
+#ifndef YY_YY_PARSER_TAB_HH_INCLUDED
+# define YY_YY_PARSER_TAB_HH_INCLUDED
 // "%code requires" blocks.
-#line 1 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 1 "src/parser.y"
 
     #include <string>
     #include "src/ast.hpp"
 
-#line 54 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
+#line 54 "parser.tab.hh"
 
 
 # include <cstdlib> // std::abort
@@ -184,9 +184,9 @@
 # define YYDEBUG 0
 #endif
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "src/parser.y"
 namespace yy {
-#line 190 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
+#line 190 "parser.tab.hh"
 
 
 
@@ -3655,11 +3655,11 @@ switch (yykind)
   }
 
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "src/parser.y"
 } // yy
-#line 3661 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
+#line 3661 "parser.tab.hh"
 
 
 
 
-#endif // !YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_PARSER_HPP_INCLUDED
+#endif // !YY_YY_PARSER_TAB_HH_INCLUDED

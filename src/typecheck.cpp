@@ -111,7 +111,7 @@ type_ptr TypeChecker::cast_strongest(type_ptr a, type_ptr b){
 // Returns fixed type if type_ptr castable is castable to fixed type
 // otherwise returns nullptr
 type_ptr TypeChecker::cast_fixed(type_ptr fix, type_ptr castable){
-    if (fix == cast_strongest(fix, castable)) return fix;
+    if (fix == cast_strongest(fix, castable) || type_equal(fix, castable)) return fix;
     return nullptr;
 }
 
@@ -129,6 +129,16 @@ bool TypeChecker::type_equal(type_ptr a, type_ptr b){
         auto al = std::static_pointer_cast<NominalType>(a);
         auto bl = std::static_pointer_cast<NominalType>(b);
         return al->name == bl->name;
+    }
+    if (a->kind == Type::Kind::Func){ // TODO : SUBTYPE FUNCTIONS I REALLY CBA RN
+        auto al = std::static_pointer_cast<FuncType>(a);
+        auto bl = std::static_pointer_cast<FuncType>(b);
+
+        if (al->args.size() != bl->args.size()) return false;
+        for (int i = 0; i < al->args.size(); i++){
+            if (!type_equal(al->args[i], bl->args[i])) return false;
+        }
+        return type_equal(al->ret, bl->ret);
     }
     return true;
 }
@@ -154,6 +164,7 @@ void TypeChecker::visit( FuncDecl& node ){
         param_types.push_back(param.type);
     }
     type_ptr ftype = type_s.func_type(param_types, node.ret);
+    node.ftype = ftype;
 
     // generate function type in global scope
     if (!push_var_safe(node.name, ftype, node.location)) return;
@@ -443,7 +454,7 @@ void TypeChecker::visit(BinaryNode& node){
 
 void TypeChecker::visit(ListNode& node){
     // start as generic
-    type_ptr type = type_s.list_type(type_s.generic_type());
+    type_ptr type = type_s.generic_type();
     for (int i = 0; i < node.elems.size(); i++){
         auto& elem = node.elems[i];
         elem->accept(*this);
@@ -459,7 +470,7 @@ void TypeChecker::visit(ListNode& node){
             return;
         }
     }
-    node.resolved_type = type;
+    node.resolved_type = type_s.list_type(type);
 }
 
 void TypeChecker::visit(StructNode& node){
@@ -511,7 +522,12 @@ void TypeChecker::visit(StructNode& node){
 }
 
 void TypeChecker::visit(CallNode& node){
-    type_ptr defn = definitions.find_var(node.label);
+    type_ptr defn;
+    if (node.label.empty()){ 
+        node.f_exp->accept(*this);
+        defn = node.f_exp->resolved_type;
+    }
+    else defn = definitions.find_var(node.label);
     if (!defn){
         errors.undef_error("Reference to function " + node.label + " is undefined", node);
         return;
@@ -590,17 +606,15 @@ void TypeChecker::visit(NominalNode& node){
         errors.undef_error("undefined reference to nominal value (variable/enum) "+node.label, node);
         return;
     }
+    if (defn->kind == Type::Kind::Enum) node.kind = ENUM_VAL;
+    else node.kind = VAR_REF;
+
     node.resolved_type = defn;
 }
 
 void TypeChecker::visit( ReadNode& node){
-    if (!push_var_safe(node.name, node.type, node.location)) return;
-    if (node.type ){
-
-    } // NEED TO CHECK FOR READABLE TYPE
-    typeprop.prop_type(node.type);
-
-    typeprop.unprop_type();
+    node.resolved_type = type_s.generic_type();
+    return;
 }
 
 void TypeChecker::visit( PrintNode& node){

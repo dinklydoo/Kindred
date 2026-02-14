@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 // TODO : FIX BLOCK LABELS IN BRANCHING EXPRESSIONS AND SHORT CIRCUIT
 
@@ -14,6 +15,7 @@ using namespace ir;
 DataType type_to_dtype(Type::Kind kind){
     switch (kind){
         case (Type::Kind::List) :
+        case (Type::Kind::Func) : // closure pointer
         case (Type::Kind::Struct) : return DataType::PTR;
         case (Type::Kind::Bool) : return DataType::BOOL;
         case (Type::Kind::Char) : return DataType::I8;
@@ -36,6 +38,7 @@ int type_to_size(Type::Kind kind){
         case (Type::Kind::Double) :
         case (Type::Kind::Struct) :
         case (Type::Kind::List) :
+        case (Type::Kind::Func) :
         case (Type::Kind::Long) : return 8;
         default : return -1; // no hit
     }
@@ -160,12 +163,14 @@ void IR_Lowerer::struct_pattern_vars( LiteralNode& node){
     for (int i = 0; i < fields.size(); i++){
         if (snode.patterns[i].empty()) continue;
 
-        unsigned int id = identifier.get_ident(snode.patterns[i]);
+        identifier.push_ident(snode.patterns[i], fields[i].type);
+        identifier.get_var(snode.patterns[i]);
+        Operand _var = cons.pop_operand();
 
         cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _target});
         cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(i)});
         cons.push_instruction({Operation::CALL, DataType::PTR, _t, {}, {}, "access_field"});
-        cons.push_instruction({Operation::LOAD, type_to_dtype(fields[i].type->kind), Operand::var(id), _t});
+        cons.push_instruction({Operation::LOAD, type_to_dtype(fields[i].type->kind), _var, _t});
     }
 }
 
@@ -174,18 +179,30 @@ void IR_Lowerer::list_pattern_vars( LiteralNode& node){
     Operand _target = cons.pop_operand();
     ListPatternLit& lnode = static_cast<ListPatternLit&>(node);
 
-    auto lptr = std::static_pointer_cast<ListType>(node.resolved_type);
+    auto ltype = std::static_pointer_cast<ListType>(node.resolved_type);
     Operand _t = cons.get_register();
-    type_ptr etype = lptr->elem;
+    type_ptr etype = ltype->elem;
 
     for (int i = 0; i < lnode.patterns.size()-1; i++){
-        unsigned int id = identifier.get_ident(lnode.patterns[i]);
+        identifier.push_ident(lnode.patterns[i], etype);
+        identifier.get_var(lnode.patterns[i]);
+        Operand _var = cons.pop_operand();
 
         cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _target});
         cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(i)});
         cons.push_instruction({Operation::CALL, DataType::PTR, _t, {}, {}, "access_index"});
-        cons.push_instruction({Operation::LOAD, type_to_dtype(lptr->elem->kind), Operand::var(id), _t});
+        cons.push_instruction({Operation::LOAD, type_to_dtype(etype->kind), _var, _t});
     }
+    int n = lnode.patterns.size();
+    identifier.push_ident(lnode.patterns[n-1], ltype);
+    identifier.get_var(lnode.patterns[n-1]);
+    Operand _var = cons.pop_operand();
+
+    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _target});
+    cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(n-1)});
+    cons.push_instruction({Operation::CALL, DataType::PTR, _t, {}, {}, "access_index"});
+    cons.push_instruction({Operation::MOV, type_to_dtype(etype->kind), _var, _t});
+    increase_ref(_var, ltype); // increase node ref count
 }
 
 void IR_Lowerer::increase_ref( Operand ptr, type_ptr type){
@@ -225,6 +242,118 @@ void IR_Lowerer::generate_node( Operand elem, type_ptr ltype, type_ptr type){
     cons.push_operand(_ptr);
 }
 
+/*
+    Generate struct or env layout
+        - id: of struct or environment
+        - kind:
+            (0) -> struct
+            (1) -> env
+*/
+#define STRUCT_GEN 0
+#define ENV_GEN 1
+void IR_Lowerer::generate_layout(std::vector<type_ptr> types, int id, int kind){
+    int alignment = 0;
+    for (type_ptr t : types){
+        alignment = std::max(alignment, type_to_size(t->kind));
+    }
+    int offset = 0;
+    int payload_size;
+    std::vector<std::vector<std::string>> layout;
+    for (type_ptr t : types){
+        int size = type_to_size(t->kind);
+        if (offset % size) offset += size - (offset % size);
+
+        payload_size = size + offset;
+        
+        std::string type;
+        switch (t->kind){
+            case (Type::Kind::Struct) : type = "STRUCT"; break;
+            case (Type::Kind::List) : type = "LIST"; break;
+            default : type = "LITERAL";
+        }
+        layout.push_back({type, std::to_string(offset), std::to_string(size)});
+        
+        offset += size;
+    }
+    if (payload_size % alignment) payload_size += alignment - (payload_size % alignment);
+
+    std::string path = "./sys_lib/struct_gen.c";;
+    std::string layout_name = "struct";
+    std::string layout_name_c = "STRUCT";
+    std::string access_name = "field";
+    if (kind == ENV_GEN) { // env
+        path = "./sys_lib/closure_gen.c";
+        layout_name = "env";
+        layout_name_c = "ENV";
+        access_name = "var";
+    }
+    std::ofstream classfile(path, std::ios::app);
+    classfile << "static "+layout_name+"_layout "+layout_name_c+'_' << id << "_LAYOUT = {\n"
+    << "\t.payload_size = "<<payload_size<<",\n"
+    <<"\t."+access_name+"_count = "<<types.size()<<",\n"
+    <<"\t."+access_name+"s = {\n";
+    for (auto& p : layout){
+        classfile << "\t\t{.type="<<p[0]<<", .offset="<<p[1]<<", .size="<<p[2]<<"},\n";
+    }
+    classfile << "\t}\n};\n";
+}
+
+void IDVarScope::get_var(std::string var){
+    ConsFunctionIR& cons = IR_Lowerer::instance().builder.top_constructor();
+    for (auto it = stack.rbegin(); it != stack.rend(); it++){
+        auto& sc = *it;
+        if (sc.contains(var) == ENCLOSED){
+            auto& p = sc.get_enclosed(var);
+
+            Operand _env = Operand::imm(0); // placeholder for now need a stack of environments
+            cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
+            cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(p.first)});
+            Operand _ptr = cons.get_register();
+            cons.push_instruction({Operation::CALL, DataType::PTR, _ptr, {}, {}, "access_var"});
+            Operand _var = cons.get_register();
+            cons.push_instruction({Operation::LOAD, type_to_dtype(p.second->kind), _var, _ptr});
+            cons.push_operand(_var);
+            return;
+        }
+        if (sc.contains(var) == IDENT){
+            int id = sc.get_ident(var);
+            cons.push_operand(Operand::var(id));
+            return;
+        }
+    }
+}
+
+void IR_Lowerer::construct_env(std::string fn, type_ptr ftype, varset& enc){
+    ConsFunctionIR& cons = builder.top_constructor();
+    Operand _ptr = cons.get_register();
+    Operand _env = cons.get_register();
+
+    int env_id = envInfo.get_env_id(fn);
+    cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(env_id)});
+    cons.push_instruction({Operation::CALL, DataType::PTR, _env, {}, {}, "allocate_env"});
+
+    Operand _var = cons.get_register();
+    Operand _temp = cons.get_register();
+    for (var v : enc){ // ref count
+        identifier.get_var(v.first);
+        _var = cons.pop_operand();
+        int var_id = envInfo.get_var_id(fn, v.first);
+        cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
+        cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(var_id)});
+        cons.push_instruction({Operation::CALL, DataType::PTR, _temp, {}, {}, "access_var"});
+        cons.push_instruction({Operation::STORE, type_to_dtype(v.second->kind), _temp, _var});
+    }
+    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, Operand::imm(0)}); // temp fix for function ptr
+    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
+    cons.push_instruction({Operation::CALL, DataType::PTR, _ptr, {}, {}, "allocate_closure"});
+
+    identifier.push_ident(fn, ftype);
+    identifier.get_var(fn);
+    Operand _closure = cons.pop_operand();
+
+    cons.push_instruction({Operation::MOV, DataType::PTR, _closure, _ptr});
+}
+
 /* ============================================================================================================================================================
 
                 INTERFACE
@@ -232,25 +361,36 @@ void IR_Lowerer::generate_node( Operand elem, type_ptr ltype, type_ptr type){
  ============================================================================================================================================================ */
 
 void IR_Lowerer::lower(ModuleNode& node){
-    generate_struct_file();
+    generate_layout_file();
     node.accept(*this);
-    close_struct_file();
+    close_layout_file();
 }
 
-void IR_Lowerer::generate_struct_file(){
-    std::ofstream classfile("./sys_lib/struct_gen.c", std::ios::trunc);
+void IR_Lowerer::generate_layout_file(){
+    std::ofstream struct_file("./sys_lib/struct_gen.c", std::ios::trunc);
     // set include paths
-    classfile << "#include \"mem.h\"\n#include \"structs.h\"\n\n";
+    struct_file << "#include \"mem.h\"\n#include \"structs.h\"\n\n";
+
+    std::ofstream env_file("./sys_lib/closure_gen.c", std::ios::trunc);
+    // set include paths
+    env_file << "#include \"mem.h\"\n#include \"closure.h\"\n\n";
     return;
 }
 
-void IR_Lowerer::close_struct_file(){
-    std::ofstream classfile("./sys_lib/struct_gen.c", std::ios::app);
-    classfile << "static struct_layout STRUCT_DATA[] {\n";
+void IR_Lowerer::close_layout_file(){
+    std::ofstream struct_file("./sys_lib/struct_gen.c", std::ios::app);
+    struct_file << "static struct_layout STRUCT_DATA[] {\n";
     for (int i = 0; i < structInfo.struct_count(); i++){
-        classfile << "\tSTRUCT_"<<i+1<<"_LAYOUT,\n";
+        struct_file << "\tSTRUCT_"<<i<<"_LAYOUT,\n";
     }
-    classfile << "};\n";
+    struct_file << "};\n";
+
+    std::ofstream env_file("./sys_lib/closure_gen.c", std::ios::app);
+    env_file << "static env_layout ENV_DATA[] {\n";
+    for (int i = 0; i < envInfo.env_count(); i++){
+        env_file << "\tENV_"<<i<<"_LAYOUT,\n";
+    }
+    env_file << "};\n";
 }
 
 /* ============================================================================================================================================================
@@ -271,42 +411,12 @@ void IR_Lowerer::visit( StructDecl& node){
     int alignment = 0;
     structInfo.add_struct(node.name, node.fields);
 
-    std::vector<Field>& fields = node.fields;
-    for (Field& f : fields){
-        alignment = std::max(alignment, type_to_size(f.type->kind));
+    int struct_id = structInfo.get_struct_id(node.name);
+    std::vector<type_ptr> types;
+    for (Field& f : node.fields){
+        types.push_back(f.type);
     }
-    int offset = 0;
-    int payload_size;
-    std::vector<std::vector<std::string>> layout;
-    for (Field& f : fields){
-        int size = type_to_size(f.type->kind);
-        if (offset % size) offset += size - (offset % size);
-
-        payload_size = size + offset;
-        
-        std::string type;
-        switch (f.type->kind){
-            case (Type::Kind::Struct) : type = "STRUCT"; break;
-            case (Type::Kind::List) : type = "LIST"; break;
-            default : type = "LITERAL";
-        }
-        layout.push_back({type, std::to_string(offset), std::to_string(size)});
-        
-        offset += size;
-    }
-    if (payload_size % alignment) payload_size += alignment - (payload_size % alignment);
-
-    int struct_no = structInfo.struct_count();
-
-    std::ofstream classfile("./sys_lib/struct_gen.c", std::ios::app);
-    classfile << "static struct_layout STRUCT_" << struct_no << "_LAYOUT = {\n"
-    << "\t.payload_size = "<<payload_size<<",\n"
-    <<"\t.field_count = "<<fields.size()<<",\n"
-    <<"\t.fields = {\n";
-    for (auto& p : layout){
-        classfile << "\t\t{.type="<<p[0]<<", .offset="<<p[1]<<", .size="<<p[2]<<"},\n";
-    }
-    classfile << "\t}\n};\n";
+    generate_layout(types, struct_id, STRUCT_GEN);
 }
 
 void IR_Lowerer::visit( EnumDecl& node ){
@@ -314,8 +424,25 @@ void IR_Lowerer::visit( EnumDecl& node ){
 }
 
 void IR_Lowerer::visit( FuncDecl& node){
+    int offset = 0;
+    if (!node.captures.empty()){
+        envInfo.add_env(node.name, node.captures);
+        int env_id = envInfo.get_env_id(node.name);
+        std::vector<type_ptr> types;
+        for (auto& v : node.captures) types.push_back(v.second);
+        generate_layout(types, env_id, ENV_GEN);
+        construct_env(node.name, node.ftype, node.captures); // assigns closure ptr to variable that shares function name
+    }
     identifier.push_scope();
     builder.push_function();
+    ConsFunctionIR& cons = builder.top_constructor();
+
+    if (!node.captures.empty()){
+        for (auto& v : node.captures) identifier.push_enclosed(v.first, v.second);
+    }
+    cons.push_instruction({Operation::LABEL, DataType::EMPTY, {}, {}, {}, '.'+node.name+':'});
+    for (auto& p : node.params) identifier.push_ident(p.name, p.type);
+
     node.body->accept(*this);
     FunctionIR ir = builder.top_function();
     IRprogram.push_back(ir);
@@ -432,12 +559,14 @@ void IR_Lowerer::visit( ElseLit& node ){
 
 void IR_Lowerer::visit(VarDecl& node){
     ConsFunctionIR& cons = builder.top_constructor();
-    unsigned int id = identifier.get_ident(node.name);
     node.r_val->accept(*this);
     Operand _rval = cons.pop_operand(); // expression register
 
+    // must increment ref count
+    identifier.push_ident(node.name, node.type);
+    identifier.get_var(node.name);
+    Operand _var = cons.pop_operand();
     cast_operand(_rval, node.type, node.r_val->resolved_type);
-    Operand _var = Operand::var(id);
     cons.push_instruction({Operation::MOV, type_to_dtype(node.type->kind), _var, _rval});
 }
 
@@ -562,6 +691,13 @@ void IR_Lowerer::visit( BinaryNode& node ){
 void IR_Lowerer::visit( CallNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
 
+    Operand _hof;
+    if (node.label.empty()){
+        _hof = cons.get_register();
+        node.f_exp->accept(*this);
+        _hof = cons.pop_operand();
+    }
+
     for (int i = 0; i < node.params.size(); i++){
         node.params[i]->accept(*this);
         Operand _t = cons.pop_operand();
@@ -573,7 +709,9 @@ void IR_Lowerer::visit( CallNode& node ){
     }
     Operand _t = cons.get_register();
     DataType rtype = type_to_dtype(node.resolved_type->kind);
-    cons.push_instruction({Operation::CALL, rtype, _t, {}, {}, node.label});
+
+    if (node.label.empty()) cons.push_instruction({Operation::CALL_CLOSURE, rtype, _t, _hof});
+    else cons.push_instruction({Operation::CALL, rtype, _t, {}, {}, node.label});
     cons.push_operand(_t);
 };
 
@@ -627,7 +765,15 @@ void IR_Lowerer::visit( AccessNode& node ){
 
 void IR_Lowerer::visit( NominalNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    cons.push_operand(Operand::var(identifier.get_ident(node.label))); // ??
+    if (node.kind == VAR_REF){
+        identifier.get_var(node.label);
+        Operand _var = cons.pop_operand();
+        cons.push_operand(_var);
+    }
+    if (node.kind == ENUM_VAL){ // enum lit
+        auto etype = std::static_pointer_cast<NominalType>(node.resolved_type);
+        cons.push_operand(Operand::imm(structInfo.get_enum_id(etype->name, node.label)));
+    }
 }
 
 void IR_Lowerer::visit( CharLit& node ){
@@ -755,4 +901,5 @@ void IR_Lowerer::visit( ListNode& node ){
         cons.push_instruction({Operation::CALL, DataType::PTR, _index, {}, {}, "index_list"});
         cons.push_instruction({Operation::STORE, type_to_dtype(etype->kind), _index, _elem});
     }
+    cons.push_operand(_ptr);
 }

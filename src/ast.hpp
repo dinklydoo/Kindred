@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <set>
 
 struct Visitor;
 
@@ -127,6 +128,7 @@ struct BinaryNode : ExpNode{
 
 struct CallNode : ExpNode {
     std::string label;
+    expr_ptr f_exp; // nullable
     std::vector<expr_ptr> params;
 
     std::vector<type_ptr> ptypes;
@@ -219,9 +221,7 @@ struct PrintNode : DeclNode {
     public: virtual void accept(Visitor& v) override;
 };
 
-struct ReadNode : DeclNode {
-    std::string name;
-    type_ptr type;
+struct ReadNode : ExpNode {
     public: virtual void accept(Visitor& v) override;
 };
 
@@ -236,11 +236,16 @@ using case_ptr = std::unique_ptr<CaseNode>;
 using struct_decl_ptr = std::unique_ptr<StructDecl>;
 using enum_decl_ptr = std::unique_ptr<EnumDecl>;
 
+using var = std::pair<std::string, type_ptr>;
+using varset = std::set<var>;
 struct FuncDecl : DeclNode{
     std::string name;
     std::vector<Param> params;
     type_ptr ret;
+    type_ptr ftype;
     prog_ptr body;
+
+    varset captures; // which variables are captured from outer scopes
     public: virtual void accept(Visitor& v) override;
 };
 

@@ -1,0 +1,8 @@
+TODO (realistic)
+    - I/O operations
+    - Function Currying (literally just closures with extra steps)
+
+TODO (in future probs not but if im so bored that i come back to this shit project):
+    - Function subtyping
+    - Handwrite parser with better error msg
+    - Lambda expressions
