@@ -127,7 +127,6 @@ struct BinaryNode : ExpNode{
 };
 
 struct CallNode : ExpNode {
-    std::string label;
     expr_ptr f_exp; // nullable
     std::vector<expr_ptr> params;
 
@@ -245,6 +244,7 @@ struct FuncDecl : DeclNode{
     type_ptr ftype;
     prog_ptr body;
 
+    bool is_closure;
     varset captures; // which variables are captured from outer scopes
     public: virtual void accept(Visitor& v) override;
 };

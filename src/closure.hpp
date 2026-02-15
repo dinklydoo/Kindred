@@ -62,7 +62,8 @@ struct VariableMap {
     }
 
     bool func_owns(std::string var){
-        return (get_owner(var) == own.top());
+        std::string owner = get_owner(var);
+        return (owner.empty() || owner == own.top());
     }
 
     std::string get_owner(std::string var){

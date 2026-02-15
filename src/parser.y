@@ -174,7 +174,6 @@
 %type <expr_ptr> unary_expr;
 %type <expr_ptr> postfix_expr;
 %type <expr_ptr> literal_expr;
-%type <expr_ptr> call_expr;
 %type <expr_ptr> struct_expr;
 %type <expr_ptr> nominal_expr;
 
@@ -278,6 +277,7 @@ function_def
     : FUNC LABEL LBRA opt_params RBRA TSEP type program
         {   
             $$ = std::make_unique<FuncDecl>();
+            $$->is_closure = false;
             $$->name = std::move($2);
             $$->params = std::move($4);
             $$->ret = std::move($7);
@@ -580,6 +580,7 @@ assign_expr
     : LABEL TSEP LBRA opt_params RBRA PROD type LBRA program RBRA 
         { 
             auto temp = std::make_unique<FuncDecl>();
+            temp->is_closure = true;
             temp->name = std::move($1);
             temp->params = std::move($4);
             temp->ret = std::move($7);
@@ -736,49 +737,6 @@ expr_list
         }
     ;
 
-call_expr
-    : LABEL LBRA RBRA 
-        {
-            auto temp = std::make_unique<CallNode>();
-            temp->label = std::move($1);
-            temp->f_exp = nullptr;
-            temp->params = std::vector<expr_ptr>{};
-            $$ = std::move(temp);
-
-            $$->location = floc_to_loc(@1);
-        }
-    | LABEL LBRA expr_list RBRA
-        {
-            auto temp = std::make_unique<CallNode>(); 
-            temp->label = std::move($1);
-            temp->f_exp = nullptr;
-            temp->params = std::move($3);
-            $$ = std::move(temp);
-
-            $$->location = floc_to_loc(@1);
-        }
-    | call_expr LBRA RBRA
-        {
-            auto temp = std::make_unique<CallNode>();
-            temp->label = "";
-            temp->f_exp = std::move($1);
-            temp->params = std::vector<expr_ptr>{};
-            $$ = std::move(temp);
-
-            $$->location = floc_to_loc(@1);
-        }
-    | call_expr LBRA expr_list RBRA
-        {
-            auto temp = std::make_unique<CallNode>(); 
-            temp->label = "";
-            temp->f_exp = std::move($1);
-            temp->params = std::move($3);
-            $$ = std::move(temp);
-
-            $$->location = floc_to_loc(@1);
-        }
-    ;
-
 struct_expr
     : LABEL C_LBRA expr_list C_RBRA
         {
@@ -930,6 +888,24 @@ postfix_expr
 
             $$->location = floc_to_loc(@2);
         }
+    | postfix_expr LBRA RBRA
+        {
+            auto temp = std::make_unique<CallNode>();
+            temp->f_exp = std::move($1);
+            temp->params = std::vector<expr_ptr>{};
+            $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
+        }
+    | postfix_expr LBRA expr_list RBRA
+        {
+            auto temp = std::make_unique<CallNode>(); 
+            temp->f_exp = std::move($1);
+            temp->params = std::move($3);
+            $$ = std::move(temp);
+
+            $$->location = floc_to_loc(@1);
+        }
     ;
 
 literal_expr
@@ -939,7 +915,6 @@ literal_expr
     | bool_lit { $$ = std::move($1); }
     | list_expr { $$ = std::move($1); }
     | nominal_expr { $$ = std::move($1); }
-    | call_expr { $$ = std::move($1); }
     | struct_expr { $$ = std::move($1); }
     | LBRA value_expr RBRA { $$ = std::move($2); }
     ;

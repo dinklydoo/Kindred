@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 typedef struct env_node {
-    int ref;
     int env_id; // lookup for environment layout information
     void* payload; // payload as an allocation of one big block
 } env_node;
@@ -22,16 +21,18 @@ typedef struct env_layout {
 } env_layout;
 
 typedef struct closure {
+    int ref = 1;
     env_node* env;
     void* function_ptr;
 } closure;
 
 closure* allocate_closure(void* function_ptr, env_node* env);
-void free_closure(closure* c);
+void incr_closure(closure* c);
+void decr_closure(closure* c);
+env_node* get_env(closure* c);
 
 env_node* allocate_env(int env_id);
-void decr_env(env_node* ptr);
-void incr_env(env_node* ptr);
+void free_env(env_node* ptr);
 void* access_var(env_node* ptr, int var_id);
 
 #endif

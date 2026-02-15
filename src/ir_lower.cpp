@@ -49,7 +49,7 @@ void IR_Lowerer::op_equals(Operand ptr1, Operand ptr2, type_ptr type){
     Operand _t0 = cons.get_register();
     switch (type->kind){
         case (Type::Kind::GENERIC) : {
-            cons.push_operand(Operand::imm(1));
+            cons.push_operand(TRUE);
             return;
         }
         case (Type::Kind::Struct) : {
@@ -91,9 +91,6 @@ void IR_Lowerer::cast_operand(Operand target, type_ptr fix, type_ptr cast){
 
 void IR_Lowerer::short_and( BinaryNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-
-    Operand _true = Operand::imm(0);
-    Operand _false = Operand::imm(0);
     Operand _t = cons.get_register();
 
     std::string L_false = builder.get_scratch_label();
@@ -110,12 +107,12 @@ void IR_Lowerer::short_and( BinaryNode& node ){
     Operand _not_rexp = cons.get_register();
     cons.push_instruction({Operation::NOT, DataType::BOOL, _not_rexp, _rexp});
     cons.push_instruction({Operation::JMP_IF, DataType::BOOL, {}, _not_rexp, {}, L_false});
-    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, _true});
+    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, TRUE});
     cons.push_instruction({Operation::JMP, DataType::EMPTY, {}, {}, {}, L_end});
 
     gen_block(L_false); // L_false
 
-    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, _false});
+    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, FALSE});
 
     gen_block(L_end); // L_end
 
@@ -125,8 +122,6 @@ void IR_Lowerer::short_and( BinaryNode& node ){
 void IR_Lowerer::short_or( BinaryNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
 
-    Operand _true = Operand::imm(0);
-    Operand _false = Operand::imm(0);
     Operand _t = cons.get_register();
 
     std::string L_true = builder.get_scratch_label();
@@ -140,12 +135,12 @@ void IR_Lowerer::short_or( BinaryNode& node ){
     Operand _rexp = cons.pop_operand();
     cons.push_instruction({Operation::JMP_IF, DataType::BOOL, {}, _rexp, {}, L_true});
     
-    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, _false});
+    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, FALSE});
     cons.push_instruction({Operation::JMP, DataType::EMPTY, {}, {}, {}, L_end});
 
     gen_block(L_true) ; // L_true
 
-    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, _true});
+    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, TRUE});
     
     gen_block(L_end); // L_end
 
@@ -161,7 +156,7 @@ void IR_Lowerer::struct_pattern_vars( LiteralNode& node){
     Operand _t = cons.get_register();
     auto& fields = sptr->get_fields();
     for (int i = 0; i < fields.size(); i++){
-        if (snode.patterns[i].empty()) continue;
+        if (snode.patterns[i].empty()) continue; // nil pattern
 
         identifier.push_ident(snode.patterns[i], fields[i].type);
         identifier.get_var(snode.patterns[i]);
@@ -171,6 +166,8 @@ void IR_Lowerer::struct_pattern_vars( LiteralNode& node){
         cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(i)});
         cons.push_instruction({Operation::CALL, DataType::PTR, _t, {}, {}, "access_field"});
         cons.push_instruction({Operation::LOAD, type_to_dtype(fields[i].type->kind), _var, _t});
+
+        increase_ref(_var, fields[i].type);
     }
 }
 
@@ -192,6 +189,7 @@ void IR_Lowerer::list_pattern_vars( LiteralNode& node){
         cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(i)});
         cons.push_instruction({Operation::CALL, DataType::PTR, _t, {}, {}, "access_index"});
         cons.push_instruction({Operation::LOAD, type_to_dtype(etype->kind), _var, _t});
+        increase_ref(_var, etype);
     }
     int n = lnode.patterns.size();
     identifier.push_ident(lnode.patterns[n-1], ltype);
@@ -205,20 +203,58 @@ void IR_Lowerer::list_pattern_vars( LiteralNode& node){
     increase_ref(_var, ltype); // increase node ref count
 }
 
-void IR_Lowerer::increase_ref( Operand ptr, type_ptr type){
+void IR_Lowerer::increase_ref( Operand _ptr, type_ptr type){
     ConsFunctionIR& cons = builder.top_constructor();
-    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, ptr});
-    if (type->kind == Type::Kind::Struct)
-        cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "incr_struct"});
-    else
-        cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "incr_list"});
+    switch (type->kind){
+        case (Type::Kind::Struct) :
+        case (Type::Kind::List) :
+        case (Type::Kind::Func) :
+            cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _ptr});
+            break;
+        default : return;
+    }
+    switch (type->kind){
+        case (Type::Kind::Struct) : 
+            cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "incr_struct"}); 
+            break;
+        case (Type::Kind::List) : 
+            cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "incr_list"});
+            break;
+        case (Type::Kind::Func) : 
+            cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "incr_closure"});
+            break;
+        default : return;
+    }
+}
+
+void IR_Lowerer::decrease_ref( Operand _ptr, type_ptr type){
+    ConsFunctionIR& cons = builder.top_constructor();
+    switch (type->kind){
+        case (Type::Kind::Struct) :
+        case (Type::Kind::List) :
+        case (Type::Kind::Func) :
+            cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _ptr});
+            break;
+        default : return;
+    }
+    switch (type->kind){
+        case (Type::Kind::Struct) : 
+            cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "decr_struct"}); 
+            break;
+        case (Type::Kind::List) : 
+            cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "decr_list"});
+            break;
+        case (Type::Kind::Func) : 
+            cons.push_instruction({Operation::CALL, DataType::EMPTY, {}, {}, {}, "decr_closure"});
+            break;
+        default : return;
+    }
 }
 
 void IR_Lowerer::generate_node( Operand elem, type_ptr ltype, type_ptr type){
     ConsFunctionIR& cons = builder.top_constructor();
     
-    if (ltype->kind == Type::Kind::Struct || ltype->kind == Type::Kind::List)
-        increase_ref(elem, type);
+    increase_ref(elem, type);
 
     Operand _cast = cons.get_register();
     cast_operand(elem, ltype, type);
@@ -230,12 +266,12 @@ void IR_Lowerer::generate_node( Operand elem, type_ptr ltype, type_ptr type){
     else cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(0)});
 
     cons.push_instruction({Operation::PARAM, DataType::I64, {}, Operand::imm(type_to_size(ltype->kind))});
-    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, Operand::imm(0)});
+    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, NULL_PTR});
     cons.push_instruction({Operation::CALL, DataType::PTR, _ptr, {}, {}, "cons"});
 
     Operand _elem = cons.get_register();
     cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _ptr});
-    cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(0)});
+    cons.push_instruction({Operation::PARAM, DataType::I32, {}, NULL_PTR});
     cons.push_instruction({Operation::CALL, DataType::PTR, _elem, {}, {}, "index_list"});
 
     cons.push_instruction({Operation::STORE, type_to_dtype(ltype->kind), _elem, _cast});
@@ -252,6 +288,8 @@ void IR_Lowerer::generate_node( Operand elem, type_ptr ltype, type_ptr type){
 #define STRUCT_GEN 0
 #define ENV_GEN 1
 void IR_Lowerer::generate_layout(std::vector<type_ptr> types, int id, int kind){
+    if (types.empty()) return;
+
     int alignment = 0;
     for (type_ptr t : types){
         alignment = std::max(alignment, type_to_size(t->kind));
@@ -305,7 +343,7 @@ void IDVarScope::get_var(std::string var){
         if (sc.contains(var) == ENCLOSED){
             auto& p = sc.get_enclosed(var);
 
-            Operand _env = Operand::imm(0); // placeholder for now need a stack of environments
+            Operand _env = get_env();
             cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
             cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(p.first)});
             Operand _ptr = cons.get_register();
@@ -326,32 +364,43 @@ void IDVarScope::get_var(std::string var){
 void IR_Lowerer::construct_env(std::string fn, type_ptr ftype, varset& enc){
     ConsFunctionIR& cons = builder.top_constructor();
     Operand _ptr = cons.get_register();
-    Operand _env = cons.get_register();
-
-    int env_id = envInfo.get_env_id(fn);
-    cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(env_id)});
-    cons.push_instruction({Operation::CALL, DataType::PTR, _env, {}, {}, "allocate_env"});
-
-    Operand _var = cons.get_register();
-    Operand _temp = cons.get_register();
-    for (var v : enc){ // ref count
-        identifier.get_var(v.first);
-        _var = cons.pop_operand();
-        int var_id = envInfo.get_var_id(fn, v.first);
-        cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
-        cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(var_id)});
-        cons.push_instruction({Operation::CALL, DataType::PTR, _temp, {}, {}, "access_var"});
-        cons.push_instruction({Operation::STORE, type_to_dtype(v.second->kind), _temp, _var});
+    Operand _func_ptr = cons.get_register();
+    if (enc.empty()){
+        cons.push_instruction({Operation::ADDR, DataType::PTR, _func_ptr, {}, {}, fn});
+        cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _func_ptr});
+        cons.push_instruction({Operation::PARAM, DataType::PTR, {}, NULL_PTR});
     }
-    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, Operand::imm(0)}); // temp fix for function ptr
-    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
+    else {
+        Operand _env = cons.get_register();
+        int env_id = envInfo.get_env_id(fn);
+        cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(env_id)});
+        cons.push_instruction({Operation::CALL, DataType::PTR, _env, {}, {}, "allocate_env"});
+    
+        Operand _var = cons.get_register();
+        Operand _temp = cons.get_register();
+        for (var v : enc){
+            identifier.get_var(v.first); // get var from parent function
+            _var = cons.pop_operand();
+    
+            increase_ref(_var, v.second);
+    
+            int var_id = envInfo.get_var_id(fn, v.first);
+            cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
+            cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(var_id)});
+            cons.push_instruction({Operation::CALL, DataType::PTR, _temp, {}, {}, "access_var"});
+            cons.push_instruction({Operation::STORE, type_to_dtype(v.second->kind), _temp, _var});
+        }
+        cons.push_instruction({Operation::ADDR, DataType::PTR, _func_ptr, {}, {}, fn});
+        cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _func_ptr}); // temp fix for function ptr
+        cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});
+    }
     cons.push_instruction({Operation::CALL, DataType::PTR, _ptr, {}, {}, "allocate_closure"});
-
     identifier.push_ident(fn, ftype);
     identifier.get_var(fn);
     Operand _closure = cons.pop_operand();
 
     cons.push_instruction({Operation::MOV, DataType::PTR, _closure, _ptr});
+    // cons.push_operand(_closure);
 }
 
 /* ============================================================================================================================================================
@@ -362,7 +411,11 @@ void IR_Lowerer::construct_env(std::string fn, type_ptr ftype, varset& enc){
 
 void IR_Lowerer::lower(ModuleNode& node){
     generate_layout_file();
+    identifier.push_scope();
+    builder.push_function();
     node.accept(*this);
+    builder.pop_function();
+    identifier.pop_scope();
     close_layout_file();
 }
 
@@ -425,21 +478,25 @@ void IR_Lowerer::visit( EnumDecl& node ){
 
 void IR_Lowerer::visit( FuncDecl& node){
     int offset = 0;
-    if (!node.captures.empty()){
-        envInfo.add_env(node.name, node.captures);
-        int env_id = envInfo.get_env_id(node.name);
-        std::vector<type_ptr> types;
-        for (auto& v : node.captures) types.push_back(v.second);
-        generate_layout(types, env_id, ENV_GEN);
-        construct_env(node.name, node.ftype, node.captures); // assigns closure ptr to variable that shares function name
-    }
-    identifier.push_scope();
+    
+    envInfo.add_env(node.name, node.captures);
+    int env_id = envInfo.get_env_id(node.name);
+    std::vector<type_ptr> types;
+    for (auto& v : node.captures) types.push_back(v.second);
+    generate_layout(types, env_id, ENV_GEN);
+    construct_env(node.name, node.ftype, node.captures); // assigns closure ptr to variable that shares function name
+
     builder.push_function();
     ConsFunctionIR& cons = builder.top_constructor();
+    identifier.push_scope();
+    
+    // ANNOTATE PARAMS WITH @_CLOSURE AS FIRST, ENSURE NO NAME CONFLICTS
+    identifier.push_ident("@_CLOSURE", node.ftype); // type is irrelevant
+    identifier.get_var("@_CLOSURE"); // first invisible param is closure
+    identifier.enter_function(cons.pop_operand()); // null env
 
-    if (!node.captures.empty()){
-        for (auto& v : node.captures) identifier.push_enclosed(v.first, v.second);
-    }
+    for (auto& v : node.captures) identifier.push_enclosed(v.first, v.second);
+    
     cons.push_instruction({Operation::LABEL, DataType::EMPTY, {}, {}, {}, '.'+node.name+':'});
     for (auto& p : node.params) identifier.push_ident(p.name, p.type);
 
@@ -447,7 +504,10 @@ void IR_Lowerer::visit( FuncDecl& node){
     FunctionIR ir = builder.top_function();
     IRprogram.push_back(ir);
     builder.pop_function();
+
     identifier.pop_scope();
+    identifier.exit_function();
+    // decr ref counts out of scope
 }
 
 void IR_Lowerer::visit( ProgramNode& node){
@@ -459,7 +519,6 @@ void IR_Lowerer::visit( ProgramNode& node){
 
 void IR_Lowerer::visit( CaseNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    identifier.push_scope();
 
     node.target->accept(*this);
     Operand _target = cons.pop_operand();
@@ -495,8 +554,6 @@ void IR_Lowerer::visit( CaseNode& node ){
         if (p->pattern_type) cons.push_operand(_target);
         p->accept(*this);
     }
-
-    identifier.push_scope();
 }
 
 void IR_Lowerer::visit(CaseBranchNode& node){
@@ -549,12 +606,12 @@ void IR_Lowerer::visit(GuardBranchNode& node){
 
 void IR_Lowerer::visit( DefaultLit& node ){ 
     ConsFunctionIR& cons = builder.top_constructor();
-    cons.push_operand(Operand::imm(1)); // true 
+    cons.push_operand(TRUE); // true 
 }
 
 void IR_Lowerer::visit( ElseLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    cons.push_operand(Operand::imm(1)); // true
+    cons.push_operand(TRUE); // true
 }
 
 void IR_Lowerer::visit(VarDecl& node){
@@ -562,7 +619,8 @@ void IR_Lowerer::visit(VarDecl& node){
     node.r_val->accept(*this);
     Operand _rval = cons.pop_operand(); // expression register
 
-    // must increment ref count
+    increase_ref(_rval, node.type);
+
     identifier.push_ident(node.name, node.type);
     identifier.get_var(node.name);
     Operand _var = cons.pop_operand();
@@ -690,13 +748,17 @@ void IR_Lowerer::visit( BinaryNode& node ){
 
 void IR_Lowerer::visit( CallNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-
     Operand _hof;
-    if (node.label.empty()){
-        _hof = cons.get_register();
-        node.f_exp->accept(*this);
-        _hof = cons.pop_operand();
-    }
+    
+    _hof = cons.get_register();
+    node.f_exp->accept(*this);
+    _hof = cons.pop_operand(); // returns a closure ptr
+
+    Operand _env = cons.get_register();
+    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _hof});
+    cons.push_instruction({Operation::CALL, DataType::PTR, _env, {}, {}, "get_env"});
+
+    cons.push_instruction({Operation::PARAM, DataType::PTR, {}, _env});     
 
     for (int i = 0; i < node.params.size(); i++){
         node.params[i]->accept(*this);
@@ -710,8 +772,7 @@ void IR_Lowerer::visit( CallNode& node ){
     Operand _t = cons.get_register();
     DataType rtype = type_to_dtype(node.resolved_type->kind);
 
-    if (node.label.empty()) cons.push_instruction({Operation::CALL_CLOSURE, rtype, _t, _hof});
-    else cons.push_instruction({Operation::CALL, rtype, _t, {}, {}, node.label});
+    cons.push_instruction({Operation::CALL, rtype, _t, _hof});
     cons.push_operand(_t);
 };
 
@@ -725,13 +786,12 @@ void IR_Lowerer::visit( StructNode& node ){
     for (int i = 0; i < node.fields.size(); i++){
         node.fields[i]->accept(*this);
         Operand _t = cons.pop_operand();
-
-        if (node.ftypes[i]->kind == Type::Kind::Struct || node.ftypes[i]->kind == Type::Kind::List)
-            increase_ref(_t, node.ftypes[i]);
-        else {
-            cast_operand(_t, node.ftypes[i], node.fields[i]->resolved_type);
-            _t = cons.pop_operand();
-        }
+        
+        increase_ref(_t, node.ftypes[i]);
+    
+        cast_operand(_t, node.ftypes[i], node.fields[i]->resolved_type);
+        _t = cons.pop_operand();
+        
         DataType dtype = type_to_dtype(node.ftypes[i]->kind);
         cons.push_instruction({Operation::PARAM, DataType::PTR, {}, {}, _ptr});
         cons.push_instruction({Operation::PARAM, DataType::I32, {}, {}, Operand::imm(i)});
@@ -800,12 +860,12 @@ void IR_Lowerer::visit( BoolLit& node ){
 
 void IR_Lowerer::visit( EmptyLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    cons.push_operand(Operand::imm(0)); // null ptr
+    cons.push_operand(NULL_PTR);
 }
 
 void IR_Lowerer::visit( NilLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    cons.push_operand(Operand::imm(0)); // null ptr
+    cons.push_operand(NULL_PTR);
 }
 
 void IR_Lowerer::visit( ListPatternLit& node ){
@@ -840,14 +900,14 @@ void IR_Lowerer::visit( StructPatternLit& node ){
         cons.push_instruction({Operation::PARAM, DataType::PTR, {}, Operand::imm(i)});
         cons.push_instruction({Operation::CALL, DataType::PTR, _field, {}, {}, "access_field"});
         // null pointer check
-        cons.push_instruction({Operation::CEQ, DataType::PTR, _neq, _field, Operand::imm(0)});
+        cons.push_instruction({Operation::CEQ, DataType::PTR, _neq, _field, NULL_PTR});
         cons.push_instruction({Operation::JMP_IF, DataType::BOOL, {}, _neq, {}, L_false});
     }
     Operand _t = cons.get_register();
-    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, Operand::imm(1)});
+    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, TRUE});
     cons.push_instruction({Operation::JMP, DataType::EMPTY, {}, {}, {}, L_end});
     gen_block(L_false);
-    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, Operand::imm(0)});
+    cons.push_instruction({Operation::MOV, DataType::BOOL, _t, FALSE});
     gen_block(L_end);
     cons.push_operand(_t);
 }
@@ -872,7 +932,7 @@ void IR_Lowerer::visit( ListNode& node ){
     type_ptr etype = ltype->elem;
 
     if (node.elems.empty()){ 
-        cons.push_operand(Operand::imm(0)); // null ptr
+        cons.push_operand(NULL_PTR); // null ptr
         return;
     }
     if (etype->kind == Type::Kind::List) cons.push_instruction({Operation::PARAM, DataType::I32, {}, Operand::imm(1)});

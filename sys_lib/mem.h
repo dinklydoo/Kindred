@@ -4,7 +4,7 @@
 #define LITERAL 0
 #define LIST 1
 #define STRUCT 2
-#define OBJECT 3
+#define CLOSURE 3
 
 void* allocate_bool(bool);
 void* allocate_char(char);

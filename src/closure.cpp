@@ -105,8 +105,6 @@ void ClosureGen::visit( StructNode& node ) {
 }
 
 void ClosureGen::visit( CallNode& node ) {
-    if (node.label.empty()) node.f_exp->accept(*this);
-    else { node.label = func_rn.get_func(node.label); }
-    
+    node.f_exp->accept(*this);
     for (auto& p : node.params) p->accept(*this);
 }

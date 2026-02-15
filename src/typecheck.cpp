@@ -1,5 +1,6 @@
 #include "typecheck.hpp"
 #include "ast.hpp"
+#include "semerror.hpp"
 #include "types.hpp"
 #include <cstddef>
 #include <memory>
@@ -523,23 +524,23 @@ void TypeChecker::visit(StructNode& node){
 
 void TypeChecker::visit(CallNode& node){
     type_ptr defn;
-    if (node.label.empty()){ 
-        node.f_exp->accept(*this);
-        defn = node.f_exp->resolved_type;
-    }
-    else defn = definitions.find_var(node.label);
-    if (!defn){
-        errors.undef_error("Reference to function " + node.label + " is undefined", node);
+    node.f_exp->accept(*this);
+    defn = node.f_exp->resolved_type;
+    if (is_error(defn)){
+        node.resolved_type = type_s.error_type();
         return;
     }
     if (defn->kind != Type::Kind::Func){
-        errors.reference_error(node.label, definitions.find_var(node.label), node);
+        errors.type_error(
+            "function call requires called expression to be a function type "
+            " instead got an expression of type: "+type_to_string(defn), node
+        );
         return;
     }
     auto func_defn = std::static_pointer_cast<FuncType>(defn);
     if (node.params.size() != func_defn->args.size()){
         errors.arg_error(
-            "function "+node.label+" expects "+
+            "function of type"+type_to_string(func_defn)+" expects "+
             std::to_string(func_defn->args.size())+" arguments but got "+
             std::to_string(node.params.size())+" instead", node
         );
@@ -558,7 +559,7 @@ void TypeChecker::visit(CallNode& node){
         auto expected = func_defn->args[i];
         if (!cast_fixed(expected, arg->resolved_type)){
             errors.type_error(
-                "function "+node.label+" expects an argument of type "
+                "function of type"+type_to_string(func_defn)+" expects an argument of type "
                 +type_to_string(expected)+" in position "+std::to_string(i+1)
                 +" but got an argument of "+type_to_string(arg->resolved_type)+" instead", node
             );

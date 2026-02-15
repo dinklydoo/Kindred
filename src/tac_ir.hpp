@@ -56,9 +56,9 @@ enum class Operation {
     // control flow
     JMP, JMP_IF, RET, LABEL,
     // functional
-    CALL, PARAM, CALL_CLOSURE,
+    CALL, PARAM,
     // mem
-    LOAD, STORE
+    LOAD, STORE, ADDR // access label pointer (for functions)
 };
 
 enum class DataType {
@@ -66,6 +66,9 @@ enum class DataType {
     , I8 // I8 for char
 };
 
+#define NULL_PTR Operand::imm(0)
+#define TRUE Operand::imm(1)
+#define FALSE Operand::imm(0)
 struct Instruction {
     Operation op;
     DataType type;
@@ -106,9 +109,9 @@ struct Instruction {
             case (Operation::STORE) : std::cout << "store"; break;
             case (Operation::PARAM) : std::cout << "param"; break;
             case (Operation::CALL) : std::cout << "call"; break;
-            case (Operation::CALL_CLOSURE) : std::cout << "call_higher"; break;
             case (Operation::JMP) : std::cout << "jmp"; break;
             case (Operation::RET) : std::cout << "ret"; break;
+            case (Operation::ADDR) : std::cout << "addr"; break;
             case (Operation::LABEL) : std::cout << target<<'\n'; return;
         }
         switch (op){
@@ -122,13 +125,13 @@ struct Instruction {
             case (Operation::STORE) : std::cout<<' '<<dst.op_str()<<' '<<src1.op_str()<<' '<<src2.op_str()<<'\n'; break;
             case (Operation::MOV) : case (Operation::NEG) : case (Operation::NOT) : 
             case (Operation::CST_I32) : case (Operation::CST_I64) : case (Operation::CST_F32) : 
-            case (Operation::CALL_CLOSURE) :
+            case (Operation::CALL) :
             case (Operation::CST_F64) : std::cout<<' '<<dst.op_str()<<' '<<src1.op_str()<<'\n'; break;
             case (Operation::JMP_IF) : std::cout<<' '<<src1.op_str()<<' '<<target<<'\n'; break;
             case (Operation::RET) :
             case (Operation::PARAM) : std::cout<<' '<<src1.op_str()<<'\n'; break;
-            case (Operation::CALL) : std::cout<<' '<<dst.op_str()<<' '<<target<<'\n'; break;
             case (Operation::JMP) : std::cout<<' '<<target<<'\n';
+            case (Operation::ADDR) : std::cout<<' '<<dst.op_str()<<' '<<target<<'\n'; break;
             default: return;
         }
     }

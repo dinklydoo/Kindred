@@ -96,13 +96,24 @@ struct Scope {
     int get_ident(std::string var){ return stack[var].first; }
 
     void push_ident(std::string var, int id, type_ptr type){ stack[var] = {id, type}; }
-    void push_enclosed(std::string var, int id, type_ptr type){ stack[var] = {id, type}; }
+    void push_enclosed(std::string var, int id, type_ptr type){ closure_id[var] = {id, type}; }
 };
 struct IDVarScope {
     std::vector<Scope> stack;
+    std::stack<Operand> env_stack;
     unsigned int ident_count = 0;
 
     void get_var(std::string label); // pushes register with variable on stack
+
+    void enter_function(Operand _env) { 
+        ident_count = 0; 
+        env_stack.push(_env);
+    } // reset
+    void exit_function(){
+        env_stack.pop();
+    }
+
+    Operand get_env(){ return env_stack.top(); }
 
     void push_ident(std::string label, type_ptr type){ stack.back().push_ident(label, ident_count++, type); }
     void push_enclosed(std::string label, type_ptr type){ stack.back().push_enclosed(label, ident_count++, type); }
@@ -203,7 +214,8 @@ struct IR_Lowerer : Visitor {
     void op_equals( Operand ptr1, Operand ptr2, type_ptr type);
     void list_equals( Operand ptr1, Operand ptr2, type_ptr type);
     void struct_equals( Operand ptr1, Operand ptr2, type_ptr type);
-    void increase_ref( Operand ptr, type_ptr type);
+    void increase_ref( Operand _ptr, type_ptr type);
+    void decrease_ref( Operand _ptr, type_ptr type);
     void generate_node( Operand elem, type_ptr ltype, type_ptr type);
 
     void short_and( BinaryNode& );

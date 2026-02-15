@@ -11,42 +11,44 @@ closure* allocate_closure(void* function_ptr, env_node* env){
     return c;
 }
 
-void free_closure(closure* c){
-    decr_env(c->env);
-    free(c);
+void incr_closure(closure* ptr){
+    ptr->ref++;
+};
+
+void decr_closure(closure* c){
+    c->ref--;
+    if (c->ref == 0){
+        free_env(c->env);
+        free(c);
+    }
+}
+
+env_node* get_env(closure* c){
+    return c->env;
 }
 
 env_node* allocate_env(int env_id){
     env_layout layout = CLOSURE_DATA[env_id];
     env_node* node = (env_node*)malloc(sizeof(env_node));
     node->env_id = env_id;
-    node->ref = 1;
     node->payload = malloc(layout.payload_size);
     memset(node->payload, 0, layout.payload_size);
 
     return node;
 }
 
-void decr_env(env_node* ptr){
-    ptr->ref--;
-    if (ptr->ref == 0){
-        // if struct is destroyed, decr all references to pointed objects
-        env_layout layout = CLOSURE_DATA[ptr->env_id];
+void free_env(env_node* ptr){
+    // if struct is destroyed, decr all references to pointed objects
+    env_layout layout = CLOSURE_DATA[ptr->env_id];
 
-        for (int i = 0; i < layout.var_count; i++){
-            env_data ed = layout.vars[i];
+    for (int i = 0; i < layout.var_count; i++){
+        env_data ed = layout.vars[i];
 
-            char* payload_ptr = ((char*)ptr->payload) + ed.offset;
-            if (ed.type != LITERAL) decr_ref(payload_ptr, ed.type);
-        }
-        free(ptr->payload); // free payload
-
-        free(ptr); // free container
+        char* payload_ptr = ((char*)ptr->payload) + ed.offset;
+        if (ed.type != LITERAL) decr_ref(payload_ptr, ed.type);
     }
-};
-
-void incr_env(env_node* ptr){
-    ptr->ref++;
+    free(ptr->payload); // free payload
+    free(ptr); // free container
 };
 
 void* access_var(env_node* ptr, int var_id){

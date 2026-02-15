@@ -425,7 +425,6 @@ namespace yy {
       // assign_val_expr
       // nominal_expr
       // list_expr
-      // call_expr
       // struct_expr
       // value_expr
       // bool_expr
@@ -784,19 +783,18 @@ namespace yy {
         S_empty_list = 127,                      // empty_list
         S_list_con = 128,                        // list_con
         S_expr_list = 129,                       // expr_list
-        S_call_expr = 130,                       // call_expr
-        S_struct_expr = 131,                     // struct_expr
-        S_value_expr = 132,                      // value_expr
-        S_bool_expr = 133,                       // bool_expr
-        S_comp_expr = 134,                       // comp_expr
-        S_bitwise_expr = 135,                    // bitwise_expr
-        S_shift_expr = 136,                      // shift_expr
-        S_additive_expr = 137,                   // additive_expr
-        S_mult_expr = 138,                       // mult_expr
-        S_pow_expr = 139,                        // pow_expr
-        S_unary_expr = 140,                      // unary_expr
-        S_postfix_expr = 141,                    // postfix_expr
-        S_literal_expr = 142                     // literal_expr
+        S_struct_expr = 130,                     // struct_expr
+        S_value_expr = 131,                      // value_expr
+        S_bool_expr = 132,                       // bool_expr
+        S_comp_expr = 133,                       // comp_expr
+        S_bitwise_expr = 134,                    // bitwise_expr
+        S_shift_expr = 135,                      // shift_expr
+        S_additive_expr = 136,                   // additive_expr
+        S_mult_expr = 137,                       // mult_expr
+        S_pow_expr = 138,                        // pow_expr
+        S_unary_expr = 139,                      // unary_expr
+        S_postfix_expr = 140,                    // postfix_expr
+        S_literal_expr = 141                     // literal_expr
       };
     };
 
@@ -886,7 +884,6 @@ namespace yy {
       case symbol_kind::S_assign_val_expr: // assign_val_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_call_expr: // call_expr
       case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
@@ -1541,7 +1538,6 @@ switch (yykind)
       case symbol_kind::S_assign_val_expr: // assign_val_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_call_expr: // call_expr
       case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
@@ -3138,8 +3134,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 285,     ///< Last index in yytable_.
-      yynnts_ = 77,  ///< Number of nonterminal symbols.
+      yylast_ = 267,     ///< Last index in yytable_.
+      yynnts_ = 76,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
 
@@ -3264,7 +3260,6 @@ switch (yykind)
       case symbol_kind::S_assign_val_expr: // assign_val_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_call_expr: // call_expr
       case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
@@ -3469,7 +3464,6 @@ switch (yykind)
       case symbol_kind::S_assign_val_expr: // assign_val_expr
       case symbol_kind::S_nominal_expr: // nominal_expr
       case symbol_kind::S_list_expr: // list_expr
-      case symbol_kind::S_call_expr: // call_expr
       case symbol_kind::S_struct_expr: // struct_expr
       case symbol_kind::S_value_expr: // value_expr
       case symbol_kind::S_bool_expr: // bool_expr
@@ -3657,7 +3651,7 @@ switch (yykind)
 
 #line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
 } // yy
-#line 3661 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
+#line 3655 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
 
 
 
