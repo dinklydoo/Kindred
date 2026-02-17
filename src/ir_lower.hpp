@@ -1,6 +1,7 @@
 #include "types.hpp"
 #include "visitor.hpp"
 #include "tac_ir.hpp"
+#include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <stack>
@@ -58,6 +59,8 @@ struct EnvMap {
     std::unordered_map<std::string, unsigned int> env_id;
 
     void add_env(std::string fn, std::set<var>& vars){
+        if (vars.empty()) return;
+
         env_id.emplace(fn, env_id.size());
         id_map temp = {};
         for (var v : vars){
@@ -65,10 +68,11 @@ struct EnvMap {
         }
         mapping[fn] = temp;
     }
-    unsigned int get_env_id(std::string fn){
+    int get_env_id(std::string fn){
+        if (!env_id.contains(fn)) return -1;
         return env_id[fn];
     }
-    unsigned int get_var_id(std::string fn, std::string vn){
+    int get_var_id(std::string fn, std::string vn){
         return mapping[fn][vn];
     }
     int env_count(){ return env_id.size(); }
@@ -93,7 +97,7 @@ struct Scope {
     }
 
     std::pair<int, type_ptr>& get_enclosed(std::string var){ return closure_id[var]; }
-    int get_ident(std::string var){ return stack[var].first; }
+    std::pair<int, type_ptr>& get_ident(std::string var){ return stack[var]; }
 
     void push_ident(std::string var, int id, type_ptr type){ stack[var] = {id, type}; }
     void push_enclosed(std::string var, int id, type_ptr type){ closure_id[var] = {id, type}; }
@@ -101,25 +105,42 @@ struct Scope {
 struct IDVarScope {
     std::vector<Scope> stack;
     std::stack<Operand> env_stack;
+
+    std::vector<std::set<std::string>> locals;
     unsigned int ident_count = 0;
 
-    void get_var(std::string label); // pushes register with variable on stack
+    type_ptr get_var(std::string label); // pushes register with variable on stack
 
     void enter_function(Operand _env) { 
-        ident_count = 0; 
+        locals.emplace_back();
         env_stack.push(_env);
     } // reset
     void exit_function(){
+        locals.pop_back();
         env_stack.pop();
     }
 
     Operand get_env(){ return env_stack.top(); }
 
-    void push_ident(std::string label, type_ptr type){ stack.back().push_ident(label, ident_count++, type); }
-    void push_enclosed(std::string label, type_ptr type){ stack.back().push_enclosed(label, ident_count++, type); }
+    void push_ident(std::string label, type_ptr type){
+        stack.back().push_ident(label, ident_count++, type);
+        if (!locals.empty()) locals.back().insert(label);
+    }
+    void push_enclosed(std::string label, type_ptr type){ 
+        stack.back().push_enclosed(label, ident_count++, type); 
+    }
 
     void push_scope(){ stack.emplace_back(); }
-    void pop_scope() { stack.pop_back(); }
+
+    void pop_scope(){
+        auto& top = stack.back();
+        if (!locals.empty()){
+            for (auto& v : top.stack) locals.back().erase(v.first);
+        }
+        stack.pop_back();
+    };
+
+    void decr_locals();
 };
 
 struct ConsFunctionIR {

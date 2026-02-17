@@ -277,7 +277,6 @@ function_def
     : FUNC LABEL LBRA opt_params RBRA TSEP type program
         {   
             $$ = std::make_unique<FuncDecl>();
-            $$->is_closure = false;
             $$->name = std::move($2);
             $$->params = std::move($4);
             $$->ret = std::move($7);
@@ -580,7 +579,6 @@ assign_expr
     : LABEL TSEP LBRA opt_params RBRA PROD type LBRA program RBRA 
         { 
             auto temp = std::make_unique<FuncDecl>();
-            temp->is_closure = true;
             temp->name = std::move($1);
             temp->params = std::move($4);
             temp->ret = std::move($7);

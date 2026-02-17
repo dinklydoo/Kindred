@@ -1,7 +1,7 @@
 #include "mem.h"
 #include "closure.h"
 
-static env_layout ENV_2_LAYOUT = {
+static env_layout ENV_0_LAYOUT = {
 	.payload_size = 8,
 	.var_count = 2,
 	.vars = {
@@ -11,10 +11,4 @@ static env_layout ENV_2_LAYOUT = {
 };
 static env_layout ENV_DATA[] {
 	ENV_0_LAYOUT,
-	ENV_1_LAYOUT,
-	ENV_2_LAYOUT,
-	ENV_3_LAYOUT,
-	ENV_4_LAYOUT,
-	ENV_5_LAYOUT,
-	ENV_6_LAYOUT,
 };

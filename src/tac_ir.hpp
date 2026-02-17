@@ -56,7 +56,7 @@ enum class Operation {
     // control flow
     JMP, JMP_IF, RET, LABEL,
     // functional
-    CALL, PARAM,
+    CALL, PARAM, CALL_EXT,
     // mem
     LOAD, STORE, ADDR // access label pointer (for functions)
 };
@@ -108,6 +108,7 @@ struct Instruction {
             case (Operation::LOAD) : std::cout << "load"; break;
             case (Operation::STORE) : std::cout << "store"; break;
             case (Operation::PARAM) : std::cout << "param"; break;
+            case (Operation::CALL_EXT) :
             case (Operation::CALL) : std::cout << "call"; break;
             case (Operation::JMP) : std::cout << "jmp"; break;
             case (Operation::RET) : std::cout << "ret"; break;
@@ -131,6 +132,7 @@ struct Instruction {
             case (Operation::RET) :
             case (Operation::PARAM) : std::cout<<' '<<src1.op_str()<<'\n'; break;
             case (Operation::JMP) : std::cout<<' '<<target<<'\n';
+            case (Operation::CALL_EXT) :
             case (Operation::ADDR) : std::cout<<' '<<dst.op_str()<<' '<<target<<'\n'; break;
             default: return;
         }

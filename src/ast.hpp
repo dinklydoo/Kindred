@@ -244,8 +244,7 @@ struct FuncDecl : DeclNode{
     type_ptr ftype;
     prog_ptr body;
 
-    bool is_closure;
-    varset captures; // which variables are captured from outer scopes
+    varset captures = {}; // which variables are captured from outer scopes
     public: virtual void accept(Visitor& v) override;
 };
 
