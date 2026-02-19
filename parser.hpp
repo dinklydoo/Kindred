@@ -45,7 +45,7 @@
 #ifndef YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_PARSER_HPP_INCLUDED
 # define YY_YY_USERS_HUANGYUGEN_DOCUMENTS_CS_PROJECTS_KINDRED_PARSER_HPP_INCLUDED
 // "%code requires" blocks.
-#line 1 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 1 "/Users/huangyugen/Documents/cs projects/Kindred/src/parse/parser.y"
 
     #include <string>
     #include "src/ast.hpp"
@@ -184,7 +184,7 @@
 # define YYDEBUG 0
 #endif
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parse/parser.y"
 namespace yy {
 #line 190 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
 
@@ -3649,7 +3649,7 @@ switch (yykind)
   }
 
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parse/parser.y"
 } // yy
 #line 3655 "/Users/huangyugen/Documents/cs projects/Kindred/parser.hpp"
 

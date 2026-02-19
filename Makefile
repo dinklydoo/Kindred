@@ -201,6 +201,30 @@ parser.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/parser.cpp.s
 .PHONY : parser.cpp.s
 
+src/cfg_builder.o: src/cfg_builder.cpp.o
+.PHONY : src/cfg_builder.o
+
+# target to build an object file
+src/cfg_builder.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/cfg_builder.cpp.o
+.PHONY : src/cfg_builder.cpp.o
+
+src/cfg_builder.i: src/cfg_builder.cpp.i
+.PHONY : src/cfg_builder.i
+
+# target to preprocess a source file
+src/cfg_builder.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/cfg_builder.cpp.i
+.PHONY : src/cfg_builder.cpp.i
+
+src/cfg_builder.s: src/cfg_builder.cpp.s
+.PHONY : src/cfg_builder.s
+
+# target to generate assembly for a file
+src/cfg_builder.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/cfg_builder.cpp.s
+.PHONY : src/cfg_builder.cpp.s
+
 src/closure.o: src/closure.cpp.o
 .PHONY : src/closure.o
 
@@ -272,6 +296,30 @@ src/ir_lower.s: src/ir_lower.cpp.s
 src/ir_lower.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/ir_lower.cpp.s
 .PHONY : src/ir_lower.cpp.s
+
+src/liveness.o: src/liveness.cpp.o
+.PHONY : src/liveness.o
+
+# target to build an object file
+src/liveness.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/liveness.cpp.o
+.PHONY : src/liveness.cpp.o
+
+src/liveness.i: src/liveness.cpp.i
+.PHONY : src/liveness.i
+
+# target to preprocess a source file
+src/liveness.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/liveness.cpp.i
+.PHONY : src/liveness.cpp.i
+
+src/liveness.s: src/liveness.cpp.s
+.PHONY : src/liveness.s
+
+# target to generate assembly for a file
+src/liveness.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/liveness.cpp.s
+.PHONY : src/liveness.cpp.s
 
 src/semerror.o: src/semerror.cpp.o
 .PHONY : src/semerror.o
@@ -363,6 +411,9 @@ help:
 	@echo "... parser.o"
 	@echo "... parser.i"
 	@echo "... parser.s"
+	@echo "... src/cfg_builder.o"
+	@echo "... src/cfg_builder.i"
+	@echo "... src/cfg_builder.s"
 	@echo "... src/closure.o"
 	@echo "... src/closure.i"
 	@echo "... src/closure.s"
@@ -372,6 +423,9 @@ help:
 	@echo "... src/ir_lower.o"
 	@echo "... src/ir_lower.i"
 	@echo "... src/ir_lower.s"
+	@echo "... src/liveness.o"
+	@echo "... src/liveness.i"
+	@echo "... src/liveness.s"
 	@echo "... src/semerror.o"
 	@echo "... src/semerror.i"
 	@echo "... src/semerror.s"

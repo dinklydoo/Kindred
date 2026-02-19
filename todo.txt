@@ -3,9 +3,12 @@ TODO (realistic)
     - I/O operations
     - Function Currying (literally just closures with extra steps)
     - Inline optimization
+    - Variable Liveness Optimization
+    - Constant Folding
 
 TODO (in future probs not but if im so bored that i come back to this shit project):
     - Function subtyping
     - Handwrite parser with better error msg
     - Lambda expressions
     - Linker
+    - Rewrite memory allocation to use a nursery and then RC

@@ -10,7 +10,7 @@ find_package(FLEX REQUIRED)
 # Bison
 BISON_TARGET(
     Parser
-    src/parser.y
+    src/parse/parser.y
     ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
     DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp
 )
@@ -18,7 +18,7 @@ BISON_TARGET(
 # Flex
 FLEX_TARGET(
     Lexer
-    src/lexer.l
+    src/parse/lexer.l
     ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp
 )
 
@@ -33,6 +33,8 @@ add_executable(main
     src/flowcheck.cpp
     src/ir_lower.cpp
     src/closure.cpp
+    src/cfg_builder.cpp
+    src/liveness.cpp
     ${BISON_Parser_OUTPUTS}
     ${FLEX_Lexer_OUTPUTS}
 )

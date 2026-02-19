@@ -12,6 +12,12 @@ func list_check(a: [int], b: [int]): int
     c: [int] = []++a++b
     return 0
 
+func factorial(n: int): int
+    case of:
+        | (n > 1 && n < 10) => return n * factorial(n-1),
+        | else => return 1
+    ;
+
 func nest_check(a: int, b: char): (int)->int
     foo: (c: int) -> int (
         case of:
@@ -20,7 +26,7 @@ func nest_check(a: int, b: char): (int)->int
         ;
     )
     d: (int)->int = foo @ make sure that this nominal node has a reference to closure element foo
-    return d
+    return factorial
 
 func get_val(node: Tree): int
     mark node of:
@@ -28,11 +34,6 @@ func get_val(node: Tree): int
         default => return node.val
     ;
 
-func factorial(n: int): int
-    case of:
-        | (n > 1 && n < 10) => return n * factorial(n-1),
-        | else => return 1
-    ;
 
 func atoi(r: [char], n: int): int
     mark r of:

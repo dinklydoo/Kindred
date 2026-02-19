@@ -15,15 +15,19 @@ struct ASTNode{
         virtual void accept(Visitor& v) = 0;
 };
 
+struct ExpNode;
+using expr_ptr = std::unique_ptr<ExpNode>;
 struct ExpNode : ASTNode{
     type_ptr resolved_type;
     virtual bool is_literal() { return false; }
 };
 
+using litval = std::variant<int64_t, double, bool, char>;
 struct LiteralNode : ExpNode{
     public: 
         virtual ~LiteralNode() = default;
         bool is_literal() override { return true; }
+        virtual litval get_val() = 0;
 };
     
 struct DeclNode : ASTNode {
@@ -32,52 +36,70 @@ struct DeclNode : ASTNode {
     
 using decl_ptr = std::unique_ptr<DeclNode>;
 using node_ptr = std::unique_ptr<ASTNode>;
-using expr_ptr = std::unique_ptr<ExpNode>;
 using literal_ptr = std::unique_ptr<LiteralNode>;
 
 struct IntLit : LiteralNode{ 
     int64_t value; 
-    public: virtual void accept(Visitor& v) override;
+    public: 
+        void accept(Visitor& v) override;
+        litval get_val() override { return value; }
 };
 struct FloatLit : LiteralNode{
     double value; 
-    public: virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return value; }
 };
 struct BoolLit : LiteralNode{ 
     bool value; 
     public: 
-        virtual void accept(Visitor& v) override;
+        void accept(Visitor& v) override;
+        litval get_val() override { return value; }
 };
 struct CharLit : LiteralNode{ 
     char value; 
-    public: virtual void accept(Visitor& v) override;
+    public: 
+        void accept(Visitor& v) override;
+        litval get_val() override { return value; }
 };
 struct ListPatternLit : LiteralNode { 
     std::vector<std::string> patterns; 
-    public: virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return -1; }
 };
 struct StructPatternLit : LiteralNode {
     std::string name; 
     std::vector<std::string> patterns;
-    public: virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return -1; }
 };
 struct EmptyLit : LiteralNode {
-    public: virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return -1; }
 };
 struct NilLit : LiteralNode{
-    public: virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return -1; }
 };
 struct DefaultLit : LiteralNode{ 
-    public: 
-        virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return -1; }
 };
 struct ElseLit : LiteralNode{
-    public: 
-        virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return -1; }
 };
 struct EnumLit : LiteralNode{ 
     std::string elem; 
-    public: virtual void accept(Visitor& v) override;
+    public:
+        void accept(Visitor& v) override;
+        litval get_val() override { return -1; }
 };
 
 enum NominalKind {

@@ -53,7 +53,7 @@
 #  endif
 # endif
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parse/parser.y"
 namespace yy {
 #line 59 "/Users/huangyugen/Documents/cs projects/Kindred/location.hh"
 
@@ -299,7 +299,7 @@ namespace yy {
     return ostr;
   }
 
-#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parser.y"
+#line 39 "/Users/huangyugen/Documents/cs projects/Kindred/src/parse/parser.y"
 } // yy
 #line 305 "/Users/huangyugen/Documents/cs projects/Kindred/location.hh"
 

@@ -598,8 +598,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "src/lexer.l"
-#line 5 "src/lexer.l"
+#line 1 "src/parse/lexer.l"
+#line 5 "src/parse/lexer.l"
     #include <iostream>
     #include <string>
     #include <stdexcept>
@@ -858,7 +858,7 @@ YY_DECL
 		}
 
 	{
-#line 46 "src/lexer.l"
+#line 46 "src/parse/lexer.l"
 
 #line 863 "/Users/huangyugen/Documents/cs projects/Kindred/lexer.cpp"
 
@@ -929,402 +929,402 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 47 "src/lexer.l"
+#line 47 "src/parse/lexer.l"
 { BEGIN(MCOMMENT); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 48 "src/lexer.l"
+#line 48 "src/parse/lexer.l"
 { BEGIN(INITIAL); }
 	YY_BREAK
 case 3:
 /* rule 3 can match eol */
 YY_RULE_SETUP
-#line 49 "src/lexer.l"
+#line 49 "src/parse/lexer.l"
 { }
 	YY_BREAK
 case YY_STATE_EOF(MCOMMENT):
-#line 50 "src/lexer.l"
+#line 50 "src/parse/lexer.l"
 { BEGIN(INITIAL); }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 52 "src/lexer.l"
+#line 52 "src/parse/lexer.l"
 { BEGIN(SCOMMENT); }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 53 "src/lexer.l"
+#line 53 "src/parse/lexer.l"
 { }
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 54 "src/lexer.l"
+#line 54 "src/parse/lexer.l"
 { BEGIN(INITIAL); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 56 "src/lexer.l"
+#line 56 "src/parse/lexer.l"
 { yycolno += yyleng; }
 	YY_BREAK
 case 8:
 /* rule 8 can match eol */
 YY_RULE_SETUP
-#line 57 "src/lexer.l"
+#line 57 "src/parse/lexer.l"
 { yycolno = 1; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 59 "src/lexer.l"
+#line 59 "src/parse/lexer.l"
 { return yy::parser::make_FLR(make_location(yyleng)); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 60 "src/lexer.l"
+#line 60 "src/parse/lexer.l"
 { return yy::parser::make_POW(make_location(yyleng)); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 61 "src/lexer.l"
+#line 61 "src/parse/lexer.l"
 { return yy::parser::make_CGEQ(make_location(yyleng)); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 62 "src/lexer.l"
+#line 62 "src/parse/lexer.l"
 { return yy::parser::make_CLEQ(make_location(yyleng)); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 63 "src/lexer.l"
+#line 63 "src/parse/lexer.l"
 { return yy::parser::make_CEQ(make_location(yyleng)); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 64 "src/lexer.l"
+#line 64 "src/parse/lexer.l"
 { return yy::parser::make_CNEQ(make_location(yyleng)); }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 65 "src/lexer.l"
+#line 65 "src/parse/lexer.l"
 { return yy::parser::make_LSL(make_location(yyleng)); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 66 "src/lexer.l"
+#line 66 "src/parse/lexer.l"
 { return yy::parser::make_LSR(make_location(yyleng)); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 67 "src/lexer.l"
+#line 67 "src/parse/lexer.l"
 { return yy::parser::make_ARROW(make_location(yyleng)); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 68 "src/lexer.l"
+#line 68 "src/parse/lexer.l"
 { return yy::parser::make_PROD(make_location(yyleng)); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 69 "src/lexer.l"
+#line 69 "src/parse/lexer.l"
 { return yy::parser::make_CONCAT(make_location(yyleng)); }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 70 "src/lexer.l"
+#line 70 "src/parse/lexer.l"
 { return yy::parser::make_BAND(make_location(yyleng)); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 71 "src/lexer.l"
+#line 71 "src/parse/lexer.l"
 { return yy::parser::make_BOR(make_location(yyleng)); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 73 "src/lexer.l"
+#line 73 "src/parse/lexer.l"
 { return yy::parser::make_ASSGN(make_location(yyleng)); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 74 "src/lexer.l"
+#line 74 "src/parse/lexer.l"
 { return yy::parser::make_ADD(make_location(yyleng)); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 75 "src/lexer.l"
+#line 75 "src/parse/lexer.l"
 { return yy::parser::make_SUB(make_location(yyleng)); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 76 "src/lexer.l"
+#line 76 "src/parse/lexer.l"
 { return yy::parser::make_MUL(make_location(yyleng)); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 77 "src/lexer.l"
+#line 77 "src/parse/lexer.l"
 { return yy::parser::make_DIV(make_location(yyleng)); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 78 "src/lexer.l"
+#line 78 "src/parse/lexer.l"
 { return yy::parser::make_MOD(make_location(yyleng)); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 79 "src/lexer.l"
+#line 79 "src/parse/lexer.l"
 { return yy::parser::make_LAND(make_location(yyleng)); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 80 "src/lexer.l"
+#line 80 "src/parse/lexer.l"
 { return yy::parser::make_BAR(make_location(yyleng)); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 81 "src/lexer.l"
+#line 81 "src/parse/lexer.l"
 { return yy::parser::make_LXOR(make_location(yyleng)); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 82 "src/lexer.l"
+#line 82 "src/parse/lexer.l"
 { return yy::parser::make_BNOT(make_location(yyleng)); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 83 "src/lexer.l"
+#line 83 "src/parse/lexer.l"
 { return yy::parser::make_LNEG(make_location(yyleng)); }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 84 "src/lexer.l"
+#line 84 "src/parse/lexer.l"
 { return yy::parser::make_CGT(make_location(yyleng)); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 85 "src/lexer.l"
+#line 85 "src/parse/lexer.l"
 { return yy::parser::make_CLT(make_location(yyleng)); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 87 "src/lexer.l"
+#line 87 "src/parse/lexer.l"
 { return yy::parser::make_PEND(make_location(yyleng)); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 88 "src/lexer.l"
+#line 88 "src/parse/lexer.l"
 { return yy::parser::make_TSEP(make_location(yyleng)); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 89 "src/lexer.l"
+#line 89 "src/parse/lexer.l"
 { return yy::parser::make_LBRA(make_location(yyleng)); }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 90 "src/lexer.l"
+#line 90 "src/parse/lexer.l"
 { return yy::parser::make_RBRA(make_location(yyleng)); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 91 "src/lexer.l"
+#line 91 "src/parse/lexer.l"
 { return yy::parser::make_SQ_LBRA(make_location(yyleng)); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 92 "src/lexer.l"
+#line 92 "src/parse/lexer.l"
 { return yy::parser::make_SQ_RBRA(make_location(yyleng)); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 93 "src/lexer.l"
+#line 93 "src/parse/lexer.l"
 { return yy::parser::make_C_LBRA(make_location(yyleng)); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 94 "src/lexer.l"
+#line 94 "src/parse/lexer.l"
 { return yy::parser::make_C_RBRA(make_location(yyleng)); }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 95 "src/lexer.l"
+#line 95 "src/parse/lexer.l"
 { return yy::parser::make_COMMA(make_location(yyleng)); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 96 "src/lexer.l"
+#line 96 "src/parse/lexer.l"
 { return yy::parser::make_DOT(make_location(yyleng)); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 98 "src/lexer.l"
+#line 98 "src/parse/lexer.l"
 { return yy::parser::make_T_INT(make_location(yyleng)); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 99 "src/lexer.l"
+#line 99 "src/parse/lexer.l"
 { return yy::parser::make_T_LONG(make_location(yyleng)); }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 100 "src/lexer.l"
+#line 100 "src/parse/lexer.l"
 { return yy::parser::make_T_FLOAT(make_location(yyleng)); }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 101 "src/lexer.l"
+#line 101 "src/parse/lexer.l"
 { return yy::parser::make_T_DOUBLE(make_location(yyleng)); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 102 "src/lexer.l"
+#line 102 "src/parse/lexer.l"
 { return yy::parser::make_T_BOOL(make_location(yyleng)); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 103 "src/lexer.l"
+#line 103 "src/parse/lexer.l"
 { return yy::parser::make_T_CHAR(make_location(yyleng)); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 105 "src/lexer.l"
+#line 105 "src/parse/lexer.l"
 { return yy::parser::make_NIL(make_location(yyleng)); }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 106 "src/lexer.l"
+#line 106 "src/parse/lexer.l"
 { return yy::parser::make_CASE(make_location(yyleng)); }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 107 "src/lexer.l"
+#line 107 "src/parse/lexer.l"
 { return yy::parser::make_MARK(make_location(yyleng)); }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 108 "src/lexer.l"
+#line 108 "src/parse/lexer.l"
 { return yy::parser::make_OF(make_location(yyleng)); }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 109 "src/lexer.l"
+#line 109 "src/parse/lexer.l"
 { return yy::parser::make_DEFAULT(make_location(yyleng)); }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 110 "src/lexer.l"
+#line 110 "src/parse/lexer.l"
 { return yy::parser::make_ELSE(make_location(yyleng)); }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 111 "src/lexer.l"
+#line 111 "src/parse/lexer.l"
 { return yy::parser::make_FUNC(make_location(yyleng)); }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 112 "src/lexer.l"
+#line 112 "src/parse/lexer.l"
 { return yy::parser::make_STRUCT(make_location(yyleng)); }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 113 "src/lexer.l"
+#line 113 "src/parse/lexer.l"
 { return yy::parser::make_ENUM(make_location(yyleng)); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 114 "src/lexer.l"
+#line 114 "src/parse/lexer.l"
 { return yy::parser::make_TRUE(make_location(yyleng)); }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 115 "src/lexer.l"
+#line 115 "src/parse/lexer.l"
 { return yy::parser::make_FALSE(make_location(yyleng)); }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 116 "src/lexer.l"
+#line 116 "src/parse/lexer.l"
 { return yy::parser::make_RETURN(make_location(yyleng)); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 117 "src/lexer.l"
+#line 117 "src/parse/lexer.l"
 { return yy::parser::make_READ(make_location(yyleng)); }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 118 "src/lexer.l"
+#line 118 "src/parse/lexer.l"
 { return yy::parser::make_PRINT(make_location(yyleng)); }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 120 "src/lexer.l"
+#line 120 "src/parse/lexer.l"
 { return yy::parser::make_FLOAT(std::stod(yytext), make_location(yyleng)); }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 121 "src/lexer.l"
+#line 121 "src/parse/lexer.l"
 { return yy::parser::make_INT(std::stol(yytext), make_location(yyleng)); }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 123 "src/lexer.l"
+#line 123 "src/parse/lexer.l"
 {
     return yy::parser::make_LABEL(yytext, make_location(yyleng));
 }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 127 "src/lexer.l"
+#line 127 "src/parse/lexer.l"
 { strbuf.clear(); BEGIN(STRING); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 128 "src/lexer.l"
+#line 128 "src/parse/lexer.l"
 { BEGIN(CHAR); }
 	YY_BREAK
 
 case 70:
 YY_RULE_SETUP
-#line 132 "src/lexer.l"
+#line 132 "src/parse/lexer.l"
 { BEGIN(INITIAL); return yy::parser::make_STRING(strbuf, make_location(yyleng)); }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 133 "src/lexer.l"
+#line 133 "src/parse/lexer.l"
 { strbuf += '\n'; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 134 "src/lexer.l"
+#line 134 "src/parse/lexer.l"
 { strbuf += '\t'; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 135 "src/lexer.l"
+#line 135 "src/parse/lexer.l"
 { strbuf += '\''; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 136 "src/lexer.l"
+#line 136 "src/parse/lexer.l"
 { strbuf += '\"'; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 137 "src/lexer.l"
+#line 137 "src/parse/lexer.l"
 { strbuf += '\?'; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 138 "src/lexer.l"
+#line 138 "src/parse/lexer.l"
 { strbuf += '\\'; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 139 "src/lexer.l"
+#line 139 "src/parse/lexer.l"
 { strbuf += (char)strtol(yytext+2, NULL, 16); }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 141 "src/lexer.l"
+#line 141 "src/parse/lexer.l"
 {
         strbuf.append(yytext, yyleng);
     }
@@ -1332,114 +1332,114 @@ YY_RULE_SETUP
 case 79:
 /* rule 79 can match eol */
 YY_RULE_SETUP
-#line 145 "src/lexer.l"
+#line 145 "src/parse/lexer.l"
 { error("newline in string literal"); }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 146 "src/lexer.l"
+#line 146 "src/parse/lexer.l"
 {error("invalid hex escape (expected two hex digits)");}
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 147 "src/lexer.l"
+#line 147 "src/parse/lexer.l"
 { error("invalid escape sequence in string"); }
 	YY_BREAK
 case YY_STATE_EOF(STRING):
-#line 148 "src/lexer.l"
+#line 148 "src/parse/lexer.l"
 { error("unterminated string literal"); }
 	YY_BREAK
 
 
 case 82:
 YY_RULE_SETUP
-#line 152 "src/lexer.l"
+#line 152 "src/parse/lexer.l"
 { charbuf = '\n'; BEGIN(CHAR_END); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 153 "src/lexer.l"
+#line 153 "src/parse/lexer.l"
 { charbuf = '\t'; BEGIN(CHAR_END); }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 154 "src/lexer.l"
+#line 154 "src/parse/lexer.l"
 { charbuf = '\''; BEGIN(CHAR_END); }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 155 "src/lexer.l"
+#line 155 "src/parse/lexer.l"
 { charbuf = '\"'; BEGIN(CHAR_END); }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 156 "src/lexer.l"
+#line 156 "src/parse/lexer.l"
 { charbuf = '\?'; BEGIN(CHAR_END); }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 157 "src/lexer.l"
+#line 157 "src/parse/lexer.l"
 { charbuf = '\\'; BEGIN(CHAR_END); }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 158 "src/lexer.l"
+#line 158 "src/parse/lexer.l"
 { charbuf = (char)strtol(yytext+2, NULL, 16); BEGIN(CHAR_END); }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 159 "src/lexer.l"
+#line 159 "src/parse/lexer.l"
 {
         charbuf = yytext[0]; BEGIN(CHAR_END);
     }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 162 "src/lexer.l"
+#line 162 "src/parse/lexer.l"
 { error("empty character value"); }
 	YY_BREAK
 case 91:
 /* rule 91 can match eol */
 YY_RULE_SETUP
-#line 163 "src/lexer.l"
+#line 163 "src/parse/lexer.l"
 { error("newline in char literal"); }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 164 "src/lexer.l"
+#line 164 "src/parse/lexer.l"
 {error("invalid hex escape (expected two hex digits)");}
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 165 "src/lexer.l"
+#line 165 "src/parse/lexer.l"
 { error("invalid escape sequence in char"); }
 	YY_BREAK
 case YY_STATE_EOF(CHAR):
-#line 166 "src/lexer.l"
+#line 166 "src/parse/lexer.l"
 { error("unterminated char literal"); }
 	YY_BREAK
 
 
 case 94:
 YY_RULE_SETUP
-#line 170 "src/lexer.l"
+#line 170 "src/parse/lexer.l"
 { BEGIN(INITIAL); return yy::parser::make_CHAR(charbuf, make_location(yyleng)); }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 171 "src/lexer.l"
+#line 171 "src/parse/lexer.l"
 { error("expected char closing quotation"); }
 	YY_BREAK
 
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(SCOMMENT):
 case YY_STATE_EOF(CHAR_END):
-#line 174 "src/lexer.l"
+#line 174 "src/parse/lexer.l"
 { return yy::parser::make_KEOF(make_location(yyleng)); }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 176 "src/lexer.l"
+#line 176 "src/parse/lexer.l"
 ECHO;
 	YY_BREAK
 #line 1445 "/Users/huangyugen/Documents/cs projects/Kindred/lexer.cpp"
@@ -2457,5 +2457,5 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 176 "src/lexer.l"
+#line 176 "src/parse/lexer.l"
 

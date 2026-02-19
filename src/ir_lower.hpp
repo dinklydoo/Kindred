@@ -2,6 +2,7 @@
 #include "visitor.hpp"
 #include "tac_ir.hpp"
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <stack>
@@ -153,14 +154,17 @@ struct ConsFunctionIR {
     std::stack<Operand> op_stack;
     std::stack<std::string> label_stack;
 
-    void push_instruction(Instruction ins){ function_ir.blocks.back().ins.push_back(ins); }
+    void push_instruction(Instruction ins){ function_ir.blocks.back()->ins.push_back(ins); }
     void push_operand(Operand op){ op_stack.push(op); }
     Operand get_register(){ return Operand::reg(reg_count++); }
     Operand pop_operand(){ Operand temp = op_stack.top(); op_stack.pop(); return temp; }
 
     std::string pop_label(){ std::string temp = label_stack.top(); label_stack.pop(); return temp; }
-    void push_block(){ function_ir.blocks.emplace_back(); block_count++; }
-    Block& get_block(){ return function_ir.blocks.back(); }
+    void push_block(){ 
+        function_ir.blocks.push_back(std::make_unique<Block>());
+        block_count++; 
+    }
+    Block& get_block(){ return *function_ir.blocks.back(); }
 };
 
 /*
@@ -172,7 +176,7 @@ struct FunctionIRBuilder {
     int top_function_count = 0; // top level function count
     int scratch_label_count = 0;
 
-    std::vector<ConsFunctionIR> stack;
+    std::deque<ConsFunctionIR> stack;
 
     FunctionIR& top_function(){ return stack.back().function_ir; }
     void pop_function(){ stack.pop_back(); }
@@ -213,18 +217,12 @@ struct IR_Lowerer : Visitor {
     IDVarScope identifier;
     FunctionIRBuilder builder;
 
-    // label functions L_F1 (for base) L_F1_1 (for nested)
-    // label blocks as function scope and block id
-    // L_F1_B1 (first block of top level function)
-    // L_F2_3_B1 (first block of nested function)
     StructMap structInfo;
     EnvMap envInfo;
 
     std::vector<FunctionIR> IRprogram;
-    int global_blocks = 0;
-    std::unordered_map<std::string, int> JMPtable;
 
-    void lower( ModuleNode& node );
+    std::vector<FunctionIR> lower( ModuleNode& node );
     void generate_layout_file();
     void generate_layout(std::vector<type_ptr>, int id, int kind);
     void close_layout_file();
@@ -278,17 +276,10 @@ struct IR_Lowerer : Visitor {
     void visit( ReadNode& node) override {};
     void visit( PrintNode& node) override {};
 
-    void print_ir(){
-        for (FunctionIR& ir : IRprogram){
-            ir.print_ir();
-            std::cout << '\n';
-        }
-    }
-
     void gen_block(std::string label){
         ConsFunctionIR& cons = builder.top_constructor();
         cons.push_block();
-        JMPtable[label] = ++global_blocks;
+        cons.function_ir.blocks.back()->label = label;
         cons.push_instruction({Operation::LABEL, DataType::EMPTY, {}, {}, {}, label});
     }
 };
