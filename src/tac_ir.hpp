@@ -1,15 +1,22 @@
 #pragma once
 
 #include "cstdint"
+#include <fstream>
 #include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
 #include <set>
+#include <list>
 #include <iostream>
 
 struct Operand {
-    enum Type {REG, IMM, VAR};
+    enum Type {
+        REG, 
+        IMM, 
+        VAR, 
+        EBP // compile target specific on x86 (we never use this in generic IR only when reg alloc)
+    };
 
     Type type;
     int64_t value;
@@ -51,6 +58,12 @@ public:
         temp.value = id;
         return temp;
     }
+    static Operand ebp(int64_t offset){
+        Operand temp;
+        temp.type = EBP;
+        temp.value = offset;
+        return temp;
+    }
     virtual ~Operand() = default;
 
     std::string op_str(){
@@ -59,8 +72,10 @@ public:
             case (REG) : str += 'r'; break;
             case (IMM) : str += 'i'; break;
             case (VAR) : str += 'v'; break; 
+            case (EBP) : str += "[ebp-"; break; 
         }
         str += std::to_string(value);
+        if (type == EBP) str += ']';
         return str;
     }
 };
@@ -81,7 +96,7 @@ enum class Operation {
     // functional
     CALL, PARAM, LOCAL, CALL_EXT,
     // mem
-    LOAD, STORE, ADDR, // access label pointer (for functions)
+    LOAD, STORE, ADDR, // access label pointer (for closures)
     BEGIN_FUNC
 };
 
@@ -105,45 +120,45 @@ struct Instruction {
     Operand src2 = VOID;
     std::string target; // jump label
 
-    void print_ins(){
+    void print_ins(std::ostream& fd){
         switch (op){
-            case (Operation::ADD) : std::cout << "add"; break;
-            case (Operation::SUB) : std::cout << "sub"; break;
-            case (Operation::MUL) : std::cout << "mul"; break;
-            case (Operation::DIV) : std::cout << "div"; break;
-            case (Operation::MOD) : std::cout << "mod"; break;
-            case (Operation::POW) : std::cout << "pow"; break;
-            case (Operation::FLR) : std::cout << "flr"; break;
-            case (Operation::AND) : std::cout << "and"; break;
-            case (Operation::OR) : std::cout << "or"; break;
-            case (Operation::XOR) : std::cout << "xor"; break;
-            case (Operation::NEG) : std::cout << "neg"; break;
-            case (Operation::NOT) : std::cout << "not"; break;
-            case (Operation::LSL) : std::cout << "lsl"; break;
-            case (Operation::LSR) : std::cout << "lsr"; break;
-            case (Operation::CLT) : std::cout << "clt"; break;
-            case (Operation::CGT) : std::cout << "cgt"; break;
-            case (Operation::CLEQ) : std::cout << "cleq"; break;
-            case (Operation::CGEQ) : std::cout << "cgeq"; break;
-            case (Operation::CEQ) : std::cout << "ceq"; break;
-            case (Operation::CNEQ) : std::cout << "cneq"; break;
-            case (Operation::MOV) : std::cout << "mov"; break;
-            case (Operation::CST_I32) : std::cout << "cst_i32"; break;
-            case (Operation::CST_I64) : std::cout << "cst_i64"; break;
-            case (Operation::CST_F32) : std::cout << "cst_f32"; break;
-            case (Operation::CST_F64) : std::cout << "cst_f64"; break;
-            case (Operation::JMP_IF) : std::cout << "jmp_if"; break;
-            case (Operation::LOAD) : std::cout << "load"; break;
-            case (Operation::STORE) : std::cout << "store"; break;
-            case (Operation::LOCAL) : std::cout << "local"; break;
-            case (Operation::PARAM) : std::cout << "param"; break;
+            case (Operation::ADD) : fd << "add"; break;
+            case (Operation::SUB) : fd << "sub"; break;
+            case (Operation::MUL) : fd << "mul"; break;
+            case (Operation::DIV) : fd << "div"; break;
+            case (Operation::MOD) : fd << "mod"; break;
+            case (Operation::POW) : fd << "pow"; break;
+            case (Operation::FLR) : fd << "flr"; break;
+            case (Operation::AND) : fd << "and"; break;
+            case (Operation::OR) : fd << "or"; break;
+            case (Operation::XOR) : fd << "xor"; break;
+            case (Operation::NEG) : fd << "neg"; break;
+            case (Operation::NOT) : fd << "not"; break;
+            case (Operation::LSL) : fd << "lsl"; break;
+            case (Operation::LSR) : fd << "lsr"; break;
+            case (Operation::CLT) : fd << "clt"; break;
+            case (Operation::CGT) : fd << "cgt"; break;
+            case (Operation::CLEQ) : fd << "cleq"; break;
+            case (Operation::CGEQ) : fd << "cgeq"; break;
+            case (Operation::CEQ) : fd << "ceq"; break;
+            case (Operation::CNEQ) : fd << "cneq"; break;
+            case (Operation::MOV) : fd << "mov"; break;
+            case (Operation::CST_I32) : fd << "cst_i32"; break;
+            case (Operation::CST_I64) : fd << "cst_i64"; break;
+            case (Operation::CST_F32) : fd << "cst_f32"; break;
+            case (Operation::CST_F64) : fd << "cst_f64"; break;
+            case (Operation::JMP_IF) : fd << "jmp_if"; break;
+            case (Operation::LOAD) : fd << "load"; break;
+            case (Operation::STORE) : fd << "store"; break;
+            case (Operation::LOCAL) : fd << "local"; break;
+            case (Operation::PARAM) : fd << "param"; break;
             case (Operation::CALL_EXT) :
-            case (Operation::CALL) : std::cout << "call"; break;
-            case (Operation::JMP) : std::cout << "jmp"; break;
-            case (Operation::RET) : std::cout << "ret"; break;
-            case (Operation::ADDR) : std::cout << "addr"; break;
-            case (Operation::LABEL) : std::cout << target<<'\n'; return;
-            case (Operation::BEGIN_FUNC) : std::cout << "begin func:\n"; return;
+            case (Operation::CALL) : fd << "call"; break;
+            case (Operation::JMP) : fd << "jmp"; break;
+            case (Operation::RET) : fd << "ret"; break;
+            case (Operation::ADDR) : fd << "addr"; break;
+            case (Operation::LABEL) : fd << target<<'\n'; return;
+            case (Operation::BEGIN_FUNC) : fd << "begin func:\n"; return;
         }
         switch (op){
             case (Operation::ADD) : case (Operation::SUB) : case (Operation::MUL) :
@@ -152,18 +167,18 @@ struct Instruction {
             case (Operation::LSL) : case (Operation::LSR) : case (Operation::CLT) : 
             case (Operation::CGT) : case (Operation::CLEQ) : case (Operation::CGEQ) : 
             case (Operation::CEQ) : case (Operation::CNEQ) : case (Operation::LOAD) :
-            case (Operation::STORE) : std::cout<<' '<<dst.op_str()<<' '<<src1.op_str()<<' '<<src2.op_str()<<'\n'; break;
+            case (Operation::STORE) : fd<<' '<<dst.op_str()<<' '<<src1.op_str()<<' '<<src2.op_str()<<'\n'; break;
             case (Operation::MOV) : case (Operation::NEG) : case (Operation::NOT) : 
             case (Operation::CST_I32) : case (Operation::CST_I64) : case (Operation::CST_F32) : 
             case (Operation::CALL) : case (Operation::FLR) :
-            case (Operation::CST_F64) : std::cout<<' '<<dst.op_str()<<' '<<src1.op_str()<<'\n'; break;
-            case (Operation::JMP_IF) : std::cout<<' '<<src1.op_str()<<' '<<target<<'\n'; break;
+            case (Operation::CST_F64) : fd<<' '<<dst.op_str()<<' '<<src1.op_str()<<'\n'; break;
+            case (Operation::JMP_IF) : fd<<' '<<src1.op_str()<<' '<<target<<'\n'; break;
             case (Operation::RET) :
             case (Operation::LOCAL) :
-            case (Operation::PARAM) : std::cout<<' '<<src1.op_str()<<'\n'; break;
-            case (Operation::JMP) : std::cout<<' '<<target<<'\n';
+            case (Operation::PARAM) : fd<<' '<<src1.op_str()<<'\n'; break;
+            case (Operation::JMP) : fd<<' '<<target<<'\n'; break;
             case (Operation::CALL_EXT) :
-            case (Operation::ADDR) : std::cout<<' '<<dst.op_str()<<' '<<target<<'\n'; break;
+            case (Operation::ADDR) : fd<<' '<<dst.op_str()<<' '<<target<<'\n'; break;
             default: return;
         }
     }
@@ -186,7 +201,7 @@ using virtual_varset = std::unordered_set<virtual_var, VarHash>;
 using opset = std::unordered_set<Operand, Operand::OperandHash>;
 struct Block {
     std::string label;
-    std::vector<Instruction> ins;
+    std::list<Instruction> ins;
 
     std::set<Block*> out_edge;
     std::set<Block*> in_edge;
@@ -198,11 +213,14 @@ struct Block {
 using blockptr = std::unique_ptr<Block>;
 struct FunctionIR {
     std::vector<blockptr> blocks;
+    int reg_count = 0;
 
-    void print_ir(){
+    Operand get_register(){ return Operand::reg(reg_count++); }
+
+    void print_ir(std::ostream& fd){
         for (auto& b : blocks){
             for (Instruction& ins : b->ins){
-                ins.print_ins();
+                ins.print_ins(fd);
             }
         }
     }
@@ -210,7 +228,18 @@ struct FunctionIR {
 
 static void print_ir(std::vector<FunctionIR>& program){
     for (FunctionIR& ir : program){
-        ir.print_ir();
+        ir.print_ir(std::cout);
         std::cout << '\n';
+    }
+}
+
+static void write_ir(std::vector<FunctionIR>& program){
+    std::string path = "./aux/ir_representation.txt";
+    std::ofstream trunc_ir(path, std::ios::trunc);
+    trunc_ir.close(); // truncate
+    std::ofstream ir_file(path, std::ios::app);
+    for (FunctionIR& ir : program){
+        ir.print_ir(ir_file);
+        ir_file << '\n';
     }
 }

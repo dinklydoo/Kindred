@@ -425,6 +425,7 @@ std::vector<FunctionIR> IR_Lowerer::lower(ModuleNode& node){
     generate_layout_file();
     node.accept(*this);
     close_layout_file();
+
     return std::move(IRprogram);
 }
 
@@ -462,7 +463,7 @@ void IR_Lowerer::close_layout_file(){
  ============================================================================================================================================================ */
 
 void IR_Lowerer::visit( ModuleNode& node){
-    builder.push_function();
+    builder.push_function("__root");
     identifier.push_scope();
     for (auto& d : node.decl){
         d->accept(*this);
@@ -495,11 +496,11 @@ void IR_Lowerer::visit( FuncDecl& node){
     generate_layout(types, env_id, ENV_GEN);
     construct_env(node.name, node.ftype, node.captures); // assigns closure ptr to variable that shares function name
 
-    builder.push_function();
+    builder.push_function(node.name);
     ConsFunctionIR& cons = builder.top_constructor();
     identifier.push_scope();
     
-    // ANNOTATE PARAMS WITH @_CLOSURE AS FIRST, ENSURE NO NAME CONFLICTS
+    // ANNOTATE PARAMS WITH @_ENV AS FIRST, ENSURE NO NAME CONFLICTS
     identifier.push_ident("@_ENV", node.ftype); // type is irrelevant
     identifier.get_var("@_ENV"); // first invisible param is closure
     Operand _env = cons.pop_operand();
@@ -871,6 +872,9 @@ void IR_Lowerer::visit( NominalNode& node ){
     if (node.kind == VAR_REF){
         identifier.get_var(node.label);
         Operand _var = cons.pop_operand();
+        if (builder.static_closures.contains(node.label)){
+            cons.push_instruction({Operation::ADDR, DataType::PTR, _var, VOID, VOID, node.label+".local"});
+        }
         cons.push_operand(_var);
     }
     if (node.kind == ENUM_VAL){ // enum lit
@@ -891,9 +895,11 @@ void IR_Lowerer::visit( IntLit& node ){
 
 void IR_Lowerer::visit( FloatLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    int64_t _bitval; 
+    Operand _t = cons.get_register();
+    int64_t _bitval;
     std::memcpy(&_bitval, &node.value, sizeof(_bitval));
-    cons.push_operand(Operand::imm(node.value));
+    cons.push_instruction({Operation::MOV, type_to_dtype(node.resolved_type->kind), _t, Operand::imm(_bitval)});
+    cons.push_operand(_t);
 }
 
 void IR_Lowerer::visit( BoolLit& node ){

@@ -5,6 +5,7 @@ TODO (realistic)
     - Inline optimization
     - Variable Liveness Optimization
     - Constant Folding
+    - Unneccessary ref counting of static closures
 
 TODO (in future probs not but if im so bored that i come back to this shit project):
     - Function subtyping

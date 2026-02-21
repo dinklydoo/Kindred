@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <stack>
+#include <unordered_set>
 
 namespace ir {
 
@@ -103,6 +104,7 @@ struct Scope {
     void push_ident(std::string var, int id, type_ptr type){ stack[var] = {id, type}; }
     void push_enclosed(std::string var, int id, type_ptr type){ closure_id[var] = {id, type}; }
 };
+
 struct IDVarScope {
     std::vector<Scope> stack;
     std::stack<Operand> env_stack;
@@ -148,7 +150,6 @@ struct ConsFunctionIR {
     FunctionIR function_ir;
     int function_id;
     int child_count = 0;
-    int reg_count = 0;
     int block_count = 0;
     int case_count = 0;
     std::stack<Operand> op_stack;
@@ -156,7 +157,7 @@ struct ConsFunctionIR {
 
     void push_instruction(Instruction ins){ function_ir.blocks.back()->ins.push_back(ins); }
     void push_operand(Operand op){ op_stack.push(op); }
-    Operand get_register(){ return Operand::reg(reg_count++); }
+    Operand get_register(){ return function_ir.get_register(); }
     Operand pop_operand(){ Operand temp = op_stack.top(); op_stack.pop(); return temp; }
 
     std::string pop_label(){ std::string temp = label_stack.top(); label_stack.pop(); return temp; }
@@ -176,15 +177,19 @@ struct FunctionIRBuilder {
     int top_function_count = 0; // top level function count
     int scratch_label_count = 0;
 
+    std::unordered_set<std::string> static_closures;
     std::deque<ConsFunctionIR> stack;
 
     FunctionIR& top_function(){ return stack.back().function_ir; }
     void pop_function(){ stack.pop_back(); }
     ConsFunctionIR& top_constructor(){ return stack.back(); }
-    void push_function(){
+    void push_function(std::string fname){
         int id = 1;
-        if (!stack.empty()) id = ++top_constructor().child_count;
-        else top_function_count++;
+        if (stack.size() > 1) id = ++top_constructor().child_count;
+        else {
+            top_function_count++;
+            static_closures.insert(fname);
+        }
         stack.emplace_back();
         top_constructor().function_id = id;
 
@@ -203,7 +208,7 @@ struct FunctionIRBuilder {
     std::string get_scratch_label(){ return ".L_"+std::to_string(scratch_label_count++); }
 
     std::string get_case_label(){
-        if (stack.empty()) return "早上好中国， 今天我要冰淇凌， 我很喜欢吃冰淇凌";
+        if (stack.empty()) return "如果我说我真的爱你 谁来收拾 那些被破坏的友谊";
         return get_block_label()+"_case"+std::to_string(top_constructor().case_count++)+'_';
     }
 };

@@ -13,7 +13,7 @@
             "args": [],
             "cwd": "${workspaceRoot}",
             "stdio": [
-                    "${workspaceFolder}/example.kd",
+                    "${workspaceFolder}/samples/register.kd",
                     null,
                     null
                 ]

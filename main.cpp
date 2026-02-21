@@ -4,12 +4,12 @@
 #include "src/ir_lower.hpp"
 #include "src/closure.hpp"
 #include "src/cfg_builder.hpp"
-#include "src/liveness.hpp"
+#include "x86/x86_regalloc.hpp"
 
 #include <string>
 
 void yy::parser::error(const yy::location& loc,const std::string& msg) {
-    std::cout << "An error occured: " << msg << std::endl;
+    std::cout << "An error occured: "<< loc.begin << loc.end << msg << std::endl;
 }
 
 #ifdef YYDEBUG
@@ -42,19 +42,20 @@ int main() {
   ir::IR_Lowerer& ir = ir::IR_Lowerer::instance();
   std::cout << "[Kindred Compiler] : IR Generated\n";
   IR_program = ir.lower(*module_node);
-  print_ir(IR_program);
+  //print_ir(IR_program);
+  write_ir(IR_program);
 
   cfg::CFGBuilder& cfg = cfg::CFGBuilder::instance();
   cfg.build_cfg(IR_program);
   std::cout << "[Kindred Compiler] : CFG Constructed\n";
 
-  LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
-  la.analyze(IR_program);
-  std::cout << "[Kindred Compiler] : Liveness Analysis Complete\n";
+  // LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
+  // interf_graph = la.analyze(IR_program);
+  // std::cout << "[Kindred Compiler] : Interference Graph Constructed\n";
   
-  for (FunctionIR& func : IR_program) interf_graph.push_back(
-    la.gen_interference(func)
-  );
+  RegAllocator& ra = RegAllocator::instance();
+  ra.allocate_prog(IR_program);
+  std::cout << "[Kindred Compiler] : Registers Allocated\n";
 
   return 0;
 }

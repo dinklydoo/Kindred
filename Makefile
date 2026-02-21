@@ -393,6 +393,30 @@ src/visitor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/visitor.cpp.s
 .PHONY : src/visitor.cpp.s
 
+src/x86/x86_regalloc.o: src/x86/x86_regalloc.cpp.o
+.PHONY : src/x86/x86_regalloc.o
+
+# target to build an object file
+src/x86/x86_regalloc.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_regalloc.cpp.o
+.PHONY : src/x86/x86_regalloc.cpp.o
+
+src/x86/x86_regalloc.i: src/x86/x86_regalloc.cpp.i
+.PHONY : src/x86/x86_regalloc.i
+
+# target to preprocess a source file
+src/x86/x86_regalloc.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_regalloc.cpp.i
+.PHONY : src/x86/x86_regalloc.cpp.i
+
+src/x86/x86_regalloc.s: src/x86/x86_regalloc.cpp.s
+.PHONY : src/x86/x86_regalloc.s
+
+# target to generate assembly for a file
+src/x86/x86_regalloc.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_regalloc.cpp.s
+.PHONY : src/x86/x86_regalloc.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -435,6 +459,9 @@ help:
 	@echo "... src/visitor.o"
 	@echo "... src/visitor.i"
 	@echo "... src/visitor.s"
+	@echo "... src/x86/x86_regalloc.o"
+	@echo "... src/x86/x86_regalloc.i"
+	@echo "... src/x86/x86_regalloc.s"
 .PHONY : help
 
 

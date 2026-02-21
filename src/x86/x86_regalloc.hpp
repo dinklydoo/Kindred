@@ -1,16 +1,18 @@
-#include "ast.hpp"
 #include "tac_ir.hpp"
+#include "interf_graph.hpp"
 #include <unordered_map>
 
-enum class GPRReg {
-    RAX, RBX,
-    RCX, RDX,
-    RSI, RDI,
-    R10, R11,
-    R12, R13,
-    R14, R15,
+enum GPReg {
+    R0, // invalid (1index)
+
+    RDI, RSI, RDX, RCX, R8, R9,
+    RBX, R10, R11, R12, R13, R14, R15,
+    RAX
+
 };
-enum class FPReg {
+enum FPReg {
+    X0, // invalid (1index)
+
     XMM0, XMM1, 
     XMM2, XMM3, 
     XMM4, XMM5,
@@ -21,11 +23,19 @@ enum class FPReg {
     XMM14, XMM15
 };
 
-struct GPRRegInfo {
+/*
+    As param registers are 1-indexed in our interf graph,
+    we can create a mapping from these forms to the actual register names
+*/
+
+static int GPR_count = 12;
+static int FPR_count = 16;
+
+struct GPRegInfo {
     enum Status {
         CALLER_SAVE, CALLEE_SAVE, RESERVE
     };
-    GPRReg reg;
+    GPReg reg;
     Status status;
 };
 
@@ -35,15 +45,11 @@ struct FPRegInfo {
 };
 
 struct RegInfo {
-    std::vector<GPRReg> free_GPR;
-    std::vector<FPReg> free_FP;
+    std::unordered_map<Operand, GPReg, Operand::OperandHash> vr_phys_gpr;
+    std::unordered_map<Operand, FPReg, Operand::OperandHash> vr_phys_fpr;
 
-    std::unordered_map<int, GPRReg> vr_phys_gpr;
-    std::unordered_map<int, FPReg> vr_phys_fpr;
-
-    std::unordered_map<int, int> vreg_to_stack; // spillover
-
-    int stack_offset;
+    void add_mapping(Operand op, GPReg reg){ vr_phys_gpr[op] = reg;}
+    void add_mapping(Operand op, FPReg reg){ vr_phys_fpr[op] = reg;}
 };
 
 struct RegAllocator {
@@ -52,8 +58,23 @@ struct RegAllocator {
         return ra;
     }
 
+    std::vector<IGNode*> simplify_stack;
+    std::vector<bool> active; // active nodes
+    int spill_offset = 0;
+    int node_neighbours(); // get neighbour count during simplify phase
+
+    InterferenceGraph ig;
+
     RegInfo reg_info;
 
+    void move_params(FunctionIR& func); // move params to virtuals (prevents rdx/rcx conflict)
+
     void allocate_prog(std::vector<FunctionIR>& prog);
-    void allocate_func(FunctionIR& prog);
+    void allocate_func(FunctionIR& func);
+    void precolor_func(FunctionIR& func);
+
+
+    void rewrite_func(FunctionIR&, Operand, int);
+    bool is_colourable(FunctionIR&);
+    void allocate_reg(FunctionIR&);
 };

@@ -1,0 +1,73 @@
+.register:
+local v1
+local v2
+local v3
+begin func:
+mov v4 i10
+mov v5 i10
+mov v6 i10
+mov v7 i10
+mov v8 i10
+mov v9 i10
+mov v10 i10
+mov v11 i10
+mov v12 i10
+mov v13 i10
+mov v14 i10
+mov v15 i10
+mov v16 i10
+mov v17 i10
+add r0 v4 v17
+mov v18 r0
+add r1 v4 v18
+mov v19 r1
+mov v20 i12
+mov v21 i12
+mov v22 i12
+mov v23 i12
+cst_f32 r2 v4
+add r3 r2 v5
+cst_f64 r4 r3
+add r5 r4 v6
+cst_f64 r6 v7
+add r7 r5 r6
+cst_f64 r8 v8
+add r9 r7 r8
+cst_f64 r10 v9
+add r11 r9 r10
+cst_f64 r12 v10
+add r13 r11 r12
+cst_f64 r14 v11
+add r15 r13 r14
+cst_f64 r16 v12
+add r17 r15 r16
+cst_f64 r18 v13
+add r19 r17 r18
+cst_f64 r20 v14
+add r21 r19 r20
+cst_f64 r22 v15
+add r23 r21 r22
+cst_f64 r24 v16
+add r25 r23 r24
+cst_f64 r26 v17
+add r27 r25 r26
+cst_f64 r28 v18
+add r29 r27 r28
+cst_f64 r30 v19
+add r31 r29 r30
+cst_f64 r32 v20
+add r33 r31 r32
+cst_f64 r34 v21
+add r35 r33 r34
+cst_f64 r36 v22
+add r37 r35 r36
+cst_f64 r38 v23
+add r39 r37 r38
+ret r39
+
+.main:
+local v25
+begin func:
+cst_i32 r0 i1
+ret r0
+
