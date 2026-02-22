@@ -12,10 +12,14 @@
 
 struct Operand {
     enum Type {
-        REG, 
-        IMM, 
-        VAR, 
-        EBP // compile target specific on x86 (we never use this in generic IR only when reg alloc)
+        REG, // virtual register
+        IMM, // immediate value
+        VAR, // virtual register (name binded - variables/functions)
+
+        GPR, // general purpose register
+        FPR, // floating point register
+        RSP, // generic stack pointer
+        RBP // generic base pointer
     };
 
     Type type;
@@ -25,6 +29,7 @@ public:
     bool operator==(const Operand& other) const {
         return (other.type == type && other.value == value);    
     }
+    bool is_register(){ return type == REG || type == VAR;}
     struct OperandHash {
         std::size_t operator()(const Operand& op) const {
             std::size_t seed = 0;
@@ -58,12 +63,37 @@ public:
         temp.value = id;
         return temp;
     }
-    static Operand ebp(int64_t offset){
+
+    /* ==================================================================================================================
+
+                REG ALLOC
+
+    ================================================================================================================== */ 
+    static Operand rbp(int64_t offset){
         Operand temp;
-        temp.type = EBP;
+        temp.type = RBP;
         temp.value = offset;
         return temp;
     }
+    static Operand rsp(int64_t offset){
+        Operand temp;
+        temp.type = RSP;
+        temp.value = offset;
+        return temp;
+    }
+    static Operand gpr(int64_t id){
+        Operand temp;
+        temp.type = GPR;
+        temp.value = id;
+        return temp;
+    }
+    static Operand fpr(int64_t id){
+        Operand temp;
+        temp.type = FPR;
+        temp.value = id;
+        return temp;
+    }
+
     virtual ~Operand() = default;
 
     std::string op_str(){
@@ -72,10 +102,17 @@ public:
             case (REG) : str += 'r'; break;
             case (IMM) : str += 'i'; break;
             case (VAR) : str += 'v'; break; 
-            case (EBP) : str += "[ebp-"; break; 
+            case (RBP) : str += "[rbp"; break; 
+            case (RSP) : return "rsp";
+            case (GPR) : return "gpr";
+            case (FPR) : return "fpr";
         }
-        str += std::to_string(value);
-        if (type == EBP) str += ']';
+        if (type == RBP){ 
+            if (value > 0) str += '+';
+            str += std::to_string(value);
+            str += ']';
+        }
+        else str += std::to_string(value);
         return str;
     }
 };
@@ -94,7 +131,7 @@ enum class Operation {
     // control flow
     JMP, JMP_IF, RET, LABEL,
     // functional
-    CALL, PARAM, LOCAL, CALL_EXT,
+    CALL, PARAM, LOCAL, CALL_EXT, BEGIN_CALL,
     // mem
     LOAD, STORE, ADDR, // access label pointer (for closures)
     BEGIN_FUNC
@@ -119,6 +156,19 @@ struct Instruction {
     Operand src1 = VOID;
     Operand src2 = VOID;
     std::string target; // jump label
+
+    bool is_move(){
+    if (op == Operation::MOV) return true;
+
+    if (op == Operation::CST_I32 || op == Operation::CST_I64) return true;
+    switch (op) {
+        case (Operation::MOV) :
+        case (Operation::CST_I32) :
+        case (Operation::CST_I64) : return true;
+        case (Operation::CST_F64) : return (type == DataType::F32);
+        default : return false; // CST_F32 will always move from a GPR to FPR
+    }
+}
 
     void print_ins(std::ostream& fd){
         switch (op){
@@ -159,6 +209,7 @@ struct Instruction {
             case (Operation::ADDR) : fd << "addr"; break;
             case (Operation::LABEL) : fd << target<<'\n'; return;
             case (Operation::BEGIN_FUNC) : fd << "begin func:\n"; return;
+            default : return;
         }
         switch (op){
             case (Operation::ADD) : case (Operation::SUB) : case (Operation::MUL) :

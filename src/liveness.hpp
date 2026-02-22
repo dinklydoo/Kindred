@@ -2,6 +2,7 @@
 
 #include "tac_ir.hpp"
 #include "interf_graph.hpp"
+#include "x86/x86_regalloc.hpp"
 
 enum CompileTarget {
     X86, ARM, MIPS // idk why mips is here
@@ -11,11 +12,27 @@ struct RegCount {
     int gp_rcount; // number of gp registers
     int fp_rcount; // number of fp registers
 
+    std::vector<int> GP_CALLER_SAVE;
+    std::vector<int> FP_CALLER_SAVE;
+
     RegCount(CompileTarget target) {
         switch (target) {
             case (X86) : {
                 gp_rcount = 12; // exlude rbp, rsp, rax, rdx
                 fp_rcount = 16;
+
+                GP_CALLER_SAVE = { RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11 };
+                FP_CALLER_SAVE = 
+                {
+                    XMM0, XMM1, 
+                    XMM2, XMM3, 
+                    XMM4, XMM5,
+                    XMM6, XMM7, 
+                    XMM8, XMM9, 
+                    XMM10, XMM11,
+                    XMM12, XMM13, 
+                    XMM14, XMM15
+                };
             }
             default : {}// :-)
         }
@@ -31,6 +48,7 @@ struct LivenessAnalyzer {
         void process_block(Block* b, InterferenceGraph& graph, movelist& moves);
         void move_coalesce(InterferenceGraph& ig, movelist& moves);
         
+        FunctionIR* func_ref;
     public:
         static LivenessAnalyzer& instance(CompileTarget target){
             static LivenessAnalyzer lan(target);

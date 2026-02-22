@@ -1,18 +1,16 @@
+#pragma once
+
 #include "tac_ir.hpp"
 #include "interf_graph.hpp"
 #include <unordered_map>
 
 enum GPReg {
-    R0, // invalid (1index)
-
     RDI, RSI, RDX, RCX, R8, R9,
     RBX, R10, R11, R12, R13, R14, R15,
     RAX
 
 };
 enum FPReg {
-    X0, // invalid (1index)
-
     XMM0, XMM1, 
     XMM2, XMM3, 
     XMM4, XMM5,
@@ -73,8 +71,8 @@ struct RegAllocator {
     void allocate_func(FunctionIR& func);
     void precolor_func(FunctionIR& func);
 
-
-    void rewrite_func(FunctionIR&, Operand, int);
+    void rewrite_coalesce(FunctionIR&);
+    void rewrite_spill(FunctionIR&, Operand, int);
     bool is_colourable(FunctionIR&);
     void allocate_reg(FunctionIR&);
 };

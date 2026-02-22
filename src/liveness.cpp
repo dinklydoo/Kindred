@@ -7,7 +7,6 @@
 // calculate liveness sets for variables for each function
 void LivenessAnalyzer::live_func(FunctionIR& func){
     bool done = false;
-
     while (!done){
         done = true;
         for (auto b_it = func.blocks.rbegin(); b_it != func.blocks.rend(); b_it++){
@@ -27,35 +26,30 @@ void LivenessAnalyzer::live_func(FunctionIR& func){
     }
 }
 
-bool valid_operand(Operand op){
-    return (op.type == Operand::REG || op.type == Operand::VAR);
-}
-
-bool is_move(Operation op, DataType src){
-    if (op == Operation::MOV) return true;
-
-    if (op == Operation::CST_I32 || op == Operation::CST_I64) return true;
-    switch (op) {
-        case (Operation::MOV) :
-        case (Operation::CST_I32) :
-        case (Operation::CST_I64) : return true;
-        case (Operation::CST_F64) : return (src == DataType::F32);
-        default : return false; // CST_F32 will always move from a GPR to FPR
-    }
-}
-
 void LivenessAnalyzer::add_interference_edges(Instruction& ins, virtual_varset& live, InterferenceGraph& graph) {
     virtual_varset defines, uses;
-    if (valid_operand(ins.dst)) defines.insert({ins.dst, ins.type});
-    if (valid_operand(ins.src1)){ 
+    if (ins.dst.is_register()) defines.insert({ins.dst, ins.type});
+    if (ins.src1.is_register()){ 
         uses.insert({ins.src1, ins.type});
         graph.incr_uses(ins.src1, ins.type);
     }
-    if (valid_operand(ins.src2)){ 
+    if (ins.src2.is_register()){ 
         uses.insert({ins.src2, ins.type});
         graph.incr_uses(ins.src2, ins.type);
     }
 
+    if (ins.op == Operation::CALL){
+        for (int clobber_gp : regInfo.GP_CALLER_SAVE){ 
+            defines.insert({Operand::gpr(clobber_gp), DataType::I64});
+            IGNode& node = graph.add_node(Operand::gpr(clobber_gp), DataType::I64);
+            node.assigned = clobber_gp;
+        }
+        for (int clobber_fp : regInfo.FP_CALLER_SAVE){ 
+            defines.insert({Operand::fpr(clobber_fp), DataType::F64});
+            IGNode& node = graph.add_node(Operand::fpr(clobber_fp), DataType::F64);
+            node.assigned = clobber_fp;
+        }
+    }
     for (virtual_var def : defines) {
         graph.add_node(def.first, def.second); // ensure node exists
         for (virtual_var var : live) {
@@ -75,7 +69,7 @@ void LivenessAnalyzer::process_block(Block* b, InterferenceGraph& graph, movelis
     for (auto it = b->ins.rbegin(); it != b->ins.rend(); it++) {
         Instruction& ins = *it;
 
-        if (is_move(ins.op, ins.type) && valid_operand(ins.src1))
+        if (ins.is_move() && ins.src1.is_register())
             moves.push_back({ins.dst, ins.src1});
 
         add_interference_edges(ins, live, graph);
@@ -83,7 +77,9 @@ void LivenessAnalyzer::process_block(Block* b, InterferenceGraph& graph, movelis
 }
 
 void LivenessAnalyzer::gen_interference(FunctionIR& func, InterferenceGraph& graph) {
+    func_ref = &func;
     movelist moves;
+    live_func(func);
     for (auto& blk_ptr : func.blocks) {
         process_block(blk_ptr.get(), graph, moves);
     }

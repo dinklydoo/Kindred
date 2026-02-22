@@ -393,6 +393,30 @@ src/visitor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/visitor.cpp.s
 .PHONY : src/visitor.cpp.s
 
+src/x86/x86_lower.o: src/x86/x86_lower.cpp.o
+.PHONY : src/x86/x86_lower.o
+
+# target to build an object file
+src/x86/x86_lower.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_lower.cpp.o
+.PHONY : src/x86/x86_lower.cpp.o
+
+src/x86/x86_lower.i: src/x86/x86_lower.cpp.i
+.PHONY : src/x86/x86_lower.i
+
+# target to preprocess a source file
+src/x86/x86_lower.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_lower.cpp.i
+.PHONY : src/x86/x86_lower.cpp.i
+
+src/x86/x86_lower.s: src/x86/x86_lower.cpp.s
+.PHONY : src/x86/x86_lower.s
+
+# target to generate assembly for a file
+src/x86/x86_lower.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_lower.cpp.s
+.PHONY : src/x86/x86_lower.cpp.s
+
 src/x86/x86_regalloc.o: src/x86/x86_regalloc.cpp.o
 .PHONY : src/x86/x86_regalloc.o
 
@@ -459,6 +483,9 @@ help:
 	@echo "... src/visitor.o"
 	@echo "... src/visitor.i"
 	@echo "... src/visitor.s"
+	@echo "... src/x86/x86_lower.o"
+	@echo "... src/x86/x86_lower.i"
+	@echo "... src/x86/x86_lower.s"
 	@echo "... src/x86/x86_regalloc.o"
 	@echo "... src/x86/x86_regalloc.i"
 	@echo "... src/x86/x86_regalloc.s"

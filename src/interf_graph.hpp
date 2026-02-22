@@ -8,7 +8,7 @@ struct IGNode {
     Operand op;
     RType type;
     std::unordered_set<int> interfere;
-    int assigned;
+    int assigned = -1;
     int uses = 0;
     int spill = 0;
 
@@ -21,7 +21,7 @@ struct InterferenceGraph {
     std::unordered_map<Operand, int, Operand::OperandHash> virtual_map;
     std::vector<IGNode> nodes;
 
-    int stack_offset = 0;
+    int spill_offset = 0;
 
     IGNode& add_node(Operand op, DataType type){
         if (!virtual_map.contains(op)){
@@ -34,6 +34,11 @@ struct InterferenceGraph {
         return nodes[virtual_map[op]];
     }
     IGNode& get_node(Operand op){ return nodes[virtual_map[op]]; }
+
+    bool coalesced(Operand o1, Operand o2){
+        if (!o1.is_register() || !o2.is_register()) return false;
+        return virtual_map[o1] == virtual_map[o2];
+    }
 
     void add_edge(Operand o1, Operand o2){
         int i = virtual_map[o1];
@@ -66,7 +71,7 @@ struct InterferenceGraph {
         // interference
         if (n1.interfere.contains(j) || n2.interfere.contains(i) || n1.spill || n2.spill) return FAIL;
 
-        if (n1.assigned || n2.assigned) return GEORGE;
+        if (n1.assigned > -1 || n2.assigned > -1) return GEORGE;
         return BRIGG;
     }
 
@@ -82,7 +87,7 @@ struct InterferenceGraph {
         IGNode& n1 = nodes[i];
         IGNode& n2 = nodes[j];
 
-        if (n2.assigned){ // pre-coloured
+        if (n2.assigned > -1){ // pre-coloured
             std::set_union(
                 n1.interfere.begin(), n1.interfere.end(),
                 n2.interfere.begin(), n2.interfere.end(),
@@ -155,7 +160,7 @@ struct InterferenceGraph {
     bool george_safe(int id1, int id2, int rcount){
         int pci = id1;
         int uci = id2;
-        if (nodes[id2].assigned) std::swap(pci, uci);
+        if (nodes[id2].assigned > -1) std::swap(pci, uci);
 
         IGNode& pc = nodes[pci];
         IGNode& uc = nodes[uci];

@@ -2,6 +2,7 @@
 #include "interf_graph.hpp"
 #include "liveness.hpp"
 #include "tac_ir.hpp"
+#include "x86_lower.hpp"
 
 void RegAllocator::allocate_prog(std::vector<FunctionIR>& prog){
     for (FunctionIR& func : prog){
@@ -10,50 +11,17 @@ void RegAllocator::allocate_prog(std::vector<FunctionIR>& prog){
     write_ir(prog);
 }
 
-void RegAllocator::move_params(FunctionIR& func){
-    Block* header = func.blocks[0].get();
-    for (Instruction& ins : header->ins){
-        
-    }
-}
-
 void RegAllocator::allocate_func(FunctionIR& prog){
-    move_params(prog);
-
     LivenessAnalyzer la = LivenessAnalyzer::instance(X86);
+    ig = lower_x86(prog);
     while (true) {
-        ig = la.gen_interference(prog);
-        ig.stack_offset = spill_offset; // retain stack offset
-        precolor_func(prog);
+        la.gen_interference(prog, ig);
+        rewrite_coalesce(prog);
+        ig.spill_offset = spill_offset; // retain stack offset
         if (is_colourable(prog)) break;
-        spill_offset = ig.stack_offset;
+        spill_offset = ig.spill_offset;
     }
     allocate_reg(prog);
-
-
-}
-
-/*
-    TODO : insert moves for div/mul and shifts
-*/
-void RegAllocator::precolor_func(FunctionIR& prog){
-
-    for (auto it = prog.blocks.begin(); it != prog.blocks.end(); it++){
-        Block* block = it->get();
-        for (Instruction& ins : block->ins){
-            IGNode& dst = ig.get_node(ins.dst);
-            IGNode& src1 = ig.get_node(ins.src1);
-            IGNode& src2 = ig.get_node(ins.src2);
-            switch (ins.op) {
-                case (Operation::LSL) :
-                case (Operation::LSR) : {
-                    src2.assigned = static_cast<int>(RCX); // shift amount
-                    break;
-                }
-                default : break;
-            }
-        }
-    }
 }
 
 /*
@@ -87,8 +55,8 @@ IGNode& InterferenceGraph::spill_node(){
         if (!candidate) candidate = &node;
         else if (node.uses > candidate->uses) candidate = &node;
     }
-    stack_offset += 8;
-    candidate->spill = stack_offset;
+    spill_offset -= 8;
+    candidate->spill = spill_offset;
     return *candidate;
 }
 
@@ -96,8 +64,8 @@ IGNode& InterferenceGraph::spill_node(){
     Agressive spill handling, on single spill rewrite IR to include spill
     with short-lived temps
 */
-void RegAllocator::rewrite_func(FunctionIR& func, Operand op, int spill){
-    Operand _ebp = Operand::ebp(spill);
+void RegAllocator::rewrite_spill(FunctionIR& func, Operand op, int spill){
+    Operand _ebp = Operand::rbp(spill);
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (auto it = b->ins.begin(); it != b->ins.end(); it++){
@@ -119,12 +87,35 @@ void RegAllocator::rewrite_func(FunctionIR& func, Operand op, int spill){
     }
 }
 
+/*
+    Rewrite for coalesced nodes, delete mov instances
+    replace nodes with coalesce
+*/
+void RegAllocator::rewrite_coalesce(FunctionIR& func){
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (auto it = b->ins.begin(); it != b->ins.end(); it++){
+            Instruction& ins = *it;
+
+            // two nodes are coalesced (pure move -> copy -> delete instruction)
+            if (ins.op == Operation::MOV && ig.coalesced(ins.dst, ins.src1)){ 
+                it = b->ins.erase(it); continue;
+            }
+            
+            // replace registers with coalesced operand
+            if (ins.dst.is_register()) ins.dst = ig.get_node(ins.dst).op;
+            if (ins.src1.is_register()) ins.src1 = ig.get_node(ins.src1).op;
+            if (ins.src2.is_register()) ins.src2 = ig.get_node(ins.src2).op;
+        }
+    }
+}
+
 bool RegAllocator::is_colourable(FunctionIR& func){
     while (ig.is_uncoloured()){
         IGNode* node_ptr = ig.get_low_deg();
         if (!node_ptr){
             IGNode& spilled = ig.spill_node();
-            rewrite_func(func, spilled.op, spilled.spill);
+            rewrite_spill(func, spilled.op, spilled.spill);
             simplify_stack.clear();
             return false;
         }

@@ -35,6 +35,7 @@ add_executable(main
     src/closure.cpp
     src/cfg_builder.cpp
     src/liveness.cpp
+    src/x86/x86_lower.cpp
     src/x86/x86_regalloc.cpp
     ${BISON_Parser_OUTPUTS}
     ${FLEX_Lexer_OUTPUTS}

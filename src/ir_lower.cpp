@@ -802,6 +802,7 @@ void IR_Lowerer::visit( CallNode& node ){
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _hof});
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _env, VOID, VOID, "get_env"});
 
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _env}); // implicitly pass environment in first param of function   
 
     for (int i = 0; i < node.params.size(); i++){
@@ -895,11 +896,9 @@ void IR_Lowerer::visit( IntLit& node ){
 
 void IR_Lowerer::visit( FloatLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    Operand _t = cons.get_register();
     int64_t _bitval;
     std::memcpy(&_bitval, &node.value, sizeof(_bitval));
-    cons.push_instruction({Operation::MOV, type_to_dtype(node.resolved_type->kind), _t, Operand::imm(_bitval)});
-    cons.push_operand(_t);
+    cons.push_operand(Operand::imm(_bitval));
 }
 
 void IR_Lowerer::visit( BoolLit& node ){
