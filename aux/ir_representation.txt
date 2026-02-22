@@ -180,82 +180,110 @@ param r21
 mov r22 i0
 param r22
 call r23 list_equals
-mov r0 r23
+store [rbp-8] r23 i-1
 jmp_if r0 .L_F6_1_1_B1_case0_0
 mov r24 v23
 param r24
 call r25 list_size
-cgeq r2 r1 i1
+cgeq r84 r25 i1
+store [rbp-80] r84 i-1
 jmp_if r2 .L_F6_1_1_B1_case0_1
+load r88 [rbp-48] i-1
+store [rbp-104] r88 i-1
 .L_F6_1_1_B1_case0_0
+store [rbp-8] r54 i-1
+load r77 [rbp-8] i-1
+store [rbp-48] r77 i-1
 mov r26 v23
 param r26
 call i-1 decr_list
-ret r27
+ret v24
+load r91 [rbp-56] i-1
+store [rbp-120] r91 i-1
 .L_F6_1_1_B1_case0_1
+store [rbp-8] r56 i-1
+load r79 [rbp-8] i-1
+store [rbp-56] r79 i-1
 mov r28 v23
 param r28
 mov r29 i0
 param r29
 call r30 access_index
-mov r3 r30
-load v25 r3 i-1
+store [rbp-32] r30 i-1
+load r73 r62 i-1
+store [rbp-40] r73 i-1
 mov r31 v23
 param r31
 mov r32 i1
 param r32
 call r33 access_index
-mov r3 r33
-mov v26 r3
+store [rbp-32] r33 i-1
+store [rbp-16] r62 i-1
 mov r34 v26
 param r34
 call i-1 incr_list
-ceq r4 v25 i45
+load r74 [rbp-40] i-1
+ceq r85 r74 i45
+store [rbp-88] r85 i-1
 jmp_if r4 .L_F6_1_1_B3_case1_0
 jmp_if i1 .L_F6_1_1_B3_case1_1
+load r80 [rbp-64] i-1
 .L_F6_1_1_B3_case1_0
-addr v21 atoi.local
+store [rbp-8] r58 i-1
+load r81 [rbp-8] i-1
+store [rbp-64] r81 i-1
+addr r67 atoi.local
+store [rbp-24] r67 i-1
 mov r35 v21
 param r35
 call r36 get_env
-mov r37 r36
-param r37
-mov r38 v26
+param r36
+load r38 [rbp-16] i-1
 param r38
 mov r39 v24
 param r39
-call r40 v21
-sub r6 i0 r9
-param r41
+load r68 [rbp-24] i-1
+call r40 r68
+sub r86 i0 r40
+store [rbp-96] r86 i-1
+param v23
 call i-1 decr_list
-mov r42 v26
+load r42 [rbp-16] i-1
 param r42
 call i-1 decr_list
-mov r43 r6
+load r43 [rbp-96] i-1
 ret r43
+load r82 [rbp-72] i-1
 .L_F6_1_1_B3_case1_1
-addr v21 atoi.local
+store [rbp-8] r60 i-1
+load r83 [rbp-8] i-1
+store [rbp-72] r83 i-1
+addr r69 atoi.local
+store [rbp-24] r69 i-1
 mov r44 v21
 param r44
 call r45 get_env
-mov r46 r45
-param r46
-mov r47 v26
+param r45
+load r47 [rbp-16] i-1
 param r47
-sub r12 v25 i48
-cst_i32 r13 i10
-mov r48 r13
+load r75 [rbp-40] i-1
+sub r89 r75 i48
+store [rbp-112] r89 i-1
+cst_i32 r48 i10
 mul i-1 i-1 v24
-cst_i32 r15 r12
+load r92 [rbp-112] i-1
+cst_i32 r92 r92
+store [rbp-128] r92 i-1
 add r49 r15 r48
 param r49
-call r50 v21
+load r70 [rbp-24] i-1
+call r50 r70
 param v23
 call i-1 decr_list
-mov r51 v26
+load r51 [rbp-16] i-1
 param r51
 call i-1 decr_list
-ret r52
+ret r50
 
 .main:
 local v28
@@ -268,73 +296,77 @@ param r20
 mov r21 i3
 param r21
 call r22 alloc_list
-mov v29 r22
+store [rbp-136] r22 i-1
 param v29
 mov r23 i0
 param r23
 call r24 index_list
-store r1 i97 i-1
-mov r25 v29
+store r24 i97 i-1
+load r25 [rbp-136] i-1
 param r25
 mov r26 i1
 param r26
 call r27 index_list
 mov r24 r27
 store r24 i98 i-1
-mov r28 v29
+load r28 [rbp-136] i-1
 param r28
 mov r29 i2
 param r29
 call r30 index_list
 mov r24 r30
 store r24 i99 i-1
-mov r31 v29
+load r31 [rbp-136] i-1
 param r31
 call i-1 incr_list
-addr v21 atoi.local
+addr r60 atoi.local
+store [rbp-144] r60 i-1
 mov r32 v21
 param r32
 call r33 get_env
-mov r34 r33
-param r34
-mov r35 v29
+param r33
+load r35 [rbp-136] i-1
 param r35
 cst_i32 r36 i0
 param r36
-call r37 v21
-mov v30 r5
-addr v18 get_val.local
+load r61 [rbp-144] i-1
+call r37 r61
+addr r62 get_val.local
+store [rbp-152] r62 i-1
 mov r38 v18
 param r38
 call r39 get_env
-mov r40 r39
-param r40
+param r39
 mov r41 i0
 param r41
-call r42 v18
-mov v31 r9
-addr v8 nest_check.local
+load r63 [rbp-152] i-1
+call r42 r63
+addr r64 nest_check.local
+store [rbp-160] r64 i-1
 mov r43 v8
 param r43
 call r44 get_env
-mov r45 r44
-param r45
-cst_i32 r13 i1
+param r44
+cst_i32 r68 i1
+store [rbp-176] r68 i-1
 mov r46 r13
 param r46
 mov r47 i97
 param r47
-call r48 v8
-mov r14 r48
+load r65 [rbp-160] i-1
+call r48 r65
+store [rbp-168] r48 i-1
 param r14
 call r49 get_env
-mov r50 r49
-param r50
-cst_i32 r16 i2
+param r49
+cst_i32 r69 i2
+store [rbp-184] r69 i-1
 mov r51 r16
 param r51
-call r52 r14
-param v29
+load r67 [rbp-168] i-1
+call r52 r67
+load r59 [rbp-136] i-1
+param r59
 call i-1 decr_list
-ret r53
+ret r52
 

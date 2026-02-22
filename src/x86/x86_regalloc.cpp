@@ -31,7 +31,7 @@ bool InterferenceGraph::is_uncoloured(){
     for (IGNode& node : nodes){
         if (!node.valid || node.simplified) continue;
 
-        if (!node.assigned && !node.spill) return true;
+        if (!node.allocated()) return true;
     }
     return false;
 }
@@ -39,7 +39,7 @@ bool InterferenceGraph::is_uncoloured(){
 IGNode* InterferenceGraph::get_low_deg(){
     for (IGNode& node : nodes){
         if (!node.valid || node.simplified) continue;
-        if (node.assigned || node.spill) continue;
+        if (node.allocated()) continue;
 
         int K = (node.type == IGNode::GP)? GPR_count : FPR_count;
         if (get_interf_size(node) < K) return &node;
@@ -50,7 +50,7 @@ IGNode* InterferenceGraph::get_low_deg(){
 IGNode& InterferenceGraph::spill_node(){
     IGNode* candidate = nullptr;
     for (IGNode& node : nodes){
-        if (!node.valid || node.simplified || node.assigned) continue;
+        if (!node.valid || node.allocated()) continue;
 
         if (!candidate) candidate = &node;
         else if (node.uses > candidate->uses) candidate = &node;
@@ -132,15 +132,12 @@ void RegAllocator::allocate_reg(FunctionIR& func){
         simplify_stack.pop_back();
 
         int rcount = (node.type == IGNode::GP)? GPR_count : FPR_count;
-        std::vector<bool> free_reg(rcount+1, true); // 1 index
-        if (node.type == IGNode::GP){ 
-            free_reg[14] = free_reg[3] = false; // RAX/RDX (change this hardcoded rn)
-        }
+        std::vector<bool> free_reg(rcount, true);
         for (int inf : node.interfere){
             IGNode& temp = ig.nodes[inf];
             if (!temp.valid || temp.spill) continue;
 
-            if (temp.assigned) free_reg[temp.assigned] = false;
+            if (temp.allocated()) free_reg[temp.assigned] = false;
         }
         for (int i = 1; i <= rcount; i++){
             if (free_reg[i]) node.assigned = i;

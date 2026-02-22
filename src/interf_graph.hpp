@@ -14,6 +14,8 @@ struct IGNode {
 
     bool valid = true; // coalesced
     bool simplified = false; // during register allocation
+
+    bool allocated() { return assigned > -1 || spill; }
 };
 
 using movelist = std::vector<std::pair<Operand, Operand>>;
