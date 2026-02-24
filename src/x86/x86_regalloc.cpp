@@ -40,6 +40,9 @@ void RegAllocator::add_nodes(FunctionIR& func){
         for (Instruction& ins : b->ins){
             RType rtype = dtype_to_rtype(ins.type);
 
+            // special case for cast float operations, ins type represents src type not resultant
+            if (ins.op == Operation::CST_F32 || ins.op == Operation::CST_F64) rtype = FP;
+
             if (ins.dst.is_register()) ig.add_node(ins.dst, rtype);
             if (ins.src1.is_register()) ig.add_node(ins.src1, rtype);
             if (ins.src2.is_register()) ig.add_node(ins.src2, rtype);
