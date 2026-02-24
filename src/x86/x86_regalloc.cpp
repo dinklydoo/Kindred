@@ -14,22 +14,152 @@ void RegAllocator::allocate_prog(std::vector<FunctionIR>& prog){
     write_ir(prog);
 }
 
-void RegAllocator::allocate_func(FunctionIR& prog){
+void RegAllocator::allocate_func(FunctionIR& func){
     X86_Lowerer& xl = X86_Lowerer::instance();
-    ig = xl.lower_x86(prog);
+    ig = xl.lower_x86(func);
     
     LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
     spill_offset = 0;
     while (true) {
         ig = InterferenceGraph();
-        la.gen_interference(prog, ig);
-        rewrite_coalesce(prog);
+        add_nodes(func);
+        precolor_func(func);
+        la.gen_interference(func, ig);
+        rewrite_coalesce(func);
         ig.spill_offset = spill_offset; // retain stack offset
-        if (is_colourable(prog)) break;
+        if (is_colourable(func)) break;
         spill_offset = ig.spill_offset;
     }
-    allocate_reg(prog);
-    convert_reg(prog);
+    allocate_reg(func);
+    convert_reg(func);
+}
+
+void RegAllocator::add_nodes(FunctionIR& func){
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (Instruction& ins : b->ins){
+            RType rtype = dtype_to_rtype(ins.type);
+
+            if (ins.dst.is_register()) ig.add_node(ins.dst, rtype);
+            if (ins.src1.is_register()) ig.add_node(ins.src1, rtype);
+            if (ins.src2.is_register()) ig.add_node(ins.src2, rtype);
+        }
+    }
+}
+
+void RegAllocator::precolor_func(FunctionIR& func){
+    precolor_locals(func);
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (auto it = b->ins.begin(); it != b->ins.end(); it++){
+            Instruction& ins = *it;
+            switch (ins.op){
+                case (Operation::MOD) : {
+                    IGNode& _rdx = ig.get_node(ins.dst);
+                    _rdx.assigned = static_cast<int>(RDX);
+                }
+                case (Operation::FLR) :
+                case (Operation::DIV) : 
+                case (Operation::MUL) : {
+                    if (is_fp(ins.type)) break;
+                    
+                    IGNode& _rax = ig.get_node(ins.src1);
+                    _rax.assigned = static_cast<int>(RAX);
+                    break;
+                }
+                case (Operation::LSL) :
+                case (Operation::LSR) : {
+                    if (is_fp(ins.type)) break;
+
+                    IGNode& _rcx = ig.get_node(ins.src2);
+                    _rcx.assigned = static_cast<int>(RCX);
+                    break;
+                }
+                case (Operation::BEGIN_CALL) : {
+                    precolor_params(it);
+                    break;
+                }
+                case (Operation::CALL) : 
+                case (Operation::CALL_EXT) : {
+                    if (ins.type == DataType::EMPTY) break;
+
+                    if (is_fp(ins.type)){ // mov xmm0->dst
+                        IGNode& _xmm0 = ig.get_node(ins.dst);
+                        _xmm0.assigned = static_cast<int>(XMM0);
+                    }
+                    else { // mov rax->dst
+                        IGNode& _rax = ig.get_node(ins.dst);
+                        _rax.assigned = static_cast<int>(RAX);
+                    }
+                    break;
+                }
+                case (Operation::RET) : {
+                    if (is_fp(ins.type)){ // mov return -> xmm0
+                        IGNode& _xmm0 = ig.get_node(ins.src1);
+                        _xmm0.assigned = static_cast<int>(XMM0);
+                        break;
+                    }
+                    else { // mov return -> rax
+                        IGNode& _rax = ig.get_node(ins.src1);
+                        _rax.assigned = static_cast<int>(RAX);
+                        break;
+                    }
+                    break;
+                }
+                default : continue;
+            }
+        }
+    }
+}
+
+void RegAllocator::precolor_locals(FunctionIR& func){
+    int fp_param = -1;
+    int gp_param = -1;
+    int spilt_params = 0;
+    Block* header = func.blocks[0].get();
+    for (Instruction& ins : header->ins){
+        if (ins.op == Operation::BEGIN_FUNC) return;
+
+        if (ins.op == Operation::LOCAL){
+            IGNode& node = ig.get_node(ins.src1);
+            if (!is_fp(ins.type)){
+                gp_param++;
+                if (gp_param < gp_params.size())
+                    node.assigned = static_cast<int>(gp_params[gp_param]);
+                else node.spill = (++spilt_params) * 8;
+            }
+            else {
+                fp_param++;
+                if (fp_param < fp_params.size())
+                    node.assigned = static_cast<int>(fp_params[fp_param]);
+                else node.spill = (++spilt_params) * 8;
+            }
+        }
+    }
+}
+
+void RegAllocator::precolor_params(std::list<Instruction>::iterator it){
+    int fp_param = -1;
+    int gp_param = -1;
+    while (true) {
+        Instruction& ins = *it;
+        if (ins.op == Operation::CALL || ins.op == Operation::CALL_EXT) return;
+
+        if (ins.op == Operation::PARAM){
+            IGNode& node = ig.get_node(ins.src1);
+            if (!is_fp(ins.type)){
+                gp_param++;
+                if (gp_param < gp_params.size())
+                    node.assigned = static_cast<int>(gp_params[gp_param]);
+            }
+            else {
+                fp_param++;
+                if (fp_param < fp_params.size())
+                    node.assigned = static_cast<int>(fp_params[fp_param]);
+            }
+        }
+        it++;
+    }
 }
 
 /*
@@ -114,7 +244,7 @@ void RegAllocator::rewrite_spill(FunctionIR& func, Operand op, int spill){
 void RegAllocator::rewrite_coalesce(FunctionIR& func){
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
-        for (auto it = b->ins.begin(); it != b->ins.end(); it++){
+        for (auto it = b->ins.begin(); it != b->ins.end();){
             Instruction& ins = *it;
 
             // two nodes are coalesced (pure move -> copy -> delete instruction)
@@ -126,6 +256,7 @@ void RegAllocator::rewrite_coalesce(FunctionIR& func){
             if (ins.dst.is_register()) ins.dst = ig.get_node(ins.dst).op;
             if (ins.src1.is_register()) ins.src1 = ig.get_node(ins.src1).op;
             if (ins.src2.is_register()) ins.src2 = ig.get_node(ins.src2).op;
+            it++;
         }
     }
 }
@@ -137,7 +268,7 @@ bool RegAllocator::is_colourable(FunctionIR& func){
         if (!node_ptr){
             IGNode& spilled = ig.spill_node();
             rewrite_spill(func, spilled.op, spilled.spill);
-            //write_func(func);
+            
             // restore state
             for (IGNode& node : ig.nodes) node.simplified = false;
             return false;
@@ -150,11 +281,12 @@ bool RegAllocator::is_colourable(FunctionIR& func){
 }
 
 void RegAllocator::allocate_reg(FunctionIR& func){
+    write_func(func);
     while (!simplify_stack.empty()){
         IGNode& node = *simplify_stack.back();
         simplify_stack.pop_back();
 
-        if (node.spill) continue;
+        if (node.spill || node.allocated()) continue;
 
         int rcount = (node.type == GP)? GPR_count : FPR_count;
         std::vector<bool> free_reg(rcount, true);

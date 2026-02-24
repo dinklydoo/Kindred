@@ -26,9 +26,8 @@ struct X86_Lowerer {
     InterferenceGraph ig;
 
     InterferenceGraph lower_x86(FunctionIR& func);
-    void add_nodes(FunctionIR& func);
     void shift_params(FunctionIR& func);
-    void precolour_ins(FunctionIR& func);
+    void lower_ins(FunctionIR& func);
     void assign_statics(FunctionIR& func);
     void fix_jumps(FunctionIR& func);
 

@@ -1,15 +1,15 @@
 TODO (realistic)
     - better docs
-    - I/O operations
-    - Function Currying (literally just closures with extra steps)
+    - I/O operations 
+    - Function Currying (literally just closures with extra steps, but also not)
     - Inline optimization
     - Variable Liveness Optimization
     - Constant Folding
     - Unneccessary ref counting of static closures
 
 TODO (in future probs not but if im so bored that i come back to this shit project):
-    - Function subtyping
-    - Handwrite parser with better error msg
-    - Lambda expressions
-    - Linker
-    - Rewrite memory allocation to use a nursery and then RC
+    - Function subtyping (doable but enforcing it is annoying)
+    - Handwrite parser with better error msgs
+    - Lambda expressions (syntax is too annoying but once i reduce to closure no extra work passed typechecking/reduction)
+    - Linker (obv u could just modify to write globals and link using gcc but theres no dependency enforcement so :/ also main entrypoint is hardcoded lmao)
+    - Maybe rewrite GC but probs not for this shit language (try hybrid nursery + rc)

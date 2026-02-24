@@ -54,12 +54,14 @@ void IR_Lowerer::op_equals(Operand ptr1, Operand ptr2, type_ptr type){
             return;
         }
         case (Type::Kind::Struct) : {
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, ptr1});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, ptr2});
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t0, VOID, VOID, "struct_equals"});
             break;
         }
         case (Type::Kind::List) : {
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, ptr1});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, ptr2});
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t0, VOID, VOID, "list_equals"});    
@@ -163,6 +165,7 @@ void IR_Lowerer::struct_pattern_vars( LiteralNode& node){
         identifier.get_var(snode.patterns[i]);
         Operand _var = cons.pop_operand();
 
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _target});
         cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(i)});
         cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "access_field"});
@@ -186,6 +189,7 @@ void IR_Lowerer::list_pattern_vars( LiteralNode& node){
         identifier.get_var(lnode.patterns[i]);
         Operand _var = cons.pop_operand();
 
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _target});
         cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(i)});
         cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "access_index"});
@@ -197,6 +201,7 @@ void IR_Lowerer::list_pattern_vars( LiteralNode& node){
     identifier.get_var(lnode.patterns[n-1]);
     Operand _var = cons.pop_operand();
 
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _target});
     cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(n-1)});
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "access_index"});
@@ -210,6 +215,7 @@ void IR_Lowerer::increase_ref( Operand _ptr, type_ptr type){
         case (Type::Kind::Struct) :
         case (Type::Kind::List) :
         case (Type::Kind::Func) :
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
             break;
         default : return;
@@ -234,6 +240,7 @@ void IR_Lowerer::decrease_ref( Operand _ptr, type_ptr type){
         case (Type::Kind::Struct) :
         case (Type::Kind::List) :
         case (Type::Kind::Func) :
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
             break;
         default : return;
@@ -262,6 +269,7 @@ void IR_Lowerer::generate_node( Operand elem, type_ptr ltype, type_ptr type){
     _cast = cons.pop_operand();
 
     Operand _ptr = cons.get_register();
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     if (type->kind == Type::Kind::List) cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(1)});
     else if (type->kind == Type::Kind::Struct) cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(2)});
     else cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(0)});
@@ -345,6 +353,7 @@ type_ptr IDVarScope::get_var(std::string var){
             auto& p = sc.get_enclosed(var);
 
             Operand _env = get_env();
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _env});
             cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(p.first)});
             Operand _ptr = cons.get_register();
@@ -379,12 +388,14 @@ void IR_Lowerer::construct_env(std::string fn, type_ptr ftype, varset& enc){
     Operand _func_ptr = cons.get_register();
     if (enc.empty()){
         cons.push_instruction({Operation::ADDR, DataType::PTR, _func_ptr, VOID, VOID, fn});
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _func_ptr});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, NULL_PTR});
     }
     else {
         Operand _env = cons.get_register();
         int env_id = envInfo.get_env_id(fn);
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(env_id)});
         cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _env, VOID, VOID, "allocate_env"});
     
@@ -397,12 +408,14 @@ void IR_Lowerer::construct_env(std::string fn, type_ptr ftype, varset& enc){
             increase_ref(_var, v.second);
     
             int var_id = envInfo.get_var_id(fn, v.first);
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _env});
             cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(var_id)});
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _temp, VOID, VOID, "access_var"});
             cons.push_instruction({Operation::STORE, type_to_dtype(v.second->kind), _temp, _var});
         }
         cons.push_instruction({Operation::ADDR, DataType::PTR, _func_ptr, VOID, VOID, fn});
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _func_ptr}); // temp fix for function ptr
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _env});
     }
@@ -703,6 +716,7 @@ void IR_Lowerer::visit( BinaryNode& node ){
                     cons.push_instruction({Operation::POW, dtype, _t, _lexp, _rexp});break;
                     break;
                 default :
+                    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
                     cons.push_instruction({Operation::PARAM, dtype, VOID, _lexp});
                     cons.push_instruction({Operation::PARAM, dtype, VOID, _rexp});
             }
@@ -749,6 +763,7 @@ void IR_Lowerer::visit( BinaryNode& node ){
             break;
         }
         case (BinaryOp::CONCAT): {
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _lexp});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _rexp});
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "concat_list"});
@@ -759,6 +774,7 @@ void IR_Lowerer::visit( BinaryNode& node ){
             generate_node(_lexp, ltype->elem, node.l_exp->resolved_type);
             _lexp = cons.pop_operand();
 
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _lexp});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _rexp});
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "concat_list"});
@@ -769,6 +785,7 @@ void IR_Lowerer::visit( BinaryNode& node ){
             generate_node(_rexp, ltype->elem, node.r_exp->resolved_type);
             _rexp = cons.pop_operand();
 
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _lexp});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _rexp});
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "concat_list"});
@@ -777,6 +794,8 @@ void IR_Lowerer::visit( BinaryNode& node ){
         case (BinaryOp::INDEX): {
             auto ltype = std::static_pointer_cast<ListType>(node.resolved_type);
             Operand _ptr = cons.get_register();
+
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _lexp});
             // maybe need to cast
             cons.push_instruction({Operation::PARAM, DataType::I32, VOID, _rexp});
@@ -798,9 +817,10 @@ void IR_Lowerer::visit( CallNode& node ){
     _hof = cons.pop_operand(); // returns a closure ptr
 
     Operand _env = cons.get_register();
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _hof});
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _env, VOID, VOID, "get_env"});
-
+    
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _env}); // implicitly pass environment in first param of function   
 
@@ -824,6 +844,7 @@ void IR_Lowerer::visit( StructNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
 
     unsigned int id = structInfo.get_struct_id(node.name);
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(id)});
     Operand _ptr = cons.get_register();
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _ptr, VOID, VOID, "allocate_struct"});
@@ -837,6 +858,7 @@ void IR_Lowerer::visit( StructNode& node ){
         _t = cons.pop_operand();
         
         DataType dtype = type_to_dtype(node.ftypes[i]->kind);
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, VOID, _ptr});
         cons.push_instruction({Operation::PARAM, DataType::I32, VOID, VOID, Operand::imm(i)});
 
@@ -854,6 +876,7 @@ void IR_Lowerer::visit( AccessNode& node ){
     Operand _ptr = cons.pop_operand();
 
     unsigned int field_id = structInfo.get_field_id(node.sn, node.field);
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, VOID, _ptr});
     cons.push_instruction({Operation::PARAM, DataType::I32, VOID, VOID, Operand::imm(field_id)});
 
@@ -933,6 +956,7 @@ void IR_Lowerer::visit( ListPatternLit& node ){
     Operand _ptr = cons.pop_operand();
 
     Operand _size = cons.get_register();
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
     cons.push_instruction({Operation::CALL_EXT, DataType::I32, _size, VOID, VOID, "list_size"});
 
@@ -955,6 +979,7 @@ void IR_Lowerer::visit( StructPatternLit& node ){
     for (int i = 0; i < node.patterns.size(); i++){
         if (!node.patterns[i].empty()) continue; // non-nil
 
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, Operand::imm(i)});
         cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _field, VOID, VOID, "access_field"});
@@ -998,6 +1023,7 @@ void IR_Lowerer::visit( ListNode& node ){
         cons.push_operand(NULL_PTR); // null ptr
         return;
     }
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     if (etype->kind == Type::Kind::List) cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(1)});
     else if (etype->kind == Type::Kind::Struct) cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(2)});
     else cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(0)});
@@ -1019,6 +1045,7 @@ void IR_Lowerer::visit( ListNode& node ){
             cast_operand(_elem, etype, node.elems[i]->resolved_type);
             _elem = cons.pop_operand();
         }
+        cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
         cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(i)});
         cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _index, VOID, VOID, "index_list"});

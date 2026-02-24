@@ -5,10 +5,13 @@
 #include <unordered_map>
 
 enum GPReg {
-    RDI, RSI, RDX, RCX, R8, R9,
-    RBX, R10, R11, R12, R13, R14, R15,
-    RAX
-
+    RAX, RBX,
+    RCX, RDX,
+    RDI, RSI,
+    R8, R9,
+    R10, R11, 
+    R12, R13, 
+    R14, R15,
 };
 enum FPReg {
     XMM0, XMM1, 
@@ -26,7 +29,7 @@ enum FPReg {
     we can create a mapping from these forms to the actual register names
 */
 
-static int GPR_count = 12;
+static int GPR_count = 14;
 static int FPR_count = 16;
 
 struct GPRegInfo {
@@ -67,9 +70,13 @@ struct RegAllocator {
 
     void move_params(FunctionIR& func); // move params to virtuals (prevents rdx/rcx conflict)
 
+    void add_nodes(FunctionIR& func);
     void allocate_prog(std::vector<FunctionIR>& prog);
     void allocate_func(FunctionIR& func);
+
+    void precolor_locals(FunctionIR& func);
     void precolor_func(FunctionIR& func);
+    void precolor_params(std::list<Instruction>::iterator it);
 
     void rewrite_coalesce(FunctionIR&);
     void rewrite_spill(FunctionIR&, Operand, int);

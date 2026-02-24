@@ -21,6 +21,7 @@ struct Operand {
         REG, // virtual register
         IMM, // immediate value
         VAR, // virtual register (name binded - variables/functions)
+        EMP,
 
         GPR, // general purpose register
         FPR, // floating point register
@@ -74,6 +75,11 @@ public:
         temp.value = id;
         return temp;
     }
+    static Operand empty(){
+        Operand temp;
+        temp.type = EMP;
+        return temp;
+    }
 
     /* ==================================================================================================================
 
@@ -117,6 +123,7 @@ public:
             case (RSP) : return "rsp";
             case (GPR) : str += "gpr"; break;
             case (FPR) : str += "fpr"; break;
+            case (EMP) : return "";
         }
         if (type == RBP){ 
             if (value > 0) str += '+';
@@ -127,7 +134,7 @@ public:
         return str;
     }
 };
-#define VOID Operand::imm(-1)
+#define VOID Operand::empty()
 
 enum class Operation {
     // arith

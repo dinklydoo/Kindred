@@ -3,6 +3,7 @@
 #include <cstring>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "x86_lower.hpp"
 
@@ -14,24 +15,10 @@ InterferenceGraph X86_Lowerer::lower_x86(FunctionIR& func){
     ig = InterferenceGraph();
     assign_statics(func);
     fix_jumps(func);
-    add_nodes(func);
     shift_params(func);
-    precolour_ins(func);
-    //write_func(func);
+    lower_ins(func);
+    write_func(func);
     return ig;
-}
-
-void X86_Lowerer::add_nodes(FunctionIR& func){
-    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
-        Block* b = bit->get();
-        for (Instruction& ins : b->ins){ // initialise all nodes
-            RType rtype = dtype_to_rtype(ins.type);
-
-            if (ins.dst.is_register()) ig.add_node(ins.dst, rtype);
-            if (ins.src1.is_register()) ig.add_node(ins.src1, rtype);
-            if (ins.src2.is_register()) ig.add_node(ins.src2, rtype);
-        }
-    }
 }
 
 /*
@@ -44,33 +31,48 @@ void X86_Lowerer::shift_params(FunctionIR& func){
     int fp_param = -1;
     int spilt_params = 0;
     std::vector<std::pair<Operand, DataType>> params;
+    std::unordered_map<Operand, int, Operand::OperandHash> spills;
+    std::unordered_map<Operand, Operand, Operand::OperandHash> remap;
     for (auto it = header->ins.begin(); it != header->ins.end(); it++){
         Instruction& ins = *it;
         if (ins.op == Operation::LOCAL){
-            IGNode& node = ig.get_node(ins.src1);
+            Operand _t = func.get_register();
+            remap.emplace(ins.src1, _t);
+
             if (!is_fp(ins.type)){
                 ++gp_param;
-                if (gp_param >= gp_params.size()) node.spill = (++spilt_params * 8) + 16; // saved rbp, saved address
-                else {
-                    node.assigned = gp_params[gp_param];
-                    params.push_back({ins.src1, ins.type});
-                }
+                if (gp_param >= gp_params.size()) spills[ins.src1] = (++spilt_params * 8) + 16; // saved rbp, saved address
+                params.push_back({ins.src1, ins.type});
             }
             else {
                 ++fp_param;
-                if (fp_param >= fp_params.size()) node.spill = (++spilt_params * 8) + 16; // saved rbp, saved address
-                else {
-                    node.assigned = fp_params[fp_param];
-                    params.push_back({ins.src1, ins.type});
-                }
+                if (fp_param >= fp_params.size()) spills[ins.src1] = (++spilt_params * 8) + 16; // saved rbp, saved address
+                params.push_back({ins.src1, ins.type});
             }
             continue;
         }
+    }
+
+    // replace all instances of variables with remappings
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (Instruction& ins : b->ins){
+            if (ins.op == Operation::LOCAL) continue;
+
+            if (remap.contains(ins.dst)) ins.dst = remap[ins.dst];
+            if (remap.contains(ins.src1)) ins.src1 = remap[ins.src1];
+            if (remap.contains(ins.src2)) ins.src2 = remap[ins.src2];
+        }
+    }
+
+    for (auto it = header->ins.begin(); it != header->ins.end(); it++){
+        Instruction& ins = *it;
         if (ins.op == Operation::BEGIN_FUNC){
             it++; // head to first instruction
             for (auto& p : params){
-                Operand _t = func.get_register();
-                header->ins.insert(it, {Operation::MOV, p.second, _t, p.first});
+                if (spills.contains(p.first))
+                    header->ins.insert(it, {Operation::LOAD, p.second, remap[p.first], Operand::rbp(spills[p.first])});
+                else header->ins.insert(it, {Operation::MOV, p.second, remap[p.first], p.first});
             }
             return;
         }
@@ -83,7 +85,7 @@ void X86_Lowerer::shift_params(FunctionIR& func){
         - rdx/rax for division/modulo
         - rcx for shift
 */
-void X86_Lowerer::precolour_ins(FunctionIR& func){
+void X86_Lowerer::lower_ins(FunctionIR& func){
     int fp_param = -1;
     int gp_param = -1;
     int spilt_params = 0;
@@ -98,42 +100,31 @@ void X86_Lowerer::precolour_ins(FunctionIR& func){
                     if (is_fp(ins.type)) break;
                     
                     Operand _rax = func.get_register();
-                    IGNode& rax_node = ig.add_node(_rax, GP);
-                    rax_node.assigned = static_cast<int>(RAX);
-
                     b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
 
-                    ins.src1 = VOID;
+                    ins.src1 = _rax;
                     
                     it++; // past ins
                     b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _rax});
-                    ins.dst = VOID;
+                    ins.dst = _rax;
                     break;
                 }
                 case (Operation::MOD) : {
                     Operand _rax = func.get_register();
-                    IGNode& rax_node = ig.add_node(_rax, GP);
-                    rax_node.assigned = static_cast<int>(RAX);
-
                     b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
 
-                    ins.src1 = VOID;
-                    
+                    ins.src1 = _rax;
                     Operand _rdx = func.get_register();
-                    IGNode& rdx_node = ig.add_node(_rdx, GP);
-                    rdx_node.assigned = static_cast<int>(RDX);
                     
                     it++; // past ins
                     b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _rdx});
-                    ins.dst = VOID;
+                    ins.dst = _rdx;
                     break;
                 }
                 case (Operation::LSL) :
                 case (Operation::LSR) : {
                     if (is_fp(ins.type)) break;
                     Operand _rcx = func.get_register();
-                    IGNode& node = ig.add_node(_rcx, GP);
-                    node.assigned = static_cast<int>(RCX);
                     b->ins.insert(it, {Operation::MOV, ins.type, _rcx, ins.src2});
                     ins.src2 = _rcx;
 
@@ -142,22 +133,18 @@ void X86_Lowerer::precolour_ins(FunctionIR& func){
                 case (Operation::PARAM) : {
                     if (is_fp(ins.type)){
                         fp_param++;
-                        if (fp_param >= fp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(++spilt_params * 8)});
+                        if (fp_param >= fp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(++spilt_params * 8), ins.src1});
                         else {
                             Operand _param = func.get_register();
-                            IGNode& node = ig.add_node(_param, FP);
-                            node.assigned = static_cast<int>(fp_params[fp_param]);
                             b->ins.insert(it, {Operation::MOV, ins.type, _param, ins.src1});
                             ins.src1 = _param;
                         }
                     }
                     else {
                         gp_param++;
-                        if (gp_param >= gp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(++spilt_params * 8)});
+                        if (gp_param >= gp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(++spilt_params * 8), ins.src1});
                         else {
                             Operand _param = func.get_register();
-                            IGNode& node = ig.add_node(_param, GP);
-                            node.assigned = static_cast<int>(gp_params[gp_param]);
                             b->ins.insert(it, {Operation::MOV, ins.type, _param, ins.src1});
                             ins.src1 = _param;
                         }
@@ -183,8 +170,6 @@ void X86_Lowerer::precolour_ins(FunctionIR& func){
 
                     if (is_fp(ins.type)){ // mov xmm0->dst
                         Operand _xmm0 = func.get_register();
-                        IGNode& node = ig.add_node(_xmm0, FP);
-                        node.assigned = static_cast<int>(XMM0);
 
                         it++;
                         b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _xmm0});
@@ -192,8 +177,6 @@ void X86_Lowerer::precolour_ins(FunctionIR& func){
                     }
                     else { // mov rax->dst
                         Operand _rax = func.get_register();
-                        IGNode& node = ig.add_node(_rax, GP);
-                        node.assigned = static_cast<int>(RAX);
 
                         it++;
                         b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _rax});
@@ -208,15 +191,11 @@ void X86_Lowerer::precolour_ins(FunctionIR& func){
                 case (Operation::RET) : {
                     if (is_fp(ins.type)){ // mov return -> xmm0
                         Operand _xmm0 = func.get_register();
-                        IGNode& node = ig.add_node(_xmm0, FP);
-                        node.assigned = static_cast<int>(XMM0);
                         b->ins.insert(it, {Operation::MOV, ins.type, _xmm0, ins.src1});
                         ins.src1 = _xmm0;
                     }
                     else { // mov return -> rax
                         Operand _rax = func.get_register();
-                        IGNode& node = ig.add_node(_rax, GP);
-                        node.assigned = static_cast<int>(RAX);
                         b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
                         ins.src1 = _rax;
                     }
@@ -256,7 +235,7 @@ void X86_Lowerer::fix_jumps(FunctionIR& func){
             it--;
             Instruction& prior = *(it++);
 
-            if (!cmp_op(prior.op) || prior.dst != ins.src1){ // depends on an external boolean register
+            if (!cmp_op(prior.op) && prior.dst != ins.src1){ // depends on an external boolean register
                 b->ins.insert(it, {Operation::CEQ, DataType::EMPTY, VOID, ins.src1, Operand::imm(1)});
                 ins.src1 = VOID;
                 continue;

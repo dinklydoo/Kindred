@@ -156,6 +156,11 @@ struct InterferenceGraph {
     }
 
     bool george_safe(int id1, int id2, int rcount){
+        if (
+            nodes[id1].allocated() && nodes[id2].allocated()
+            && (nodes[id1].assigned != nodes[id2].assigned)
+        ) return false;
+
         int pci = id1;
         int uci = id2;
         if (nodes[id2].assigned > -1) std::swap(pci, uci);
