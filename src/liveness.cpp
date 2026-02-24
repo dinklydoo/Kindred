@@ -3,57 +3,95 @@
 #include "tac_ir.hpp"
 #include <vector>
 
+void LivenessAnalyzer::pre_liveness(FunctionIR& func){
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        b->use.clear(); b->def.clear();
+        b->live_in.clear(); b->live_out.clear();
+        for (auto& ins : b->ins){
+            RType rtype = dtype_to_rtype(ins.type);
+
+            if (ins.op == Operation::LOCAL){ 
+                b->def.insert({ins.src1, rtype});
+                continue;
+            }
+
+            if (ins.dst.is_register()) 
+                b->def.insert({ins.dst, rtype});
+
+            if (ins.src1.is_register()){ // defined
+                if (!b->def.contains({ins.src1, rtype})) b->use.insert({ins.src1, rtype});
+            }
+            if (ins.src2.is_register()){ // defined
+                if (!b->def.contains({ins.src2, rtype})) b->use.insert({ins.src2, rtype});
+            }
+        }
+    }
+}
 
 // calculate liveness sets for variables for each function
 void LivenessAnalyzer::live_func(FunctionIR& func){
+    pre_liveness(func);
+    
+    for (auto& blk_ptr : func.blocks) {
+        Block* b = blk_ptr.get();
+        b->live_in.clear();
+        b->live_out.clear();
+    }
+
     bool done = false;
     while (!done){
         done = true;
-        for (auto b_it = func.blocks.rbegin(); b_it != func.blocks.rend(); b_it++){
-            Block* b = b_it->get();
-            virtual_varset temp_in = b->live_in;
-            virtual_varset temp_out = b->live_out;
+        for (auto it = func.blocks.rbegin(); it != func.blocks.rend(); ++it){
+            Block* b = it->get();
+            
+            virtual_varset temp_in = b->use;
+            virtual_varset temp_out;
 
-            for (virtual_var v : b->use) b->live_in.insert(v);
-            for (virtual_var v : b->live_out){
-                if (!b->def.count(v)) b->live_in.insert(v);
+            for (Block* suc : b->out_edge)
+                temp_out.insert(suc->live_in.begin(), suc->live_in.end());
+
+            for (auto& v : temp_out){
+                if (!b->def.count(v)) temp_in.insert(v);
             }
-            for (Block* suc : b->out_edge){
-                for (virtual_var v : suc->live_in) b->live_out.insert(v);
-            }
-            if (temp_in != b->live_in || temp_out != b->live_out) done = false;
+            if (temp_in != b->live_in || temp_out != b->live_out)
+                done = false;
+
+            b->live_in  = std::move(temp_in);
+            b->live_out = std::move(temp_out);
         }
     }
 }
 
 void LivenessAnalyzer::add_interference_edges(Instruction& ins, virtual_varset& live, InterferenceGraph& graph) {
     virtual_varset defines, uses;
-    if (ins.dst.is_register()) defines.insert({ins.dst, ins.type});
+    RType rtype = dtype_to_rtype(ins.type);
+    if (ins.dst.is_register()) defines.insert({ins.dst, rtype});
     if (ins.src1.is_register()){ 
-        uses.insert({ins.src1, ins.type});
-        graph.incr_uses(ins.src1, ins.type);
+        uses.insert({ins.src1, rtype});
+        graph.incr_uses(ins.src1, rtype);
     }
     if (ins.src2.is_register()){ 
-        uses.insert({ins.src2, ins.type});
-        graph.incr_uses(ins.src2, ins.type);
+        uses.insert({ins.src2, rtype});
+        graph.incr_uses(ins.src2, rtype);
     }
 
     if (ins.op == Operation::CALL){
         for (int clobber_gp : regInfo.GP_CALLER_SAVE){ 
-            defines.insert({Operand::gpr(clobber_gp), DataType::I64});
-            IGNode& node = graph.add_node(Operand::gpr(clobber_gp), DataType::I64);
+            defines.insert({Operand::gpr(clobber_gp), GP});
+            IGNode& node = graph.add_node(Operand::gpr(clobber_gp), GP);
             node.assigned = clobber_gp;
         }
         for (int clobber_fp : regInfo.FP_CALLER_SAVE){ 
-            defines.insert({Operand::fpr(clobber_fp), DataType::F64});
-            IGNode& node = graph.add_node(Operand::fpr(clobber_fp), DataType::F64);
+            defines.insert({Operand::fpr(clobber_fp), FP});
+            IGNode& node = graph.add_node(Operand::fpr(clobber_fp), FP);
             node.assigned = clobber_fp;
         }
     }
     for (virtual_var def : defines) {
         graph.add_node(def.first, def.second); // ensure node exists
         for (virtual_var var : live) {
-            if (is_fp(var.second) == is_fp(def.second)) {
+            if (var.second == def.second) {
                 graph.add_node(var.first, var.second);
                 graph.add_edge(var.first, def.first);
             }
@@ -77,9 +115,9 @@ void LivenessAnalyzer::process_block(Block* b, InterferenceGraph& graph, movelis
 }
 
 void LivenessAnalyzer::gen_interference(FunctionIR& func, InterferenceGraph& graph) {
-    func_ref = &func;
     movelist moves;
-    live_func(func);
+
+    live_func(func); // generates live sets for blocks
     for (auto& blk_ptr : func.blocks) {
         process_block(blk_ptr.get(), graph, moves);
     }
@@ -100,8 +138,8 @@ void LivenessAnalyzer::move_coalesce(InterferenceGraph& ig, movelist& mlist){
                 continue;
             }
             
-            IGNode::RType rtype = ig.nodes[idx1].type; // assert: node1 and node2 are same type
-            int rcount = (rtype == IGNode::GP)? regInfo.gp_rcount : regInfo.fp_rcount;
+            RType rtype = ig.nodes[idx1].type; // assert: node1 and node2 are same type
+            int rcount = (rtype == GP)? regInfo.gp_rcount : regInfo.fp_rcount;
             
             std::unordered_set<int> set_union = ig.smart_union(m.first, m.second);
 

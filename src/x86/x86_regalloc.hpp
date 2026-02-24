@@ -75,4 +75,7 @@ struct RegAllocator {
     void rewrite_spill(FunctionIR&, Operand, int);
     bool is_colourable(FunctionIR&);
     void allocate_reg(FunctionIR&);
+
+    Operand get_phys_reg(Operand);
+    void convert_reg(FunctionIR&);
 };

@@ -5,6 +5,7 @@
 #include "src/closure.hpp"
 #include "src/cfg_builder.hpp"
 #include "x86/x86_regalloc.hpp"
+#include "x86/x86_codegen.hpp"
 
 #include <string>
 
@@ -48,14 +49,11 @@ int main() {
   cfg::CFGBuilder& cfg = cfg::CFGBuilder::instance();
   cfg.build_cfg(IR_program);
   std::cout << "[Kindred Compiler] : CFG Constructed\n";
-
-  // LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
-  // interf_graph = la.analyze(IR_program);
-  // std::cout << "[Kindred Compiler] : Interference Graph Constructed\n";
   
   RegAllocator& ra = RegAllocator::instance();
   ra.allocate_prog(IR_program);
   std::cout << "[Kindred Compiler] : Registers Allocated\n";
+
 
   return 0;
 }

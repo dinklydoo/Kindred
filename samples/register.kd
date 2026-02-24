@@ -1,6 +1,6 @@
 func register(p1: float, p2: double): double
     v1: int = 10
-    v2: float = 10.00
+    v2: float = 10.0123
     v3: double = 10.1
     v4: int = 10
     v5: char = 10

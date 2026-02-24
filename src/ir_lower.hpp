@@ -192,7 +192,10 @@ struct FunctionIRBuilder {
         }
         stack.emplace_back();
         top_constructor().function_id = id;
+        
+        top_constructor().function_ir.name = fname;
 
+        if (static_closures.contains(fname)) top_constructor().function_ir.is_static = true;
         top_constructor().push_block();
     }
     std::string get_block_label(){ // meaningful block labels

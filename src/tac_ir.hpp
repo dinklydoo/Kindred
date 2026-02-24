@@ -1,5 +1,4 @@
 #pragma once
-
 #include "cstdint"
 #include <fstream>
 #include <memory>
@@ -9,6 +8,13 @@
 #include <set>
 #include <list>
 #include <iostream>
+
+enum class DataType {
+    EMPTY, I32, I64, F32, F64, BOOL, PTR
+    , I8 // I8 for char
+};
+
+enum RType { GP, FP };
 
 struct Operand {
     enum Type {
@@ -23,18 +29,23 @@ struct Operand {
     };
 
     Type type;
+    DataType kind = DataType::EMPTY;
     int64_t value;
     
 public:
     bool operator==(const Operand& other) const {
-        return (other.type == type && other.value == value);    
+        return (other.type == type && other.value == value && kind == other.kind);    
     }
     bool is_register(){ return type == REG || type == VAR;}
+
     struct OperandHash {
         std::size_t operator()(const Operand& op) const {
             std::size_t seed = 0;
 
             seed ^= std::hash<int>{}(static_cast<int>(op.type))
+                    + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+            seed ^= std::hash<int>{}(static_cast<int>(op.kind))
                     + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 
             seed ^= std::hash<int64_t>{}(op.value)
@@ -104,8 +115,8 @@ public:
             case (VAR) : str += 'v'; break; 
             case (RBP) : str += "[rbp"; break; 
             case (RSP) : return "rsp";
-            case (GPR) : return "gpr";
-            case (FPR) : return "fpr";
+            case (GPR) : str += "gpr"; break;
+            case (FPR) : str += "fpr"; break;
         }
         if (type == RBP){ 
             if (value > 0) str += '+';
@@ -131,19 +142,20 @@ enum class Operation {
     // control flow
     JMP, JMP_IF, RET, LABEL,
     // functional
-    CALL, PARAM, LOCAL, CALL_EXT, BEGIN_CALL,
+    CALL, PARAM, LOCAL, CALL_EXT, 
     // mem
     LOAD, STORE, ADDR, // access label pointer (for closures)
-    BEGIN_FUNC
+    
+    BEGIN_FUNC, BEGIN_CALL // helper labels
 };
 
-
-enum class DataType {
-    EMPTY, I32, I64, F32, F64, BOOL, PTR
-    , I8 // I8 for char
-};
 static bool is_fp(DataType op){
     return (op == DataType::F32 || op == DataType::F64);
+}
+
+static RType dtype_to_rtype(DataType dtype){
+    if (dtype == DataType::F32 || dtype == DataType::F64) return FP;
+    return GP;
 }
 
 #define NULL_PTR Operand::imm(0)
@@ -235,7 +247,9 @@ struct Instruction {
     }
 };
 
-using virtual_var = std::pair<Operand, DataType>;
+
+
+using virtual_var = std::pair<Operand, RType>;
 struct VarHash {
     std::size_t operator()(const virtual_var& var) const {
         std::size_t seed = 0;
@@ -266,6 +280,9 @@ struct FunctionIR {
     std::vector<blockptr> blocks;
     int reg_count = 0;
 
+    std::string name;
+    bool is_static = false;
+
     Operand get_register(){ return Operand::reg(reg_count++); }
 
     void print_ir(std::ostream& fd){
@@ -279,18 +296,31 @@ struct FunctionIR {
 
 static void print_ir(std::vector<FunctionIR>& program){
     for (FunctionIR& ir : program){
+        std::cout << ir.name << ":\n";
+
         ir.print_ir(std::cout);
         std::cout << '\n';
     }
 }
 
 static void write_ir(std::vector<FunctionIR>& program){
-    std::string path = "./aux/ir_representation.txt";
+    std::string path = "./.aux/ir_representation.txt";
     std::ofstream trunc_ir(path, std::ios::trunc);
     trunc_ir.close(); // truncate
     std::ofstream ir_file(path, std::ios::app);
     for (FunctionIR& ir : program){
+        ir_file << ir.name << ":\n";
         ir.print_ir(ir_file);
         ir_file << '\n';
     }
+}
+
+static void write_func(FunctionIR& program){
+    std::string path = "./.aux/ir_"+program.name+".txt";
+    std::ofstream trunc_ir(path, std::ios::trunc);
+    trunc_ir.close(); // truncate
+    std::ofstream ir_file(path, std::ios::app);
+    ir_file << program.name << ":\n";
+    program.print_ir(ir_file);
+    ir_file << '\n';
 }

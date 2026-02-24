@@ -1,26 +1,35 @@
 #include "tac_ir.hpp"
 #include "interf_graph.hpp"
+#include <cstring>
+#include <fstream>
+#include <string>
+#include <vector>
 #include "x86_lower.hpp"
 
 /*
     Instruction Selection for X86 aware IR
     from target-independent IR
 */
-InterferenceGraph lower_x86(FunctionIR& func){
-    InterferenceGraph ig;
-    add_nodes(func, ig);
-    shift_params(func, ig);
-    precolour_ins(func, ig);
+InterferenceGraph X86_Lowerer::lower_x86(FunctionIR& func){
+    ig = InterferenceGraph();
+    assign_statics(func);
+    fix_jumps(func);
+    add_nodes(func);
+    shift_params(func);
+    precolour_ins(func);
+    //write_func(func);
     return ig;
 }
 
-void add_nodes(FunctionIR& func, InterferenceGraph& ig){
+void X86_Lowerer::add_nodes(FunctionIR& func){
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (Instruction& ins : b->ins){ // initialise all nodes
-            if (ins.dst.is_register()) ig.add_node(ins.dst, ins.type);
-            if (ins.src1.is_register()) ig.add_node(ins.src1, ins.type);
-            if (ins.src2.is_register()) ig.add_node(ins.src2, ins.type);
+            RType rtype = dtype_to_rtype(ins.type);
+
+            if (ins.dst.is_register()) ig.add_node(ins.dst, rtype);
+            if (ins.src1.is_register()) ig.add_node(ins.src1, rtype);
+            if (ins.src2.is_register()) ig.add_node(ins.src2, rtype);
         }
     }
 }
@@ -28,7 +37,7 @@ void add_nodes(FunctionIR& func, InterferenceGraph& ig){
 /*
     Shift parameters in volatile param registers to new registers
 */
-void shift_params(FunctionIR& func, InterferenceGraph& ig){
+void X86_Lowerer::shift_params(FunctionIR& func){
     Block* header = func.blocks[0].get();
 
     int gp_param = -1;
@@ -74,7 +83,7 @@ void shift_params(FunctionIR& func, InterferenceGraph& ig){
         - rdx/rax for division/modulo
         - rcx for shift
 */
-void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
+void X86_Lowerer::precolour_ins(FunctionIR& func){
     int fp_param = -1;
     int gp_param = -1;
     int spilt_params = 0;
@@ -89,7 +98,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                     if (is_fp(ins.type)) break;
                     
                     Operand _rax = func.get_register();
-                    IGNode& rax_node = ig.add_node(_rax, ins.type);
+                    IGNode& rax_node = ig.add_node(_rax, GP);
                     rax_node.assigned = static_cast<int>(RAX);
 
                     b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
@@ -103,7 +112,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                 }
                 case (Operation::MOD) : {
                     Operand _rax = func.get_register();
-                    IGNode& rax_node = ig.add_node(_rax, ins.type);
+                    IGNode& rax_node = ig.add_node(_rax, GP);
                     rax_node.assigned = static_cast<int>(RAX);
 
                     b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
@@ -111,7 +120,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                     ins.src1 = VOID;
                     
                     Operand _rdx = func.get_register();
-                    IGNode& rdx_node = ig.add_node(_rdx, ins.type);
+                    IGNode& rdx_node = ig.add_node(_rdx, GP);
                     rdx_node.assigned = static_cast<int>(RDX);
                     
                     it++; // past ins
@@ -123,7 +132,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                 case (Operation::LSR) : {
                     if (is_fp(ins.type)) break;
                     Operand _rcx = func.get_register();
-                    IGNode& node = ig.add_node(_rcx, ins.type);
+                    IGNode& node = ig.add_node(_rcx, GP);
                     node.assigned = static_cast<int>(RCX);
                     b->ins.insert(it, {Operation::MOV, ins.type, _rcx, ins.src2});
                     ins.src2 = _rcx;
@@ -136,7 +145,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                         if (fp_param >= fp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(++spilt_params * 8)});
                         else {
                             Operand _param = func.get_register();
-                            IGNode& node = ig.add_node(_param, ins.type);
+                            IGNode& node = ig.add_node(_param, FP);
                             node.assigned = static_cast<int>(fp_params[fp_param]);
                             b->ins.insert(it, {Operation::MOV, ins.type, _param, ins.src1});
                             ins.src1 = _param;
@@ -147,7 +156,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                         if (gp_param >= gp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(++spilt_params * 8)});
                         else {
                             Operand _param = func.get_register();
-                            IGNode& node = ig.add_node(_param, ins.type);
+                            IGNode& node = ig.add_node(_param, GP);
                             node.assigned = static_cast<int>(gp_params[gp_param]);
                             b->ins.insert(it, {Operation::MOV, ins.type, _param, ins.src1});
                             ins.src1 = _param;
@@ -174,7 +183,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
 
                     if (is_fp(ins.type)){ // mov xmm0->dst
                         Operand _xmm0 = func.get_register();
-                        IGNode& node = ig.add_node(_xmm0, ins.type);
+                        IGNode& node = ig.add_node(_xmm0, FP);
                         node.assigned = static_cast<int>(XMM0);
 
                         it++;
@@ -183,7 +192,7 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                     }
                     else { // mov rax->dst
                         Operand _rax = func.get_register();
-                        IGNode& node = ig.add_node(_rax, ins.type);
+                        IGNode& node = ig.add_node(_rax, GP);
                         node.assigned = static_cast<int>(RAX);
 
                         it++;
@@ -199,14 +208,14 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
                 case (Operation::RET) : {
                     if (is_fp(ins.type)){ // mov return -> xmm0
                         Operand _xmm0 = func.get_register();
-                        IGNode& node = ig.add_node(_xmm0, ins.type);
+                        IGNode& node = ig.add_node(_xmm0, FP);
                         node.assigned = static_cast<int>(XMM0);
                         b->ins.insert(it, {Operation::MOV, ins.type, _xmm0, ins.src1});
                         ins.src1 = _xmm0;
                     }
                     else { // mov return -> rax
                         Operand _rax = func.get_register();
-                        IGNode& node = ig.add_node(_rax, ins.type);
+                        IGNode& node = ig.add_node(_rax, GP);
                         node.assigned = static_cast<int>(RAX);
                         b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
                         ins.src1 = _rax;
@@ -219,7 +228,126 @@ void precolour_ins(FunctionIR& func, InterferenceGraph& ig){
     }
 }
 
+bool cmp_op(Operation op){
+    return (
+        op == Operation::CEQ || 
+        op == Operation::CNEQ || 
+        op == Operation::CLEQ || 
+        op == Operation::CGEQ || 
+        op == Operation::CLT || 
+        op == Operation::CGT
+    );
+}
+
+/*
+    Fix jump instructions to remove redundant registers
+*/
+void X86_Lowerer::fix_jumps(FunctionIR& func){
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (auto it = b->ins.begin(); it != b->ins.end(); it++){
+            Instruction& ins = *it;
+            if (ins.op != Operation::JMP_IF) continue;
+            
+            if (ins.src1 == Operand::imm(1)){
+                ins.op = Operation::JMP; continue;
+            }
+            
+            it--;
+            Instruction& prior = *(it++);
+
+            if (!cmp_op(prior.op) || prior.dst != ins.src1){ // depends on an external boolean register
+                b->ins.insert(it, {Operation::CEQ, DataType::EMPTY, VOID, ins.src1, Operand::imm(1)});
+                ins.src1 = VOID;
+                continue;
+            }
+            // now prior is a compare that affects the jump condition
+            // don't require jmp condition register as cmp will provide the flag
+            ins.src1 = VOID;
+            prior.dst = VOID;
+        }
+    }
+}
+
+void X86_Lowerer::assign_statics(FunctionIR& func){
+    if (func.is_static) statics.closures.push_back(func.name);
+
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (auto it = b->ins.begin(); it != b->ins.end(); it++){
+            Instruction& ins = *it;
+
+            if (ins.op == Operation::CALL_EXT){ // external functions
+                statics.externs.insert(ins.target);
+                continue;
+            }
 
 
+            if (ins.type != DataType::F32 && ins.type != DataType::F64) continue;
 
+            std::string fp_imm;
+            if (ins.src1.type == Operand::IMM){
+                if (!statics.float_imms.contains(ins.src1)){
+                    fp_imm = ".fp_imm_"+std::to_string(statics.float_imms.size());
+                    statics.float_imms.emplace(ins.src1, fp_imm);
+                }
+                else fp_imm = statics.float_imms[ins.src1];
+                Operand _t = func.get_register();
+                b->ins.insert(it, {Operation::ADDR, ins.type, _t, VOID, VOID, fp_imm});
+                ins.src1 = _t;
+            }
+            if (ins.src2.type == Operand::IMM){
+                if (!statics.float_imms.contains(ins.src2)){
+                    fp_imm = ".fp_imm_"+std::to_string(statics.float_imms.size());
+                    statics.float_imms.emplace(ins.src2, fp_imm);
+                }
+                else fp_imm = statics.float_imms[ins.src2];
+                Operand _t = func.get_register();
+                b->ins.insert(it, {Operation::ADDR, ins.type, _t, VOID, VOID, fp_imm});
+                ins.src2 = _t;
+            }
+        }
+    }
+}
 
+void X86_Lowerer::write_statics(){
+    // clear then append
+    std::ofstream sdata("./.aux/static_data", std::ios::trunc);
+    sdata.close();
+    sdata.open("./.aux/static_data", std::ios::app);
+
+    for (std::string ext : statics.externs){
+        sdata << ".extern "<<ext<<'\n';
+    }
+    sdata << '\n';
+
+    // writeable data -- static closures
+    sdata << ".section .data\n" << ".align 8\n";
+
+    for (std::string fname : statics.closures){
+        sdata<<fname<<".local:\n";
+        sdata<<"\t.quad 0\n"; // NULL env
+        sdata<<"\t.quad "<<fname<<'\n'; // Function name
+        sdata<<"\t.long 1\n"; // ref count
+    }
+    sdata << '\n';
+
+    // readable data -- float immediates
+    sdata << ".section .rodata\n" << ".align 8\n";
+    for (auto& p : statics.float_imms){
+        sdata<<p.second<<":\n";
+        if (p.first.kind == DataType::F32){ // float
+            int32_t temp = static_cast<int32_t>(p.first.value);
+            float f;
+            std::memcpy(&f, &temp, sizeof(temp));
+
+            sdata <<'\t'<<p.second<<':'<<" .float "<<f<<'\n';
+        }
+        else {
+            double d;
+            std::memcpy(&d, &p.first.value, sizeof(p.first.value));
+
+            sdata <<'\t'<<p.second<<':'<<" .double "<<d<<'\n';
+        }
+    }
+}

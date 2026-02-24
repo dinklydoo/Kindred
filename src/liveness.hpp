@@ -18,7 +18,7 @@ struct RegCount {
     RegCount(CompileTarget target) {
         switch (target) {
             case (X86) : {
-                gp_rcount = 12; // exlude rbp, rsp, rax, rdx
+                gp_rcount = 14; 
                 fp_rcount = 16;
 
                 GP_CALLER_SAVE = { RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11 };
@@ -42,19 +42,17 @@ struct RegCount {
 struct LivenessAnalyzer {
     private: 
         LivenessAnalyzer(CompileTarget target) : regInfo(target) {}
-        void live_func(FunctionIR& prog);
+        void pre_liveness(FunctionIR&);
+        void live_func(FunctionIR&);
         
         void add_interference_edges(Instruction& ins, virtual_varset& live, InterferenceGraph& graph);
         void process_block(Block* b, InterferenceGraph& graph, movelist& moves);
         void move_coalesce(InterferenceGraph& ig, movelist& moves);
-        
-        FunctionIR* func_ref;
     public:
         static LivenessAnalyzer& instance(CompileTarget target){
             static LivenessAnalyzer lan(target);
             return lan;
         }
-        std::vector<InterferenceGraph> ig;
         RegCount regInfo;
         void gen_interference(FunctionIR& func, InterferenceGraph& graph);
 };

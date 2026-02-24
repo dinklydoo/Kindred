@@ -4,7 +4,6 @@
 #include "tac_ir.hpp"
 
 struct IGNode {
-    enum RType { GP, FP };
     Operand op;
     RType type;
     std::unordered_set<int> interfere;
@@ -25,11 +24,8 @@ struct InterferenceGraph {
 
     int spill_offset = 0;
 
-    IGNode& add_node(Operand op, DataType type){
+    IGNode& add_node(Operand op, RType rtype){
         if (!virtual_map.contains(op)){
-            IGNode::RType rtype = ((type == DataType::F32 || type == DataType::F64)? 
-                IGNode::RType::FP : IGNode::RType::GP
-            );
             nodes.push_back({op, rtype});
             virtual_map[op] = nodes.size() - 1;
         }
@@ -50,8 +46,8 @@ struct InterferenceGraph {
         nodes[j].interfere.insert(i);
     }
 
-    void incr_uses(Operand op, DataType type){
-        IGNode& node = add_node(op, type);
+    void incr_uses(Operand op, RType rtype){
+        IGNode& node = add_node(op, rtype);
         node.uses++;
     }
 
@@ -73,7 +69,7 @@ struct InterferenceGraph {
         // interference
         if (n1.interfere.contains(j) || n2.interfere.contains(i) || n1.spill || n2.spill) return FAIL;
 
-        if (n1.assigned > -1 || n2.assigned > -1) return GEORGE;
+        if (n1.allocated() || n2.allocated()) return GEORGE;
         return BRIGG;
     }
 
@@ -89,7 +85,7 @@ struct InterferenceGraph {
         IGNode& n1 = nodes[i];
         IGNode& n2 = nodes[j];
 
-        if (n2.assigned > -1){ // pre-coloured
+        if (n2.allocated()){ // pre-coloured
             std::set_union(
                 n1.interfere.begin(), n1.interfere.end(),
                 n2.interfere.begin(), n2.interfere.end(),

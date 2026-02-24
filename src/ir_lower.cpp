@@ -508,7 +508,6 @@ void IR_Lowerer::visit( FuncDecl& node){
     
     for (auto& v : node.captures) identifier.push_enclosed(v.first, v.second);
     
-    cons.push_instruction({Operation::LABEL, DataType::EMPTY, VOID, VOID, VOID, '.'+node.name+':'});
     cons.push_instruction({Operation::LOCAL, DataType::PTR, VOID, _env});
     for (auto& p : node.params){
         identifier.push_ident(p.name, p.type);
@@ -897,7 +896,19 @@ void IR_Lowerer::visit( IntLit& node ){
 void IR_Lowerer::visit( FloatLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
     int64_t _bitval;
-    std::memcpy(&_bitval, &node.value, sizeof(_bitval));
+    if (node.resolved_type->kind == Type::Kind::Double){
+        double d = node.value;
+        std::memcpy(&_bitval, &d, sizeof(_bitval));
+    }
+    else {
+        int32_t _temp;
+        float f = (float)node.value;
+        std::memcpy(&_temp, &f, sizeof(_temp));
+        _bitval = static_cast<int64_t>(_temp);
+    }
+    Operand _t = Operand::imm(_bitval);
+    _t.kind = 
+        (node.resolved_type->kind == Type::Kind::Double)? DataType::F64 : DataType::F32;
     cons.push_operand(Operand::imm(_bitval));
 }
 

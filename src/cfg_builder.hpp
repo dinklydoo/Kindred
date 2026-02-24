@@ -13,7 +13,6 @@ struct CFGBuilder {
     
     void enter_function() { JMP_table.clear(); }
 
-    void pre_liveness(Block& block);
     void build_cfg(std::vector<FunctionIR>& program);
 
     void cons_jmp_table(FunctionIR& func);
