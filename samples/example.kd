@@ -34,6 +34,9 @@ func get_val(node: Tree): int
         default => return node.val
     ;
 
+func div_check(a: int, b: int): int
+    c: int = a % b
+    return b / a
 
 func atoi(r: [char], n: int): int
     mark r of:

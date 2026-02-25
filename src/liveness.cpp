@@ -8,16 +8,16 @@ void LivenessAnalyzer::pre_liveness(FunctionIR& func){
         Block* b = bit->get();
         b->use.clear(); b->def.clear();
         b->live_in.clear(); b->live_out.clear();
+
         for (auto& ins : b->ins){
             RType rtype = dtype_to_rtype(ins.type);
 
             if (ins.op == Operation::LOCAL){ 
-                b->def.insert({ins.src1, rtype});
+                b->live_in.insert({ins.src1, rtype});
                 continue;
             }
 
-            if (ins.dst.is_register()) 
-                b->def.insert({ins.dst, rtype});
+            if (ins.dst.is_register()) b->def.insert({ins.dst, rtype});
 
             if (ins.src1.is_register()){ // defined
                 if (!b->def.contains({ins.src1, rtype})) b->use.insert({ins.src1, rtype});
@@ -32,12 +32,6 @@ void LivenessAnalyzer::pre_liveness(FunctionIR& func){
 // calculate liveness sets for variables for each function
 void LivenessAnalyzer::live_func(FunctionIR& func){
     pre_liveness(func);
-    
-    for (auto& blk_ptr : func.blocks) {
-        Block* b = blk_ptr.get();
-        b->live_in.clear();
-        b->live_out.clear();
-    }
 
     bool done = false;
     while (!done){
@@ -66,6 +60,17 @@ void LivenessAnalyzer::live_func(FunctionIR& func){
 void LivenessAnalyzer::add_interference_edges(Instruction& ins, virtual_varset& live, InterferenceGraph& graph) {
     virtual_varset defines, uses;
     RType rtype = dtype_to_rtype(ins.type);
+
+
+    // SPECIAL CASE FOR IDIV IN X86
+    if (target == X86 && rtype == GP && 
+        (ins.op == Operation::DIV || ins.op == Operation::FLR)
+    ){
+        defines.insert({Operand::gpr(RDX), GP});
+        IGNode& node = graph.add_node(Operand::gpr(RDX), GP);
+        node.assigned = RDX;
+    }
+
     if (ins.dst.is_register()) defines.insert({ins.dst, rtype});
     if (ins.src1.is_register()){ 
         uses.insert({ins.src1, rtype});
@@ -106,6 +111,7 @@ void LivenessAnalyzer::process_block(Block* b, InterferenceGraph& graph, movelis
 
     for (auto it = b->ins.rbegin(); it != b->ins.rend(); it++) {
         Instruction& ins = *it;
+        if (ins.op == Operation::LOCAL) continue;
 
         if (ins.is_move() && ins.src1.is_register())
             moves.push_back({ins.dst, ins.src1});
@@ -133,7 +139,7 @@ void LivenessAnalyzer::move_coalesce(InterferenceGraph& ig, movelist& mlist){
             int idx1 = ig.virtual_map[m.first];
             int idx2 = ig.virtual_map[m.second];
 
-            if (idx1 == idx2){
+            if (idx1 == idx2){ // already merged
                 it = mlist.erase(it);
                 continue;
             }

@@ -96,7 +96,8 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
             switch (ins.op){
                 case (Operation::FLR) :
                 case (Operation::DIV) : 
-                case (Operation::MUL) : {
+                //case (Operation::MUL) : 
+                {
                     if (is_fp(ins.type)) break;
                     
                     Operand _rax = func.get_register();
@@ -123,10 +124,14 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                 }
                 case (Operation::LSL) :
                 case (Operation::LSR) : {
-                    if (is_fp(ins.type)) break;
                     Operand _rcx = func.get_register();
+
+                    if (!ins.src2.is_register()) break; // immediates can be directly called
+
                     b->ins.insert(it, {Operation::MOV, ins.type, _rcx, ins.src2});
+                    b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, ins.src1});
                     ins.src2 = _rcx;
+                    ins.src1 = ins.dst;
 
                     break;
                 }

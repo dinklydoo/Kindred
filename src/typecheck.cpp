@@ -603,6 +603,10 @@ void TypeChecker::visit(AccessNode& node){
 
 void TypeChecker::visit(NominalNode& node){
     type_ptr defn = definitions.find_var(node.label);
+    if (node.label == "main"){
+        errors.undef_error("function entry-point \"main\" cannot be called or treated as a closure"+node.label, node);
+        return;
+    }
     if (!defn){
         errors.undef_error("undefined reference to nominal value (variable/enum) "+node.label, node);
         return;

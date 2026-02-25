@@ -757,6 +757,9 @@ void IR_Lowerer::visit( BinaryNode& node ){
             cons.push_instruction({Operation::CLEQ, dtype, _t, _lexp, _rexp});break;
         case (BinaryOp::CEQ): op_equals(_lexp, _rexp, node.resolved_type); return;
         case (BinaryOp::CNEQ): {
+            if (dtype != DataType::PTR){
+                cons.push_instruction({Operation::CNEQ, dtype, _t, _lexp, _rexp}); break;
+            }
             op_equals(_lexp, _rexp, node.resolved_type);
             Operand _eq = cons.pop_operand();
             cons.push_instruction({Operation::NOT, DataType::BOOL, _t, _eq});

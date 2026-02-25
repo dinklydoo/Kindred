@@ -32,6 +32,7 @@ void RegAllocator::allocate_func(FunctionIR& func){
     }
     allocate_reg(func);
     convert_reg(func);
+    //cleanup_reg(func); // cleanup any redundant instructions
 }
 
 void RegAllocator::add_nodes(FunctionIR& func){
@@ -63,7 +64,8 @@ void RegAllocator::precolor_func(FunctionIR& func){
                 }
                 case (Operation::FLR) :
                 case (Operation::DIV) : 
-                case (Operation::MUL) : {
+                // case (Operation::MUL) : 
+                {
                     if (is_fp(ins.type)) break;
                     
                     IGNode& _rax = ig.get_node(ins.src1);
@@ -72,7 +74,7 @@ void RegAllocator::precolor_func(FunctionIR& func){
                 }
                 case (Operation::LSL) :
                 case (Operation::LSR) : {
-                    if (is_fp(ins.type)) break;
+                    if (!ins.src2.is_register()) break;
 
                     IGNode& _rcx = ig.get_node(ins.src2);
                     _rcx.assigned = static_cast<int>(RCX);
@@ -262,6 +264,7 @@ void RegAllocator::rewrite_coalesce(FunctionIR& func){
             it++;
         }
     }
+    write_func(func);
 }
 
 bool RegAllocator::is_colourable(FunctionIR& func){
@@ -321,6 +324,21 @@ void RegAllocator::convert_reg(FunctionIR& func){
             if (ins.dst.is_register())ins.dst = get_phys_reg(ins.dst);
             if (ins.src1.is_register())ins.src1 = get_phys_reg(ins.src1);
             if (ins.src2.is_register())ins.src2 = get_phys_reg(ins.src2);
+        }
+    }
+}
+
+void RegAllocator::cleanup_reg(FunctionIR& func){
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (auto it = b->ins.begin(); it != b->ins.end(); ){
+            Instruction& ins = *it;
+            if (ins.op == Operation::MOV){
+                if (ins.dst == ins.src1){
+                    it = b->ins.erase(it);
+                    continue;
+                }
+            }
         }
     }
 }

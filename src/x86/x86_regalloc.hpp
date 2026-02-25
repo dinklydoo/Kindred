@@ -2,6 +2,7 @@
 
 #include "tac_ir.hpp"
 #include "interf_graph.hpp"
+#include <string>
 #include <unordered_map>
 
 enum GPReg {
@@ -23,6 +24,49 @@ enum FPReg {
     XMM12, XMM13, 
     XMM14, XMM15
 };
+
+static std::string x86_gpr_string(GPReg gpr, DataType dtype){
+    std::string str = "r";
+    if (dtype == DataType::I8 || dtype == DataType::BOOL) {
+        switch (gpr) {
+            case (RAX) : return "al";
+            case (RBX) : return "bl";
+            case (RCX) : return "cl";
+            case (RDX) : return "dl";
+            case (RDI) : return "dil";
+            case (RSI) : return "sil";
+            default : return 'r'+std::to_string(static_cast<int>(gpr) + 2)+'b';
+        }
+    }
+    else if (dtype == DataType::I32){
+        str = "e";
+        switch (gpr) {
+            case (RAX) : str += "ax"; break;
+            case (RBX) : str += "bx"; break;
+            case (RCX) : str += "cx"; break;
+            case (RDX) : str += "dx"; break;
+            case (RDI) : str += "di"; break;
+            case (RSI) : str += "si"; break;
+            default : str='r'+std::to_string(static_cast<int>(gpr) + 2)+'d';
+        }
+    }
+    else {
+        switch (gpr) {
+            case (RAX) : str += "ax"; break;
+            case (RBX) : str += "bx"; break;
+            case (RCX) : str += "cx"; break;
+            case (RDX) : str += "dx"; break;
+            case (RDI) : str += "di"; break;
+            case (RSI) : str += "si"; break;
+            default : str+=std::to_string(static_cast<int>(gpr) + 2);
+        }
+    }
+    return str;
+}
+
+static std::string x86_fpr_string(FPReg gpr){
+    return "xmm"+std::to_string(static_cast<int>(gpr));
+}
 
 /*
     As param registers are 1-indexed in our interf graph,
@@ -85,4 +129,5 @@ struct RegAllocator {
 
     Operand get_phys_reg(Operand);
     void convert_reg(FunctionIR&);
+    void cleanup_reg(FunctionIR&);
 };

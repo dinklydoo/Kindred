@@ -41,7 +41,7 @@ struct RegCount {
 
 struct LivenessAnalyzer {
     private: 
-        LivenessAnalyzer(CompileTarget target) : regInfo(target) {}
+        LivenessAnalyzer(CompileTarget target) : regInfo(target), target(target) {}
         void pre_liveness(FunctionIR&);
         void live_func(FunctionIR&);
         
@@ -53,6 +53,7 @@ struct LivenessAnalyzer {
             static LivenessAnalyzer lan(target);
             return lan;
         }
+        CompileTarget target;
         RegCount regInfo;
         void gen_interference(FunctionIR& func, InterferenceGraph& graph);
 };

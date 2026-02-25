@@ -9,6 +9,9 @@ struct X86_CodeGen {
         return cg;
     }
     std::string path;
+    Operation jump_flag;
+
+    std::string reg_string(Operand op, DataType type);
 
     void write_header();
     void write_func(FunctionIR& func);

@@ -119,13 +119,16 @@ public:
             case (REG) : str += 'r'; break;
             case (IMM) : str += 'i'; break;
             case (VAR) : str += 'v'; break; 
-            case (RBP) : str += "[rbp"; break; 
-            case (RSP) : return "rsp";
+            case (RBP) : str += "rbp"; break; 
+            case (RSP) : str += "rsp"; break;
             case (GPR) : str += "gpr"; break;
             case (FPR) : str += "fpr"; break;
             case (EMP) : return "";
         }
-        if (type == RBP){ 
+        if (type == RBP || type == RSP){ 
+            if (value) str = '['+str;
+            else return str;
+
             if (value > 0) str += '+';
             str += std::to_string(value);
             str += ']';

@@ -156,20 +156,22 @@ struct InterferenceGraph {
     }
 
     bool george_safe(int id1, int id2, int rcount){
-        if (
-            nodes[id1].allocated() && nodes[id2].allocated()
-            && (nodes[id1].assigned != nodes[id2].assigned)
-        ) return false;
+        if (nodes[id1].allocated() && nodes[id2].allocated())
+            return nodes[id1].assigned == nodes[id2].assigned;
 
         int pci = id1;
         int uci = id2;
-        if (nodes[id2].assigned > -1) std::swap(pci, uci);
+        if (nodes[id2].allocated()) std::swap(pci, uci);
 
         IGNode& pc = nodes[pci];
         IGNode& uc = nodes[uci];
-        
+
+        int colour = pc.assigned;
         for (int n : uc.interfere){
             IGNode& temp = nodes[n];
+            if (temp.simplified || !temp.valid || temp.spill) continue;
+
+            if (temp.assigned == colour) return false;
             if (get_interf_size(temp) >= rcount && !temp.interfere.contains(pci)) return false;
         }
         return true;
