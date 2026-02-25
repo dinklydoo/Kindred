@@ -61,15 +61,7 @@ void LivenessAnalyzer::add_interference_edges(Instruction& ins, virtual_varset& 
     virtual_varset defines, uses;
     RType rtype = dtype_to_rtype(ins.type);
 
-
-    // SPECIAL CASE FOR IDIV IN X86
-    if (target == X86 && rtype == GP && 
-        (ins.op == Operation::DIV || ins.op == Operation::FLR)
-    ){
-        defines.insert({Operand::gpr(RDX), GP});
-        IGNode& node = graph.add_node(Operand::gpr(RDX), GP);
-        node.assigned = RDX;
-    }
+    if (target == X86) X86_interference(ins, defines, graph);
 
     if (ins.dst.is_register()) defines.insert({ins.dst, rtype});
     if (ins.src1.is_register()){ 
@@ -104,6 +96,24 @@ void LivenessAnalyzer::add_interference_edges(Instruction& ins, virtual_varset& 
         live.erase(def);
     }
     for (virtual_var u : uses) live.insert(u);
+}
+
+void LivenessAnalyzer::X86_interference(Instruction& ins, virtual_varset& defines, InterferenceGraph& graph){
+    RType rtype = dtype_to_rtype(ins.type);
+    if (rtype == GP){
+        if (ins.op == Operation::DIV || ins.op == Operation::FLR){
+            defines.insert({Operand::gpr(RDX), GP});
+            IGNode& node = graph.add_node(Operand::gpr(RDX), GP);
+            node.assigned = RDX;
+        }
+    }
+    else { // FP (might do this in ir lower though, ensure R11 is free during a flr ins)
+        if (ins.op == Operation::FLR){
+            defines.insert({Operand::gpr(R11), GP});
+            IGNode& node = graph.add_node(Operand::gpr(R11), GP);
+            node.assigned = R11;
+        }
+    }
 }
 
 void LivenessAnalyzer::process_block(Block* b, InterferenceGraph& graph, movelist& moves) {

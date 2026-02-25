@@ -706,21 +706,15 @@ void IR_Lowerer::visit( BinaryNode& node ){
             cons.push_instruction({Operation::DIV, dtype, _t, _lexp, _rexp});break;
         case (BinaryOp::MOD):
             cons.push_instruction({Operation::MOD, dtype, _t, _lexp, _rexp});break;
-        case (BinaryOp::POW): {
-            if (dtype == DataType::F32 || dtype == DataType::F64){
-                cons.push_instruction({Operation::POW, dtype, _t, _lexp, _rexp});break;
-            }
+        case (BinaryOp::POW): {    
+            cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
+            cons.push_instruction({Operation::PARAM, dtype, VOID, _lexp});
+            cons.push_instruction({Operation::PARAM, dtype, VOID, _rexp});
             switch (dtype){
                 case (DataType::F32) :
+                    cons.push_instruction({Operation::CALL_EXT, dtype, _t, VOID, VOID, "float_exp"});break;
                 case (DataType::F64) :
-                    cons.push_instruction({Operation::POW, dtype, _t, _lexp, _rexp});break;
-                    break;
-                default :
-                    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
-                    cons.push_instruction({Operation::PARAM, dtype, VOID, _lexp});
-                    cons.push_instruction({Operation::PARAM, dtype, VOID, _rexp});
-            }
-            switch (dtype){
+                    cons.push_instruction({Operation::CALL_EXT, dtype, _t, VOID, VOID, "double_exp"});break;
                 case (DataType::I8) :
                     cons.push_instruction({Operation::CALL_EXT, dtype, _t, VOID, VOID, "char_bin_exp"});break;
                 case (DataType::I32) :
@@ -728,7 +722,8 @@ void IR_Lowerer::visit( BinaryNode& node ){
                 case (DataType::I64) :
                     cons.push_instruction({Operation::CALL_EXT, dtype, _t, VOID, VOID, "long_bin_exp"});break;
                 default : break;
-            } break;
+            } 
+            break;
         }
         case (BinaryOp::FLR): {
             cons.push_instruction({Operation::DIV, dtype, _t, _lexp, _rexp});

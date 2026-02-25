@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <math.h>
 
 char char_bin_exp(char base, char exp){
     if (exp < 0) return 0;
@@ -34,4 +35,14 @@ int64_t long_bin_exp(int64_t base, int64_t exp){
         exp >>= 1;
     }
     return res;
+}
+
+// :-)
+// should i just link powf and pow directly?? O - O
+float float_exp(float base, float exp){
+    return powf(base, exp);
+}
+
+double double_exp(double base, double exp){
+    return pow(base, exp);
 }

@@ -48,6 +48,8 @@ struct LivenessAnalyzer {
         void add_interference_edges(Instruction& ins, virtual_varset& live, InterferenceGraph& graph);
         void process_block(Block* b, InterferenceGraph& graph, movelist& moves);
         void move_coalesce(InterferenceGraph& ig, movelist& moves);
+
+        void X86_interference(Instruction& ins, virtual_varset& defines, InterferenceGraph& graph);
     public:
         static LivenessAnalyzer& instance(CompileTarget target){
             static LivenessAnalyzer lan(target);

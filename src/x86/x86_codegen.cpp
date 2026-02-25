@@ -9,7 +9,6 @@ void X86_CodeGen::write_header(){
     sfile.close();
     sfile.open(path, std::ios::app);
 
-
     std::ifstream hfile("./.aux/static_data");
     sfile << hfile.rdbuf();
     hfile.close();
@@ -32,9 +31,6 @@ std::string X86_CodeGen::reg_string(Operand op, DataType type){
         case (Operand::RSP) : {
             if (op.type == Operand::RSP) str = "%rsp";
             else str = "%rbp";
-
-            // if (op.value) str = std::to_string(op.value)+'('+str+')';
-            // else break;
 
             break;
         }
@@ -120,7 +116,7 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
         }
         case (Operation::NEG) : 
         {
-            // MIGHT ACTUALLY WANT TO DO THIS PROPERLY (IE IGNORE HI-BITS)
+            // MIGHT ACTUALLY WANT TO DO THIS PROPERLY (IE IGNORE HI-BITS) -- might add to math lib
             int64_t mask;
             if (type == DataType::I8) mask = 0xFFULL;
             if (type == DataType::I32) mask = 0xFFFFFFFFULL;
@@ -249,11 +245,54 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
 
 void X86_CodeGen::write_fp_ins(Instruction& ins){
     std::ofstream sfile(path, std::ios::app);
+    std::string suf = ins_suffix(ins.type);
+    DataType type = ins.type;
     switch (ins.op) {
-        case (Operation::ADD) : {
-            
-        }  
-        
+        case (Operation::MUL) :
+        case (Operation::DIV) :
+        case (Operation::ADD) :
+        case (Operation::SUB) : {
+            std::string op;
+            switch (ins.op){
+                case (Operation::MUL) : op = "mul"; break;
+                case (Operation::DIV) : op = "div"; break;
+                case (Operation::ADD) : op = "add"; break;
+                case (Operation::SUB) : op = "sub"; break;
+                default : break;
+            }
+            if (ins.src1 != ins.dst)
+                sfile<<"mov"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
+            sfile<<op+suf+" "+reg_string(ins.src2, type)+", "+reg_string(ins.dst, type)<<'\n';
+            break;
+        }
+        case (Operation::FLR) : { // might push this to x86_lower with precolour (bandaid fix for now)
+            if (ins.src1 != ins.dst)
+                sfile<<"mov"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
+            sfile<<"div"+suf+" "+reg_string(ins.src2, type)+", "+reg_string(ins.dst, type)<<'\n';
+            sfile<<"cvt"+suf+"2siq "+reg_string(ins.dst, type)+", %r11"<<'\n';
+            sfile<<"cvtsi2"+suf+"q %r11, "+reg_string(ins.dst, type)<<'\n';
+            break;
+        }
+        case (Operation::MOV) : {
+            sfile<<"mov"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
+            break;
+        }
+        case (Operation::CST_F64) : {
+            sfile<<"cvtss2sd "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
+            break;
+        }
+        case (Operation::LOAD) : {
+
+            break;
+        }
+        case (Operation::STORE) : {
+
+            break;
+        }
+        case (Operation::ADDR) : { // floating point address -> static value
+
+            break;
+        }
         default : return;
     }
 }
