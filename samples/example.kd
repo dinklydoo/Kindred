@@ -26,7 +26,7 @@ func nest_check(a: int, b: char): (int)->int
         ;
     )
     d: (int)->int = foo @ make sure that this nominal node has a reference to closure element foo
-    return factorial
+    return d
 
 func get_val(node: Tree): int
     mark node of:

@@ -105,7 +105,6 @@ struct RegAllocator {
 
     std::vector<IGNode*> simplify_stack;
     std::vector<bool> active; // active nodes
-    int spill_offset = 0;
     int node_neighbours(); // get neighbour count during simplify phase
 
     InterferenceGraph ig;

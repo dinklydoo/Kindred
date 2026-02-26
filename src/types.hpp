@@ -155,6 +155,10 @@ struct TypeSystem {
         return t;
     }
 
+    type_ptr cast_strongest(type_ptr, type_ptr);
+    type_ptr cast_fixed(type_ptr fix, type_ptr castable);
+    bool type_equal(type_ptr a, type_ptr b);
+
 private:
     TypeSystem() = default; // singleton
 

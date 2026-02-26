@@ -10,7 +10,7 @@ static std::vector<GPReg> gp_params = {RDI, RSI, RDX, RCX, R8, R9};
 static std::vector<FPReg> fp_params = {XMM0, XMM1, XMM2, XMM3, XMM4, XMM5};
 
 struct StaticData {
-    std::vector<std::string> closures;
+    std::unordered_set<std::string> closures;
     std::unordered_set<std::string> externs;
 
     std::unordered_map<Operand, std::string, Operand::OperandHash> float_imms;

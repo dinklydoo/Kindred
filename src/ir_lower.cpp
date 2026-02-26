@@ -519,7 +519,8 @@ void IR_Lowerer::visit( FuncDecl& node){
     Operand _env = cons.pop_operand();
     identifier.enter_function(_env);
     
-    for (auto& v : node.captures) identifier.push_enclosed(v.first, v.second);
+    int id = 0;
+    for (auto& v : node.captures) identifier.push_enclosed(v.first, id++ ,v.second);
     
     cons.push_instruction({Operation::LOCAL, DataType::PTR, VOID, _env});
     for (auto& p : node.params){
@@ -688,13 +689,17 @@ void IR_Lowerer::visit( BinaryNode& node ){
     node.r_exp->accept(*this);
     Operand _tr = cons.pop_operand();
     
+    DataType dtype = type_to_dtype(node.resolved_type->kind);
+    if (is_cmp(node.op)){
+        type_ptr cmp_type = type_s.cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
+        dtype = type_to_dtype(cmp_type->kind);
+    }
     cast_operand(_tl, node.resolved_type, node.l_exp->resolved_type);
     Operand _lexp = cons.pop_operand();
     cast_operand(_tr, node.resolved_type, node.r_exp->resolved_type);
     Operand _rexp = cons.pop_operand();
 
     Operand _t = cons.get_register();
-    DataType dtype = type_to_dtype(node.resolved_type->kind);
     switch (node.op){
         case (BinaryOp::ADD):
             cons.push_instruction({Operation::ADD, dtype, _t, _lexp, _rexp});break;
@@ -748,9 +753,11 @@ void IR_Lowerer::visit( BinaryNode& node ){
             cons.push_instruction({Operation::CLT, dtype, _t, _lexp, _rexp});break;
         case (BinaryOp::CGEQ): 
             cons.push_instruction({Operation::CGEQ, dtype, _t, _lexp, _rexp});break;
-        case (BinaryOp::CLEQ):
+        case (BinaryOp::CLEQ): {
             cons.push_instruction({Operation::CLEQ, dtype, _t, _lexp, _rexp});break;
-        case (BinaryOp::CEQ): op_equals(_lexp, _rexp, node.resolved_type); return;
+            break;
+        }
+        case (BinaryOp::CEQ): op_equals(_lexp, _rexp, node.resolved_type); break;
         case (BinaryOp::CNEQ): {
             if (dtype != DataType::PTR){
                 cons.push_instruction({Operation::CNEQ, dtype, _t, _lexp, _rexp}); break;

@@ -19,16 +19,15 @@ void RegAllocator::allocate_func(FunctionIR& func){
     ig = xl.lower_x86(func);
     
     LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
-    spill_offset = 0;
     while (true) {
         ig = InterferenceGraph();
         add_nodes(func);
         precolor_func(func);
         la.gen_interference(func, ig);
         rewrite_coalesce(func);
-        ig.spill_offset = spill_offset; // retain stack offset
+        ig.spill_offset = func.spill_offset; // retain stack offset
         if (is_colourable(func)) break;
-        spill_offset = ig.spill_offset;
+        func.spill_offset = ig.spill_offset;
     }
     allocate_reg(func);
     convert_reg(func);

@@ -41,12 +41,12 @@ void X86_Lowerer::shift_params(FunctionIR& func){
 
             if (!is_fp(ins.type)){
                 ++gp_param;
-                if (gp_param >= gp_params.size()) spills[ins.src1] = (++spilt_params * 8) + 16; // saved rbp, saved address
-                params.push_back({ins.src1, ins.type});
+                if (gp_param >= gp_params.size()) spills[ins.src1] = (++spilt_params * 8) + 8; // offset saved address
+                if (!func.is_static || gp_param > 0) params.push_back({ins.src1, ins.type});
             }
-            else {
+            else {            
                 ++fp_param;
-                if (fp_param >= fp_params.size()) spills[ins.src1] = (++spilt_params * 8) + 16; // saved rbp, saved address
+                if (fp_param >= fp_params.size()) spills[ins.src1] = (++spilt_params * 8) + 8; // offset saved address
                 params.push_back({ins.src1, ins.type});
             }
             continue;
@@ -147,8 +147,8 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                     }
                     else {
                         gp_param++;
-                        if (gp_param >= gp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(++spilt_params * 8), ins.src1});
-                        else {
+                        if (gp_param >= gp_params.size()) b->ins.insert(it, {Operation::STORE, ins.type, Operand::rsp(spilt_params++ * 8), ins.src1});
+                        else {                        
                             Operand _param = func.get_register();
                             b->ins.insert(it, {Operation::MOV, ins.type, _param, ins.src1});
                             ins.src1 = _param;
@@ -157,13 +157,14 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                     break;
                 }
                 case (Operation::CALL) : {
+                    // push stack pointer for spilt params
                     if (spilt_params){
                         for (auto call_it = it; call_it != b->ins.begin();){
                             --call_it;
                             Instruction& temp = *call_it;
                             if (temp.op == Operation::BEGIN_CALL){
                                 if (spilt_params % 2) spilt_params++; // allocate to 16B call frame
-                                b->ins.insert(call_it, {Operation::SUB, DataType::PTR, Operand::rsp(0), Operand::rsp(0), Operand::imm(spilt_params * 8)});
+                                b->ins.insert(call_it, {Operation::SUB, DataType::PTR, Operand::rsp(0), Operand::rsp(0), Operand::imm(spilt_params++ * 8)});
                                 break;
                             }
                         }
@@ -212,17 +213,6 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
     }
 }
 
-bool cmp_op(Operation op){
-    return (
-        op == Operation::CEQ || 
-        op == Operation::CNEQ || 
-        op == Operation::CLEQ || 
-        op == Operation::CGEQ || 
-        op == Operation::CLT || 
-        op == Operation::CGT
-    );
-}
-
 /*
     Fix jump instructions to remove redundant registers
 */
@@ -240,9 +230,8 @@ void X86_Lowerer::fix_jumps(FunctionIR& func){
             it--;
             Instruction& prior = *(it++);
 
-            if (!cmp_op(prior.op) && prior.dst != ins.src1){ // depends on an external boolean register
-                b->ins.insert(it, {Operation::CEQ, DataType::EMPTY, VOID, ins.src1, Operand::imm(1)});
-                ins.src1 = VOID;
+            if (!cmp_op(prior.op)){ // depends on an external boolean register
+                // b->ins.insert(it, {Operation::CEQ, DataType::EMPTY, VOID, ins.src1, Operand::imm(1)});
                 continue;
             }
             // now prior is a compare that affects the jump condition
@@ -254,7 +243,7 @@ void X86_Lowerer::fix_jumps(FunctionIR& func){
 }
 
 void X86_Lowerer::assign_statics(FunctionIR& func){
-    if (func.is_static) statics.closures.push_back(func.name);
+    if (func.is_static) statics.closures.insert(func.name);
 
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();

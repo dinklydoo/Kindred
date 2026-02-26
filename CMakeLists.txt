@@ -30,6 +30,7 @@ add_executable(main
     src/visitor.cpp
     src/semerror.cpp
     src/typecheck.cpp
+    src/types.cpp
     src/flowcheck.cpp
     src/ir_lower.cpp
     src/closure.cpp
@@ -37,6 +38,7 @@ add_executable(main
     src/liveness.cpp
     src/x86/x86_lower.cpp
     src/x86/x86_regalloc.cpp
+    src/x86/x86_codegen.cpp
     ${BISON_Parser_OUTPUTS}
     ${FLEX_Lexer_OUTPUTS}
 )

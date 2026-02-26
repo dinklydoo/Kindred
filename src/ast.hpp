@@ -141,6 +141,14 @@ enum BinaryOp {
     APPEND, PREPEND
 };
 
+static bool is_cmp(BinaryOp op){
+    return (
+        op == CGT || op == CLT ||
+        op == CGEQ || op == CLEQ ||
+        op == CEQ || op == CNEQ
+    );
+}
+
 struct BinaryNode : ExpNode{
     BinaryOp op;
     expr_ptr l_exp;

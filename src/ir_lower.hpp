@@ -117,20 +117,19 @@ struct IDVarScope {
     void enter_function(Operand _env) { 
         locals.emplace_back();
         env_stack.push(_env);
-    } // reset
+    }
     void exit_function(){
         locals.pop_back();
         env_stack.pop();
     }
-
     Operand get_env(){ return env_stack.top(); }
 
     void push_ident(std::string label, type_ptr type){
         stack.back().push_ident(label, ident_count++, type);
         if (!locals.empty()) locals.back().insert(label);
     }
-    void push_enclosed(std::string label, type_ptr type){ 
-        stack.back().push_enclosed(label, ident_count++, type); 
+    void push_enclosed(std::string label, int id, type_ptr type){ 
+        stack.back().push_enclosed(label, id, type); 
     }
 
     void push_scope(){ stack.emplace_back(); }
@@ -221,6 +220,8 @@ struct IR_Lowerer : Visitor {
         static IR_Lowerer ir;
         return ir;
     }
+
+    TypeSystem type_s = TypeSystem::instance();
 
     IDVarScope identifier;
     FunctionIRBuilder builder;

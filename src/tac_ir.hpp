@@ -78,6 +78,7 @@ public:
     static Operand empty(){
         Operand temp;
         temp.type = EMP;
+        temp.value = 0;
         return temp;
     }
 
@@ -161,6 +162,17 @@ enum class Operation {
 
 static bool is_fp(DataType op){
     return (op == DataType::F32 || op == DataType::F64);
+}
+
+static bool cmp_op(Operation op){
+    return (
+        op == Operation::CEQ || 
+        op == Operation::CNEQ || 
+        op == Operation::CLEQ || 
+        op == Operation::CGEQ || 
+        op == Operation::CLT || 
+        op == Operation::CGT
+    );
 }
 
 static RType dtype_to_rtype(DataType dtype){
@@ -287,10 +299,11 @@ struct Block {
 
 using blockptr = std::unique_ptr<Block>;
 struct FunctionIR {
-    std::vector<blockptr> blocks;
-    int reg_count = 0;
-
     std::string name;
+    std::vector<blockptr> blocks;
+
+    int spill_offset = 0;
+    int reg_count = 0;
     bool is_static = false;
 
     Operand get_register(){ return Operand::reg(reg_count++); }

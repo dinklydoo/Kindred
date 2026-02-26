@@ -369,6 +369,30 @@ src/typecheck.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/typecheck.cpp.s
 .PHONY : src/typecheck.cpp.s
 
+src/types.o: src/types.cpp.o
+.PHONY : src/types.o
+
+# target to build an object file
+src/types.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/types.cpp.o
+.PHONY : src/types.cpp.o
+
+src/types.i: src/types.cpp.i
+.PHONY : src/types.i
+
+# target to preprocess a source file
+src/types.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/types.cpp.i
+.PHONY : src/types.cpp.i
+
+src/types.s: src/types.cpp.s
+.PHONY : src/types.s
+
+# target to generate assembly for a file
+src/types.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/types.cpp.s
+.PHONY : src/types.cpp.s
+
 src/visitor.o: src/visitor.cpp.o
 .PHONY : src/visitor.o
 
@@ -392,6 +416,30 @@ src/visitor.s: src/visitor.cpp.s
 src/visitor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/visitor.cpp.s
 .PHONY : src/visitor.cpp.s
+
+src/x86/x86_codegen.o: src/x86/x86_codegen.cpp.o
+.PHONY : src/x86/x86_codegen.o
+
+# target to build an object file
+src/x86/x86_codegen.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_codegen.cpp.o
+.PHONY : src/x86/x86_codegen.cpp.o
+
+src/x86/x86_codegen.i: src/x86/x86_codegen.cpp.i
+.PHONY : src/x86/x86_codegen.i
+
+# target to preprocess a source file
+src/x86/x86_codegen.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_codegen.cpp.i
+.PHONY : src/x86/x86_codegen.cpp.i
+
+src/x86/x86_codegen.s: src/x86/x86_codegen.cpp.s
+.PHONY : src/x86/x86_codegen.s
+
+# target to generate assembly for a file
+src/x86/x86_codegen.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_codegen.cpp.s
+.PHONY : src/x86/x86_codegen.cpp.s
 
 src/x86/x86_lower.o: src/x86/x86_lower.cpp.o
 .PHONY : src/x86/x86_lower.o
@@ -480,9 +528,15 @@ help:
 	@echo "... src/typecheck.o"
 	@echo "... src/typecheck.i"
 	@echo "... src/typecheck.s"
+	@echo "... src/types.o"
+	@echo "... src/types.i"
+	@echo "... src/types.s"
 	@echo "... src/visitor.o"
 	@echo "... src/visitor.i"
 	@echo "... src/visitor.s"
+	@echo "... src/x86/x86_codegen.o"
+	@echo "... src/x86/x86_codegen.i"
+	@echo "... src/x86/x86_codegen.s"
 	@echo "... src/x86/x86_lower.o"
 	@echo "... src/x86/x86_lower.i"
 	@echo "... src/x86/x86_lower.s"

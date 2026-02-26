@@ -54,6 +54,9 @@ int main() {
   ra.allocate_prog(IR_program);
   std::cout << "[Kindred Compiler] : Registers Allocated\n";
 
+  X86_CodeGen& cgen = X86_CodeGen::instance("./compiled.s");
+  cgen.generate_asm(IR_program);
+  std::cout << "[Kindred Compiler] : Code Generated\n";
 
   return 0;
 }

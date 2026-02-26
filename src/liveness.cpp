@@ -73,7 +73,7 @@ void LivenessAnalyzer::add_interference_edges(Instruction& ins, virtual_varset& 
         graph.incr_uses(ins.src2, rtype);
     }
 
-    if (ins.op == Operation::CALL){
+    if (ins.op == Operation::CALL || ins.op == Operation::CALL_EXT){
         for (int clobber_gp : regInfo.GP_CALLER_SAVE){ 
             defines.insert({Operand::gpr(clobber_gp), GP});
             IGNode& node = graph.add_node(Operand::gpr(clobber_gp), GP);

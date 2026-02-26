@@ -4,22 +4,60 @@
 #include <fstream>
 #include <string>
 
-void X86_CodeGen::write_header(){
-    std::ofstream sfile(path, std::ios::trunc);
+// X86 codegen AT&T syntax cuz it looks cooler than intel syntax
+void X86_CodeGen::generate_asm(std::vector<FunctionIR>& prog){
+    write_header();
+    for (FunctionIR& func : prog){
+        write_func(func);
+    }
     sfile.close();
-    sfile.open(path, std::ios::app);
+};
 
+
+void X86_CodeGen::write_header(){
+    sfile<<".att_syntax prefix\n";
+    sfile<<".global main\n";
+    sfile<<'\n';
     std::ifstream hfile("./.aux/static_data");
-    sfile << hfile.rdbuf();
+    sfile << hfile.rdbuf() << '\n';
     hfile.close();
+
+    sfile<<".section .text\n";
+}
+
+bool is_caller_saved(Operand reg){
+    return (reg.type == Operand::GPR && CALLEE_SAVE.contains(static_cast<GPReg>(reg.value)));
+}
+
+void X86_CodeGen::generate_prologue(FunctionIR& func){
+    // fetch callee saved registers used
+    for (auto it = func.blocks.begin(); it != func.blocks.end(); it++){
+        Block* b = it->get();
+        for (Instruction& ins : b->ins){
+            if (is_caller_saved(ins.dst)) preserved.insert(static_cast<GPReg>(ins.dst.value));
+            if (is_caller_saved(ins.src1)) preserved.insert(static_cast<GPReg>(ins.src1.value));
+            if (is_caller_saved(ins.src2)) preserved.insert(static_cast<GPReg>(ins.src2.value));
+        }
+    }
+    sfile<<"pushq %rbp\n";
+    sfile<<"movq %rsp, %rbp\n";
+    int rbp_offset = -func.spill_offset;
+    if (!(rbp_offset % 16)) rbp_offset += 8; // realign to 16B, push rbp offsets 8
+    sfile<<"subq %rbp, "+reg_string(Operand::imm(rbp_offset), DataType::PTR)<<'\n';
+}
+
+void X86_CodeGen::generate_epilogue(){
+    sfile<<"movq %rbp, %rsp\n";
+    sfile<<"popq %rbp\n";
 }
 
 void X86_CodeGen::write_func(FunctionIR& func){
+    sfile<<func.name<<':'<<'\n';
+    generate_prologue(func);
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (Instruction& ins : b->ins) write_ins(ins);
     }
-    std::ofstream sfile(path, std::ios::app);
     sfile << '\n';
 }
 
@@ -42,18 +80,16 @@ std::string X86_CodeGen::reg_string(Operand op, DataType type){
 }
 
 void X86_CodeGen::write_ins(Instruction& ins){
-    std::ofstream sfile(path, std::ios::app);
     switch (ins.op){
         // jump label is type independent
         case (Operation::LABEL) : 
             sfile<<ins.target<<'\n'; return;
         case (Operation::RET) : 
-            sfile<<"ret"<<'\n'; return;
+            generate_epilogue();
+            return;
         case (Operation::CALL) : {
-            if (ins.src1.is_register()){ // call a closure
-                sfile<<"call *"<<reg_string(ins.src1, DataType::PTR)<<'\n';
-                break;
-            }
+            sfile<<"call *"<<reg_string(ins.src1, DataType::PTR)<<'\n';
+            return;
         }
         case (Operation::CALL_EXT) :
             sfile<<"call "<<ins.target<<'\n'; return;
@@ -73,10 +109,11 @@ std::string ins_suffix(DataType type){
         case (DataType::BOOL) : // bool use byte registers
         case (DataType::I8) : return "b";
         case (DataType::I32) : return "l";
+        case (DataType::PTR) :
         case (DataType::I64) : return "q";
         case (DataType::F32) : return "ss";
         case (DataType::F64) : return "sd";
-        default : return "";
+        case (DataType::EMPTY) : return "";
     }
 }
 
@@ -86,8 +123,8 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
 
     std::string suf = ins_suffix(type);
     switch (ins.op) {
-        case (Operation::ADD) : 
-        case (Operation::SUB) : 
+        case (Operation::ADD) :
+        case (Operation::SUB) :
         case (Operation::MUL) :
         case (Operation::XOR) :
         {
@@ -174,20 +211,20 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
         case (Operation::CEQ) :
         case (Operation::CNEQ) :
         {
+            sfile<<"cmp"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.src2, type)<<'\n';
             if (ins.dst == VOID){
                 jump_flag = ins.op;
                 break; // only sets flag
             }
             // compare instruction needs floating point check
-            sfile<<"cmp"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
             std::string op;
             switch (ins.op){
-                case (Operation::CLT) : op = "setl"; break;
-                case (Operation::CGT) : op = "setg"; break;
-                case (Operation::CLEQ) : op = "setle"; break;
-                case (Operation::CGEQ) : op = "setge"; break;
-                case (Operation::CEQ) : op = "sete"; break;
-                case (Operation::CNEQ) : op = "setne"; break;
+                case (Operation::CLT) : op = "setlb"; break;
+                case (Operation::CGT) : op = "setgb"; break;
+                case (Operation::CLEQ) : op = "setleb"; break;
+                case (Operation::CGEQ) : op = "setgeb"; break;
+                case (Operation::CEQ) : op = "seteb"; break;
+                case (Operation::CNEQ) : op = "setneb"; break;
                 default : break;
             }
             sfile<<op+" "+reg_string(ins.dst, type)<<'\n';
@@ -244,7 +281,6 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
 }
 
 void X86_CodeGen::write_fp_ins(Instruction& ins){
-    std::ofstream sfile(path, std::ios::app);
     std::string suf = ins_suffix(ins.type);
     DataType type = ins.type;
     switch (ins.op) {
@@ -282,15 +318,24 @@ void X86_CodeGen::write_fp_ins(Instruction& ins){
             break;
         }
         case (Operation::LOAD) : {
-
+            std::string src = '('+reg_string(ins.src1, type)+')';
+            if (ins.src1.type == Operand::RBP || ins.src1.type == Operand::RSP){
+                if (ins.src1.value) src = std::to_string(ins.src1.value)+src;
+            }
+            sfile<<"mov"+suf+" "+src+", "+reg_string(ins.dst, type)<<'\n';
+            break;
             break;
         }
         case (Operation::STORE) : {
-
+            std::string dst = '('+reg_string(ins.dst, type)+')';
+            if (ins.dst.type == Operand::RBP || ins.dst.type == Operand::RSP){
+                if (ins.dst.value) dst = std::to_string(ins.dst.value)+dst;
+            }
+            sfile<<"mov"+suf+" "+reg_string(ins.src1, type)+", "+dst<<'\n';
             break;
         }
         case (Operation::ADDR) : { // floating point address -> static value
-
+            sfile<<"mov"+suf+" "+ins.target+", "+reg_string(ins.dst, type)<<'\n';
             break;
         }
         default : return;

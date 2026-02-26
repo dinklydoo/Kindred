@@ -56,96 +56,6 @@ bool is_error(type_ptr type){
 
 /* ============================================================================================================================================================
 
-                TYPE CASTING LOGIC
-
- ============================================================================================================================================================ */
-
-// Binding strengths for castable numeric values
-int binding_strength(type_ptr tp){
-    Type::Kind kind = tp->kind;
-    switch (kind) {
-        case Type::Kind::GENERIC : return 0;
-        case Type::Kind::Char : return 1;
-        case Type::Kind::Int : return 2;
-        case Type::Kind::Long : return 3;
-        case Type::Kind::Float : return 4;
-        case Type::Kind::Double : return 5;
-        default : return -1;
-    }
-}
-
-
-// Casts a type to the strongest binding if castable
-
-// struct types by definition are only equivalent to each other
-// list types can be cast if underlying values are castable
-// enum types are never castable
-
-// If a cast is impossible returns nullptr
-type_ptr TypeChecker::cast_strongest(type_ptr a, type_ptr b){
-    if (a->kind == Type::Kind::Nil && b->kind == Type::Kind::Struct) return b;
-    if (b->kind == Type::Kind::Nil && a->kind == Type::Kind::Struct) return a;
-
-    // recursively cast for list types (UNUSED)
-    if (a->kind == Type::Kind::List && b->kind == Type::Kind::List){
-        auto al = std::static_pointer_cast<ListType>(a);
-        auto bl = std::static_pointer_cast<ListType>(b);
-
-        auto elem = cast_strongest(al->elem, bl->elem);
-        if (!elem) return nullptr;
-        
-        return type_s.list_type(elem);
-    }
-    int bind_a = binding_strength(a);
-    int bind_b = binding_strength(b);
-
-    // generic types
-    if (bind_a == 0) return b;
-    if (bind_b == 0) return a;
-
-    // non comparable types
-    if (bind_a < 0 || bind_b < 0) return nullptr;
-    if (bind_a > bind_b) return a;
-    return b;
-}
-
-// Returns fixed type if type_ptr castable is castable to fixed type
-// otherwise returns nullptr
-type_ptr TypeChecker::cast_fixed(type_ptr fix, type_ptr castable){
-    if (fix == cast_strongest(fix, castable) || type_equal(fix, castable)) return fix;
-    return nullptr;
-}
-
-bool TypeChecker::type_equal(type_ptr a, type_ptr b){
-    if (a == b) return true;
-    // generics can morph any type
-    if (a->kind == Type::Kind::GENERIC || b->kind == Type::Kind::GENERIC) return true;
-    if (a->kind != b->kind) return false;
-    if (a->kind == Type::Kind::List){
-        auto al = std::static_pointer_cast<ListType>(a);
-        auto bl = std::static_pointer_cast<ListType>(b);
-        return type_equal(al->elem, bl->elem);
-    }
-    if (a->kind == Type::Kind::Struct || a->kind == Type::Kind::Enum){
-        auto al = std::static_pointer_cast<NominalType>(a);
-        auto bl = std::static_pointer_cast<NominalType>(b);
-        return al->name == bl->name;
-    }
-    if (a->kind == Type::Kind::Func){ // TODO : SUBTYPE FUNCTIONS I REALLY CBA RN
-        auto al = std::static_pointer_cast<FuncType>(a);
-        auto bl = std::static_pointer_cast<FuncType>(b);
-
-        if (al->args.size() != bl->args.size()) return false;
-        for (int i = 0; i < al->args.size(); i++){
-            if (!type_equal(al->args[i], bl->args[i])) return false;
-        }
-        return type_equal(al->ret, bl->ret);
-    }
-    return true;
-}
-
-/* ============================================================================================================================================================
-
                 VISITOR PATTERN VISIT DECLARATIONS
 
  ============================================================================================================================================================ */
@@ -207,7 +117,7 @@ void TypeChecker::visit( VarDecl& node){
     node.r_val->accept(*this);
     if (is_error(node.r_val->resolved_type)) return;
 
-    if (!cast_fixed(node.type, node.r_val->resolved_type)){
+    if (!type_s.cast_fixed(node.type, node.r_val->resolved_type)){
         errors.type_error(
             "Variable " + node.name + " expects expression of type " + 
             type_to_string(node.type) + " but got expression of type " + 
@@ -229,7 +139,7 @@ void TypeChecker::visit( ReturnNode& node){
     if (is_error(node.rexp->resolved_type)) return;
 
     type_ptr rtype = typeprop.top_type();
-    if (!cast_fixed(rtype, node.rexp->resolved_type)){
+    if (!type_s.cast_fixed(rtype, node.rexp->resolved_type)){
         errors.type_error(
             "Function expects return expression of type "
             +type_to_string(rtype)+" instead got "+
@@ -258,7 +168,7 @@ void TypeChecker::visit(CaseBranchNode& node){
 
     if (is_error(node.pattern->resolved_type)){ /*do nothing*/}
 
-    else if (!cast_fixed(exp, node.pattern->resolved_type)){
+    else if (!type_s.cast_fixed(exp, node.pattern->resolved_type)){
         errors.type_error("Pattern matching requires pattern to share a type with match value", *node.pattern);
     }
     else {
@@ -348,7 +258,7 @@ void TypeChecker::visit(BinaryNode& node){
             if (!is_arith(l_kind) || !is_arith(r_kind)){
                 errors.type_error(std::string("Arithmetic operator '") + op_token + "' requires numeric operands", node);
             }
-            else node.resolved_type = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
+            else node.resolved_type = type_s.cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
             return;
         }
         case BinaryOp::LAND : if (op_token.empty()) op_token = '&';
@@ -361,7 +271,7 @@ void TypeChecker::visit(BinaryNode& node){
             if (!is_arith_whole(l_kind) || !is_arith_whole(r_kind)){
                 errors.type_error(std::string("Arithmetic operator '") + op_token + "' requires whole numeric operands", node);
             }
-            else node.resolved_type = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
+            else node.resolved_type = type_s.cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
             return;
         }
         case BinaryOp::CGT : if (op_token.empty()) op_token = '>';
@@ -379,7 +289,7 @@ void TypeChecker::visit(BinaryNode& node){
         case BinaryOp::CNEQ : {
             if (op_token.empty()) op_token = "!=";
             type_ptr casted;
-            if (!(casted = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type))){
+            if (!(casted = type_s.cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type))){
                 errors.type_error(std::string("Equality operator '") + op_token + "' requires operands of same type (or castable)", node);
             }
             else node.resolved_type = type_s.bool_type();
@@ -405,11 +315,11 @@ void TypeChecker::visit(BinaryNode& node){
             }
             // concat two lists -> check if lists are of the same type (cast as generic can cause equality)
             if (l_kind == Type::Kind::List && r_kind == Type::Kind::List){
-                if (!type_equal(node.l_exp->resolved_type, node.r_exp->resolved_type)){
+                if (!type_s.type_equal(node.l_exp->resolved_type, node.r_exp->resolved_type)){
                     errors.type_error("List concatenation requires lists of the same element type", node);
                     return;
                 }
-                node.resolved_type = cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
+                node.resolved_type = type_s.cast_strongest(node.l_exp->resolved_type, node.r_exp->resolved_type);
                 return;
             }
             type_ptr internal = nullptr;
@@ -417,22 +327,22 @@ void TypeChecker::visit(BinaryNode& node){
             if (l_kind == Type::Kind::List){ // concat [l_exp : list] [r_exp : value]
                 internal = 
                     std::static_pointer_cast<ListType>(node.l_exp->resolved_type)->elem;
-                if (!(casted = cast_fixed(internal, node.r_exp->resolved_type))){
+                if (!(casted = type_s.cast_fixed(internal, node.r_exp->resolved_type))){
                     errors.type_error("List concatenation requires operands of the same element type", node);
                     return;
                 }
                 node.op = BinaryOp::APPEND;
-                node.resolved_type = type_s.list_type(cast_strongest(internal, node.r_exp->resolved_type));
+                node.resolved_type = type_s.list_type(type_s.cast_strongest(internal, node.r_exp->resolved_type));
             }
             if (r_kind == Type::Kind::List){ // concat [l_exp : val] [r_exp : list]
                 internal =
                     std::static_pointer_cast<ListType>(node.r_exp->resolved_type)->elem;
-                if (!(casted = cast_fixed(internal, node.l_exp->resolved_type))){
+                if (!(casted = type_s.cast_fixed(internal, node.l_exp->resolved_type))){
                     errors.type_error("List concatenation requires operands of the same element type", node);
                     return;
                 }
                 node.op = BinaryOp::PREPEND;
-                node.resolved_type = type_s.list_type(cast_strongest(internal, node.l_exp->resolved_type));
+                node.resolved_type = type_s.list_type(type_s.cast_strongest(internal, node.l_exp->resolved_type));
             }
             return;
         }
@@ -463,7 +373,7 @@ void TypeChecker::visit(ListNode& node){
             node.resolved_type = type_s.error_type();
             return;
         }
-        if (!(type = cast_strongest(type, elem->resolved_type))){
+        if (!(type = type_s.cast_strongest(type, elem->resolved_type))){
             errors.type_error(
                 "List constructor element has conflicting type\
                  with container at index " + std::to_string(i),node
@@ -509,7 +419,7 @@ void TypeChecker::visit(StructNode& node){
         }
 
         auto correspondent = fields[i];
-        if (!cast_fixed(correspondent.type, fval->resolved_type)){
+        if (!type_s.cast_fixed(correspondent.type, fval->resolved_type)){
             errors.type_error(
                 "struct "+node.name+" with field "+correspondent.name
                 +"expects type "+type_to_string(correspondent.type)+" but got "
@@ -557,7 +467,7 @@ void TypeChecker::visit(CallNode& node){
         }
 
         auto expected = func_defn->args[i];
-        if (!cast_fixed(expected, arg->resolved_type)){
+        if (!type_s.cast_fixed(expected, arg->resolved_type)){
             errors.type_error(
                 "function of type"+type_to_string(func_defn)+" expects an argument of type "
                 +type_to_string(expected)+" in position "+std::to_string(i+1)
