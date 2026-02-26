@@ -43,7 +43,7 @@ void X86_CodeGen::generate_prologue(FunctionIR& func){
     sfile<<"movq %rsp, %rbp\n";
     int rbp_offset = -func.spill_offset;
     if (!(rbp_offset % 16)) rbp_offset += 8; // realign to 16B, push rbp offsets 8
-    sfile<<"subq %rbp, "+reg_string(Operand::imm(rbp_offset), DataType::PTR)<<'\n';
+    sfile<<"subq "+reg_string(Operand::imm(rbp_offset), DataType::PTR)+", %rsp"<<'\n';
 }
 
 void X86_CodeGen::generate_epilogue(){
@@ -86,6 +86,7 @@ void X86_CodeGen::write_ins(Instruction& ins){
             sfile<<ins.target<<'\n'; return;
         case (Operation::RET) : 
             generate_epilogue();
+            sfile<<"ret\n";
             return;
         case (Operation::CALL) : {
             sfile<<"call *"<<reg_string(ins.src1, DataType::PTR)<<'\n';
@@ -148,7 +149,7 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
         {
             if (ins.type == DataType::I32) sfile <<"cdq\n";
             else sfile << "cqo\n";
-            sfile<<"idiv"+ins_suffix(type)+", "+reg_string(ins.src2, type)<<'\n';
+            sfile<<"idiv"+ins_suffix(type)+" "+reg_string(ins.src2, type)<<'\n';
             break;
         }
         case (Operation::NEG) : 
@@ -227,7 +228,7 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
                 case (Operation::CNEQ) : op = "setneb"; break;
                 default : break;
             }
-            sfile<<op+" "+reg_string(ins.dst, type)<<'\n';
+            sfile<<op+" "+reg_string(ins.dst, DataType::BOOL)<<'\n';
             break;
         }
         case (Operation::JMP_IF) :

@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "src/parse/parser.hpp"
 #include "src/typecheck.hpp"
 #include "src/flowcheck.hpp"
 #include "src/ir_lower.hpp"

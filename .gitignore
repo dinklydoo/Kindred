@@ -26,6 +26,11 @@ compile_commands.json
 .vscode
 .clangd
 
+src/parse/lexer.cpp
+src/parse/location.hh
+src/parse/parser.cpp
+src/parse/parser.hpp
+
 cmake_install.cmake
 CMakeCache.txt
 CmakeFiles

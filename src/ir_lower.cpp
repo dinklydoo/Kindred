@@ -74,7 +74,8 @@ void IR_Lowerer::op_equals(Operand ptr1, Operand ptr2, type_ptr type){
 
 void IR_Lowerer::cast_operand(Operand target, type_ptr fix, type_ptr cast){
     ConsFunctionIR& cons = builder.top_constructor();
-    if (fix->kind == cast->kind){
+
+    if (fix->kind == cast->kind || target.type == Operand::IMM){
         cons.push_operand(target); return;
     }
     Operand _casted = cons.get_register();
@@ -882,8 +883,8 @@ void IR_Lowerer::visit( AccessNode& node ){
 
     unsigned int field_id = structInfo.get_field_id(node.sn, node.field);
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
-    cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, VOID, _ptr});
-    cons.push_instruction({Operation::PARAM, DataType::I32, VOID, VOID, Operand::imm(field_id)});
+    cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
+    cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(field_id)});
 
     Operand _fptr = cons.get_register();
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _fptr, VOID, VOID, "access_field"});

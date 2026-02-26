@@ -129,30 +129,6 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
-lexer.o: lexer.cpp.o
-.PHONY : lexer.o
-
-# target to build an object file
-lexer.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/lexer.cpp.o
-.PHONY : lexer.cpp.o
-
-lexer.i: lexer.cpp.i
-.PHONY : lexer.i
-
-# target to preprocess a source file
-lexer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/lexer.cpp.i
-.PHONY : lexer.cpp.i
-
-lexer.s: lexer.cpp.s
-.PHONY : lexer.s
-
-# target to generate assembly for a file
-lexer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/lexer.cpp.s
-.PHONY : lexer.cpp.s
-
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -176,30 +152,6 @@ main.s: main.cpp.s
 main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
 .PHONY : main.cpp.s
-
-parser.o: parser.cpp.o
-.PHONY : parser.o
-
-# target to build an object file
-parser.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/parser.cpp.o
-.PHONY : parser.cpp.o
-
-parser.i: parser.cpp.i
-.PHONY : parser.i
-
-# target to preprocess a source file
-parser.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/parser.cpp.i
-.PHONY : parser.cpp.i
-
-parser.s: parser.cpp.s
-.PHONY : parser.s
-
-# target to generate assembly for a file
-parser.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/parser.cpp.s
-.PHONY : parser.cpp.s
 
 src/cfg_builder.o: src/cfg_builder.cpp.o
 .PHONY : src/cfg_builder.o
@@ -320,6 +272,54 @@ src/liveness.s: src/liveness.cpp.s
 src/liveness.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/liveness.cpp.s
 .PHONY : src/liveness.cpp.s
+
+src/parse/lexer.o: src/parse/lexer.cpp.o
+.PHONY : src/parse/lexer.o
+
+# target to build an object file
+src/parse/lexer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/lexer.cpp.o
+.PHONY : src/parse/lexer.cpp.o
+
+src/parse/lexer.i: src/parse/lexer.cpp.i
+.PHONY : src/parse/lexer.i
+
+# target to preprocess a source file
+src/parse/lexer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/lexer.cpp.i
+.PHONY : src/parse/lexer.cpp.i
+
+src/parse/lexer.s: src/parse/lexer.cpp.s
+.PHONY : src/parse/lexer.s
+
+# target to generate assembly for a file
+src/parse/lexer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/lexer.cpp.s
+.PHONY : src/parse/lexer.cpp.s
+
+src/parse/parser.o: src/parse/parser.cpp.o
+.PHONY : src/parse/parser.o
+
+# target to build an object file
+src/parse/parser.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/parser.cpp.o
+.PHONY : src/parse/parser.cpp.o
+
+src/parse/parser.i: src/parse/parser.cpp.i
+.PHONY : src/parse/parser.i
+
+# target to preprocess a source file
+src/parse/parser.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/parser.cpp.i
+.PHONY : src/parse/parser.cpp.i
+
+src/parse/parser.s: src/parse/parser.cpp.s
+.PHONY : src/parse/parser.s
+
+# target to generate assembly for a file
+src/parse/parser.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/parser.cpp.s
+.PHONY : src/parse/parser.cpp.s
 
 src/semerror.o: src/semerror.cpp.o
 .PHONY : src/semerror.o
@@ -498,15 +498,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... main"
-	@echo "... lexer.o"
-	@echo "... lexer.i"
-	@echo "... lexer.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
-	@echo "... parser.o"
-	@echo "... parser.i"
-	@echo "... parser.s"
 	@echo "... src/cfg_builder.o"
 	@echo "... src/cfg_builder.i"
 	@echo "... src/cfg_builder.s"
@@ -522,6 +516,12 @@ help:
 	@echo "... src/liveness.o"
 	@echo "... src/liveness.i"
 	@echo "... src/liveness.s"
+	@echo "... src/parse/lexer.o"
+	@echo "... src/parse/lexer.i"
+	@echo "... src/parse/lexer.s"
+	@echo "... src/parse/parser.o"
+	@echo "... src/parse/parser.i"
+	@echo "... src/parse/parser.s"
 	@echo "... src/semerror.o"
 	@echo "... src/semerror.i"
 	@echo "... src/semerror.s"

@@ -11,22 +11,22 @@ find_package(FLEX REQUIRED)
 BISON_TARGET(
     Parser
     src/parse/parser.y
-    ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
-    DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.hpp
+    ${CMAKE_CURRENT_BINARY_DIR}/src/parse/parser.cpp
+    DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/src/parse/parser.hpp
 )
 
 # Flex
 FLEX_TARGET(
     Lexer
     src/parse/lexer.l
-    ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/src/parse/lexer.cpp
 )
 
 # Ensure Flex runs after Bison (for token headers)
 ADD_FLEX_BISON_DEPENDENCY(Lexer Parser)
 
-add_executable(main
-    main.cpp
+add_executable(kdc
+    kdc.cpp
     src/visitor.cpp
     src/semerror.cpp
     src/typecheck.cpp
@@ -43,9 +43,9 @@ add_executable(main
     ${FLEX_Lexer_OUTPUTS}
 )
 
-target_include_directories(main PRIVATE
+target_include_directories(kdc PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     src
 )
 
-target_compile_options(main PRIVATE -g)
+target_compile_options(kdc PRIVATE -g)

@@ -1,6 +1,6 @@
 %code requires {
     #include <string>
-    #include "src/ast.hpp"
+    #include "ast.hpp"
 }
 
 %{
