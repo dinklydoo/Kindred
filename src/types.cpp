@@ -1,4 +1,5 @@
 #include "types.hpp"
+#include <memory>
 
 // Binding strengths for castable numeric values
 int binding_strength(type_ptr tp){

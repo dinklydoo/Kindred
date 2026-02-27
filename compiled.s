@@ -1,9 +1,9 @@
 .att_syntax prefix
 .global main
 
-.extern index_list
 .extern list_size
 .extern list_equals
+.extern read_string
 .extern access_index
 .extern struct_equals
 .extern decr_closure
@@ -14,7 +14,7 @@
 .extern incr_closure
 .extern get_env
 .extern access_var
-.extern alloc_list
+.extern print_int
 .extern incr_list
 .extern decr_struct
 .extern concat_list
@@ -330,26 +330,9 @@ ret
 main:
 pushq %rbp
 movq %rsp, %rbp
-subq $24, %rsp
-movl $0, %edi
-movq $1, %rsi
-movl $3, %edx
-call alloc_list
+subq $40, %rsp
+call read_string
 movq %rax, -8(%rbp)
-movq -8(%rbp), %rdi
-movl $0, %esi
-call index_list
-movb $97, (%al)
-movq -8(%rbp), %rdi
-movl $1, %esi
-call index_list
-movb $98, (%al)
-movq -8(%rbp), %rdi
-movl $2, %esi
-call index_list
-movb $99, (%al)
-movq -8(%rbp), %rdi
-call incr_list
 leaq atoi.local(%rip), %rax
 movq %rax, -16(%rbp)
 movq -16(%rbp), %rdi
@@ -359,20 +342,28 @@ movq -8(%rbp), %rsi
 movl $0, %edx
 movl -16(%rbp), %eax
 call *%rax
+movl %eax, -24(%rbp)
 leaq get_val.local(%rip), %rbx
 movq %rbx, %rdi
 call get_env
 movq %rax, %rdi
 movq $0, %rsi
 call *%rbx
+leaq factorial.local(%rip), %rbx
+movq %rbx, %rdi
+call get_env
+movq %rax, %rdi
+movl -24(%rbp), %esi
+call *%rbx
+call print_int
 leaq nest_check.local(%rip), %rax
-movq %rax, -24(%rbp)
-movq -24(%rbp), %rdi
+movq %rax, -32(%rbp)
+movq -32(%rbp), %rdi
 call get_env
 movq %rax, %rdi
 movl $1, %esi
 movb $97, %dl
-movq -24(%rbp), %rax
+movq -32(%rbp), %rax
 call *%rax
 movq %rax, %rbx
 movq %rbx, %rdi

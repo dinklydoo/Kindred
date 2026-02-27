@@ -20,6 +20,7 @@ using expr_ptr = std::unique_ptr<ExpNode>;
 struct ExpNode : ASTNode{
     type_ptr resolved_type;
     virtual bool is_literal() { return false; }
+    virtual bool is_constructor() { return false; }
 };
 
 using litval = std::variant<int64_t, double, bool, char>;
@@ -169,7 +170,9 @@ struct StructNode : ExpNode {
     std::vector<expr_ptr> fields;
 
     std::vector<type_ptr> ftypes;
-    public: virtual void accept(Visitor& v) override;
+    public: 
+    virtual void accept(Visitor& v) override;
+    bool is_constructor() override { return true; }
 };
 
 struct Param {
@@ -229,7 +232,9 @@ struct GuardNode : ExpNode {
 
 struct ListNode : ExpNode {
     std::vector<expr_ptr> elems;
-    public: virtual void accept(Visitor& v) override;
+    public: 
+    virtual void accept(Visitor& v) override;
+    bool is_constructor() override { return true; }
 };
 
 struct StructDecl : DeclNode{
@@ -251,7 +256,9 @@ struct PrintNode : DeclNode {
 };
 
 struct ReadNode : ExpNode {
-    public: virtual void accept(Visitor& v) override;
+    public: 
+    virtual void accept(Visitor& v) override;
+    bool is_constructor() override { return true; }
 };
 
 struct ModuleNode : ASTNode {

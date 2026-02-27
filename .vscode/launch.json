@@ -8,7 +8,7 @@
             "name": "Example",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/main",
+            "program": "${workspaceRoot}/kdc",
             "args": [],
             "cwd": "${workspaceRoot}",
             "stdio": [
@@ -21,7 +21,7 @@
             "name": "Regalloc",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/main",
+            "program": "${workspaceRoot}/kdc",
             "args": [],
             "cwd": "${workspaceRoot}",
             "stdio": [

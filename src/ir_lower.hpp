@@ -210,7 +210,7 @@ struct FunctionIRBuilder {
     std::string get_scratch_label(){ return ".L_"+std::to_string(scratch_label_count++); }
 
     std::string get_case_label(){
-        if (stack.empty()) return "如果我说我真的爱你 谁来收拾 那些被破坏的友谊";
+        if (stack.empty()) return "早上好中国， 今天我要冰淇凌， 我很喜欢吃冰淇凌";
         return get_block_label()+"_case"+std::to_string(top_constructor().case_count++)+'_';
     }
 };
@@ -282,8 +282,8 @@ struct IR_Lowerer : Visitor {
     void visit( ListNode& node) override ;
     void visit( ProgramNode& node) override ;
     void visit( ModuleNode& node) override;
-    void visit( ReadNode& node) override {};
-    void visit( PrintNode& node) override {};
+    void visit( ReadNode& node) override ;
+    void visit( PrintNode& node) override ;
 
     void gen_block(std::string label){
         ConsFunctionIR& cons = builder.top_constructor();

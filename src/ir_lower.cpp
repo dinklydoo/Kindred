@@ -262,8 +262,6 @@ void IR_Lowerer::decrease_ref( Operand _ptr, type_ptr type){
 
 void IR_Lowerer::generate_node( Operand elem, type_ptr ltype, type_ptr type){
     ConsFunctionIR& cons = builder.top_constructor();
-    
-    increase_ref(elem, type);
 
     Operand _cast = cons.get_register();
     cast_operand(elem, ltype, type);
@@ -650,7 +648,8 @@ void IR_Lowerer::visit(VarDecl& node){
     node.r_val->accept(*this);
     Operand _rval = cons.pop_operand(); // expression register
 
-    increase_ref(_rval, node.type);
+    if (!node.r_val->is_constructor())
+        increase_ref(_rval, node.type);
 
     identifier.push_ident(node.name, node.type);
     identifier.get_var(node.name);
@@ -777,6 +776,8 @@ void IR_Lowerer::visit( BinaryNode& node ){
         }
         case (BinaryOp::PREPEND): {
             auto ltype = std::static_pointer_cast<ListType>(node.resolved_type);
+            if (!node.l_exp->is_constructor())
+                increase_ref(_lexp, ltype->elem);
             generate_node(_lexp, ltype->elem, node.l_exp->resolved_type);
             _lexp = cons.pop_operand();
 
@@ -788,6 +789,8 @@ void IR_Lowerer::visit( BinaryNode& node ){
         }
         case (BinaryOp::APPEND): {
             auto ltype = std::static_pointer_cast<ListType>(node.resolved_type);
+            if (!node.r_exp->is_constructor())
+                increase_ref(_rexp, ltype->elem);
             generate_node(_rexp, ltype->elem, node.r_exp->resolved_type);
             _rexp = cons.pop_operand();
 
@@ -858,7 +861,8 @@ void IR_Lowerer::visit( StructNode& node ){
         node.fields[i]->accept(*this);
         Operand _t = cons.pop_operand();
         
-        increase_ref(_t, node.ftypes[i]);
+        if (!node.fields[i]->is_constructor())
+            increase_ref(_t, node.ftypes[i]);
     
         cast_operand(_t, node.ftypes[i], node.fields[i]->resolved_type);
         _t = cons.pop_operand();
@@ -1015,7 +1019,8 @@ void IR_Lowerer::visit( ReturnNode& node ){
     Operand _exp = cons.pop_operand();
     cast_operand(_exp, node.resolved_type, node.rexp->resolved_type);
     Operand _t = cons.pop_operand();
-    increase_ref(_t, node.resolved_type);
+    if (!node.rexp->is_constructor())
+        increase_ref(_t, node.resolved_type);
     identifier.decr_locals(); // clear locals before return; need to keep return local alive if possible
     cons.push_instruction({Operation::RET, type_to_dtype(node.resolved_type->kind), VOID, _t});
 }
@@ -1045,7 +1050,7 @@ void IR_Lowerer::visit( ListNode& node ){
         Operand _elem = cons.pop_operand();
 
         // increase ref counts to objects
-        if (etype->kind == Type::Kind::List || etype->kind == Type::Kind::Struct)
+        if (!node.elems[i]->is_constructor())
             increase_ref(_elem, etype);
         else {
             cast_operand(_elem, etype, node.elems[i]->resolved_type);
@@ -1058,4 +1063,58 @@ void IR_Lowerer::visit( ListNode& node ){
         cons.push_instruction({Operation::STORE, type_to_dtype(etype->kind), _index, _elem});
     }
     cons.push_operand(_ptr);
+}
+
+void IR_Lowerer::visit( PrintNode& node ){
+    ConsFunctionIR& cons = builder.top_constructor();
+    Type::Kind kind = node.msg->resolved_type->kind;
+    node.msg->accept(*this);
+    Operand _t = cons.pop_operand();
+    cons.push_instruction({Operation::PARAM, type_to_dtype(kind), VOID, _t});
+    std::string print_func = "";
+    switch (kind){
+        case (Type::Kind::Bool) : 
+            print_func = "print_bool"; break;
+        case (Type::Kind::Char) : 
+            print_func = "print_char"; break;
+        case (Type::Kind::Enum) :
+        case (Type::Kind::Int) : 
+            print_func = "print_int"; break;
+        case (Type::Kind::Long) : 
+            print_func = "print_long"; break;
+        case (Type::Kind::Float) : 
+            print_func = "print_float"; break;
+        case (Type::Kind::Double) : 
+            print_func = "print_double"; break;
+        case (Type::Kind::List) :  // string
+            print_func = "print_string"; break;
+        default : return;
+    }
+    cons.push_instruction({Operation::CALL_EXT, DataType::EMPTY, VOID, VOID, VOID, print_func});
+}
+
+void IR_Lowerer::visit( ReadNode& node ){
+    ConsFunctionIR& cons = builder.top_constructor();
+    Operand _t = cons.get_register();
+    Type::Kind kind = node.resolved_type->kind;
+    std::string read_func = "";
+    switch (kind){
+        case (Type::Kind::Bool) : 
+            read_func = "read_bool"; break;
+        case (Type::Kind::Char) : 
+            read_func = "read_char"; break;
+        case (Type::Kind::Int) : 
+            read_func = "read_int"; break;
+        case (Type::Kind::Long) : 
+            read_func = "read_long"; break;
+        case (Type::Kind::Float) : 
+            read_func = "read_float"; break;
+        case (Type::Kind::Double) : 
+            read_func = "read_double"; break;
+        case (Type::Kind::List) : // strings
+            read_func = "read_string"; break;
+        default : return;
+    }
+    cons.push_instruction({Operation::CALL_EXT, type_to_dtype(kind), _t, VOID, VOID, read_func});
+    cons.push_operand(_t);
 }

@@ -20,4 +20,6 @@ list_node* concat(list_node* a, list_node* b);
 int list_size(list_node* list);
 bool list_equals(list_node* a, list_node* b);
 
+list_node* construct_string(char* str);
+
 #endif

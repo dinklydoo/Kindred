@@ -49,8 +49,7 @@ func atoi(r: [char], n: int): int
         ;
 
 func main(:): int
-    @ r:[char] = read()
-    r:[char] = "abc"
+    r:[char] = read()
     n:int = atoi(r, 0)
     m:int = get_val(nil)
     print(factorial(n))

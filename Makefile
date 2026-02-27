@@ -117,48 +117,48 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named main
+# Target rules for targets named kdc
 
 # Build rule for target.
-main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main
-.PHONY : main
+kdc: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 kdc
+.PHONY : kdc
 
 # fast build rule for target.
-main/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
-.PHONY : main/fast
+kdc/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/build
+.PHONY : kdc/fast
 
-main.o: main.cpp.o
-.PHONY : main.o
+kdc.o: kdc.cpp.o
+.PHONY : kdc.o
 
 # target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.o
-.PHONY : main.cpp.o
+kdc.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/kdc.cpp.o
+.PHONY : kdc.cpp.o
 
-main.i: main.cpp.i
-.PHONY : main.i
+kdc.i: kdc.cpp.i
+.PHONY : kdc.i
 
 # target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.i
-.PHONY : main.cpp.i
+kdc.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/kdc.cpp.i
+.PHONY : kdc.cpp.i
 
-main.s: main.cpp.s
-.PHONY : main.s
+kdc.s: kdc.cpp.s
+.PHONY : kdc.s
 
 # target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
-.PHONY : main.cpp.s
+kdc.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/kdc.cpp.s
+.PHONY : kdc.cpp.s
 
 src/cfg_builder.o: src/cfg_builder.cpp.o
 .PHONY : src/cfg_builder.o
 
 # target to build an object file
 src/cfg_builder.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/cfg_builder.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/cfg_builder.cpp.o
 .PHONY : src/cfg_builder.cpp.o
 
 src/cfg_builder.i: src/cfg_builder.cpp.i
@@ -166,7 +166,7 @@ src/cfg_builder.i: src/cfg_builder.cpp.i
 
 # target to preprocess a source file
 src/cfg_builder.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/cfg_builder.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/cfg_builder.cpp.i
 .PHONY : src/cfg_builder.cpp.i
 
 src/cfg_builder.s: src/cfg_builder.cpp.s
@@ -174,7 +174,7 @@ src/cfg_builder.s: src/cfg_builder.cpp.s
 
 # target to generate assembly for a file
 src/cfg_builder.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/cfg_builder.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/cfg_builder.cpp.s
 .PHONY : src/cfg_builder.cpp.s
 
 src/closure.o: src/closure.cpp.o
@@ -182,7 +182,7 @@ src/closure.o: src/closure.cpp.o
 
 # target to build an object file
 src/closure.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/closure.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/closure.cpp.o
 .PHONY : src/closure.cpp.o
 
 src/closure.i: src/closure.cpp.i
@@ -190,7 +190,7 @@ src/closure.i: src/closure.cpp.i
 
 # target to preprocess a source file
 src/closure.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/closure.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/closure.cpp.i
 .PHONY : src/closure.cpp.i
 
 src/closure.s: src/closure.cpp.s
@@ -198,7 +198,7 @@ src/closure.s: src/closure.cpp.s
 
 # target to generate assembly for a file
 src/closure.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/closure.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/closure.cpp.s
 .PHONY : src/closure.cpp.s
 
 src/flowcheck.o: src/flowcheck.cpp.o
@@ -206,7 +206,7 @@ src/flowcheck.o: src/flowcheck.cpp.o
 
 # target to build an object file
 src/flowcheck.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/flowcheck.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/flowcheck.cpp.o
 .PHONY : src/flowcheck.cpp.o
 
 src/flowcheck.i: src/flowcheck.cpp.i
@@ -214,7 +214,7 @@ src/flowcheck.i: src/flowcheck.cpp.i
 
 # target to preprocess a source file
 src/flowcheck.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/flowcheck.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/flowcheck.cpp.i
 .PHONY : src/flowcheck.cpp.i
 
 src/flowcheck.s: src/flowcheck.cpp.s
@@ -222,7 +222,7 @@ src/flowcheck.s: src/flowcheck.cpp.s
 
 # target to generate assembly for a file
 src/flowcheck.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/flowcheck.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/flowcheck.cpp.s
 .PHONY : src/flowcheck.cpp.s
 
 src/ir_lower.o: src/ir_lower.cpp.o
@@ -230,7 +230,7 @@ src/ir_lower.o: src/ir_lower.cpp.o
 
 # target to build an object file
 src/ir_lower.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/ir_lower.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/ir_lower.cpp.o
 .PHONY : src/ir_lower.cpp.o
 
 src/ir_lower.i: src/ir_lower.cpp.i
@@ -238,7 +238,7 @@ src/ir_lower.i: src/ir_lower.cpp.i
 
 # target to preprocess a source file
 src/ir_lower.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/ir_lower.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/ir_lower.cpp.i
 .PHONY : src/ir_lower.cpp.i
 
 src/ir_lower.s: src/ir_lower.cpp.s
@@ -246,7 +246,7 @@ src/ir_lower.s: src/ir_lower.cpp.s
 
 # target to generate assembly for a file
 src/ir_lower.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/ir_lower.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/ir_lower.cpp.s
 .PHONY : src/ir_lower.cpp.s
 
 src/liveness.o: src/liveness.cpp.o
@@ -254,7 +254,7 @@ src/liveness.o: src/liveness.cpp.o
 
 # target to build an object file
 src/liveness.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/liveness.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/liveness.cpp.o
 .PHONY : src/liveness.cpp.o
 
 src/liveness.i: src/liveness.cpp.i
@@ -262,7 +262,7 @@ src/liveness.i: src/liveness.cpp.i
 
 # target to preprocess a source file
 src/liveness.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/liveness.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/liveness.cpp.i
 .PHONY : src/liveness.cpp.i
 
 src/liveness.s: src/liveness.cpp.s
@@ -270,7 +270,7 @@ src/liveness.s: src/liveness.cpp.s
 
 # target to generate assembly for a file
 src/liveness.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/liveness.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/liveness.cpp.s
 .PHONY : src/liveness.cpp.s
 
 src/parse/lexer.o: src/parse/lexer.cpp.o
@@ -278,7 +278,7 @@ src/parse/lexer.o: src/parse/lexer.cpp.o
 
 # target to build an object file
 src/parse/lexer.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/lexer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/parse/lexer.cpp.o
 .PHONY : src/parse/lexer.cpp.o
 
 src/parse/lexer.i: src/parse/lexer.cpp.i
@@ -286,7 +286,7 @@ src/parse/lexer.i: src/parse/lexer.cpp.i
 
 # target to preprocess a source file
 src/parse/lexer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/lexer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/parse/lexer.cpp.i
 .PHONY : src/parse/lexer.cpp.i
 
 src/parse/lexer.s: src/parse/lexer.cpp.s
@@ -294,7 +294,7 @@ src/parse/lexer.s: src/parse/lexer.cpp.s
 
 # target to generate assembly for a file
 src/parse/lexer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/lexer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/parse/lexer.cpp.s
 .PHONY : src/parse/lexer.cpp.s
 
 src/parse/parser.o: src/parse/parser.cpp.o
@@ -302,7 +302,7 @@ src/parse/parser.o: src/parse/parser.cpp.o
 
 # target to build an object file
 src/parse/parser.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/parser.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/parse/parser.cpp.o
 .PHONY : src/parse/parser.cpp.o
 
 src/parse/parser.i: src/parse/parser.cpp.i
@@ -310,7 +310,7 @@ src/parse/parser.i: src/parse/parser.cpp.i
 
 # target to preprocess a source file
 src/parse/parser.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/parser.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/parse/parser.cpp.i
 .PHONY : src/parse/parser.cpp.i
 
 src/parse/parser.s: src/parse/parser.cpp.s
@@ -318,7 +318,7 @@ src/parse/parser.s: src/parse/parser.cpp.s
 
 # target to generate assembly for a file
 src/parse/parser.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/parse/parser.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/parse/parser.cpp.s
 .PHONY : src/parse/parser.cpp.s
 
 src/semerror.o: src/semerror.cpp.o
@@ -326,7 +326,7 @@ src/semerror.o: src/semerror.cpp.o
 
 # target to build an object file
 src/semerror.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/semerror.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/semerror.cpp.o
 .PHONY : src/semerror.cpp.o
 
 src/semerror.i: src/semerror.cpp.i
@@ -334,7 +334,7 @@ src/semerror.i: src/semerror.cpp.i
 
 # target to preprocess a source file
 src/semerror.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/semerror.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/semerror.cpp.i
 .PHONY : src/semerror.cpp.i
 
 src/semerror.s: src/semerror.cpp.s
@@ -342,7 +342,7 @@ src/semerror.s: src/semerror.cpp.s
 
 # target to generate assembly for a file
 src/semerror.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/semerror.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/semerror.cpp.s
 .PHONY : src/semerror.cpp.s
 
 src/typecheck.o: src/typecheck.cpp.o
@@ -350,7 +350,7 @@ src/typecheck.o: src/typecheck.cpp.o
 
 # target to build an object file
 src/typecheck.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/typecheck.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/typecheck.cpp.o
 .PHONY : src/typecheck.cpp.o
 
 src/typecheck.i: src/typecheck.cpp.i
@@ -358,7 +358,7 @@ src/typecheck.i: src/typecheck.cpp.i
 
 # target to preprocess a source file
 src/typecheck.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/typecheck.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/typecheck.cpp.i
 .PHONY : src/typecheck.cpp.i
 
 src/typecheck.s: src/typecheck.cpp.s
@@ -366,7 +366,7 @@ src/typecheck.s: src/typecheck.cpp.s
 
 # target to generate assembly for a file
 src/typecheck.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/typecheck.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/typecheck.cpp.s
 .PHONY : src/typecheck.cpp.s
 
 src/types.o: src/types.cpp.o
@@ -374,7 +374,7 @@ src/types.o: src/types.cpp.o
 
 # target to build an object file
 src/types.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/types.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/types.cpp.o
 .PHONY : src/types.cpp.o
 
 src/types.i: src/types.cpp.i
@@ -382,7 +382,7 @@ src/types.i: src/types.cpp.i
 
 # target to preprocess a source file
 src/types.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/types.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/types.cpp.i
 .PHONY : src/types.cpp.i
 
 src/types.s: src/types.cpp.s
@@ -390,7 +390,7 @@ src/types.s: src/types.cpp.s
 
 # target to generate assembly for a file
 src/types.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/types.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/types.cpp.s
 .PHONY : src/types.cpp.s
 
 src/visitor.o: src/visitor.cpp.o
@@ -398,7 +398,7 @@ src/visitor.o: src/visitor.cpp.o
 
 # target to build an object file
 src/visitor.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/visitor.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/visitor.cpp.o
 .PHONY : src/visitor.cpp.o
 
 src/visitor.i: src/visitor.cpp.i
@@ -406,7 +406,7 @@ src/visitor.i: src/visitor.cpp.i
 
 # target to preprocess a source file
 src/visitor.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/visitor.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/visitor.cpp.i
 .PHONY : src/visitor.cpp.i
 
 src/visitor.s: src/visitor.cpp.s
@@ -414,7 +414,7 @@ src/visitor.s: src/visitor.cpp.s
 
 # target to generate assembly for a file
 src/visitor.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/visitor.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/visitor.cpp.s
 .PHONY : src/visitor.cpp.s
 
 src/x86/x86_codegen.o: src/x86/x86_codegen.cpp.o
@@ -422,7 +422,7 @@ src/x86/x86_codegen.o: src/x86/x86_codegen.cpp.o
 
 # target to build an object file
 src/x86/x86_codegen.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_codegen.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_codegen.cpp.o
 .PHONY : src/x86/x86_codegen.cpp.o
 
 src/x86/x86_codegen.i: src/x86/x86_codegen.cpp.i
@@ -430,7 +430,7 @@ src/x86/x86_codegen.i: src/x86/x86_codegen.cpp.i
 
 # target to preprocess a source file
 src/x86/x86_codegen.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_codegen.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_codegen.cpp.i
 .PHONY : src/x86/x86_codegen.cpp.i
 
 src/x86/x86_codegen.s: src/x86/x86_codegen.cpp.s
@@ -438,7 +438,7 @@ src/x86/x86_codegen.s: src/x86/x86_codegen.cpp.s
 
 # target to generate assembly for a file
 src/x86/x86_codegen.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_codegen.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_codegen.cpp.s
 .PHONY : src/x86/x86_codegen.cpp.s
 
 src/x86/x86_lower.o: src/x86/x86_lower.cpp.o
@@ -446,7 +446,7 @@ src/x86/x86_lower.o: src/x86/x86_lower.cpp.o
 
 # target to build an object file
 src/x86/x86_lower.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_lower.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_lower.cpp.o
 .PHONY : src/x86/x86_lower.cpp.o
 
 src/x86/x86_lower.i: src/x86/x86_lower.cpp.i
@@ -454,7 +454,7 @@ src/x86/x86_lower.i: src/x86/x86_lower.cpp.i
 
 # target to preprocess a source file
 src/x86/x86_lower.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_lower.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_lower.cpp.i
 .PHONY : src/x86/x86_lower.cpp.i
 
 src/x86/x86_lower.s: src/x86/x86_lower.cpp.s
@@ -462,7 +462,7 @@ src/x86/x86_lower.s: src/x86/x86_lower.cpp.s
 
 # target to generate assembly for a file
 src/x86/x86_lower.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_lower.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_lower.cpp.s
 .PHONY : src/x86/x86_lower.cpp.s
 
 src/x86/x86_regalloc.o: src/x86/x86_regalloc.cpp.o
@@ -470,7 +470,7 @@ src/x86/x86_regalloc.o: src/x86/x86_regalloc.cpp.o
 
 # target to build an object file
 src/x86/x86_regalloc.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_regalloc.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_regalloc.cpp.o
 .PHONY : src/x86/x86_regalloc.cpp.o
 
 src/x86/x86_regalloc.i: src/x86/x86_regalloc.cpp.i
@@ -478,7 +478,7 @@ src/x86/x86_regalloc.i: src/x86/x86_regalloc.cpp.i
 
 # target to preprocess a source file
 src/x86/x86_regalloc.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_regalloc.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_regalloc.cpp.i
 .PHONY : src/x86/x86_regalloc.cpp.i
 
 src/x86/x86_regalloc.s: src/x86/x86_regalloc.cpp.s
@@ -486,7 +486,7 @@ src/x86/x86_regalloc.s: src/x86/x86_regalloc.cpp.s
 
 # target to generate assembly for a file
 src/x86/x86_regalloc.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/x86/x86_regalloc.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kdc.dir/build.make CMakeFiles/kdc.dir/src/x86/x86_regalloc.cpp.s
 .PHONY : src/x86/x86_regalloc.cpp.s
 
 # Help Target
@@ -497,10 +497,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... main"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
+	@echo "... kdc"
+	@echo "... kdc.o"
+	@echo "... kdc.i"
+	@echo "... kdc.s"
 	@echo "... src/cfg_builder.o"
 	@echo "... src/cfg_builder.i"
 	@echo "... src/cfg_builder.s"

@@ -3,6 +3,7 @@
 #include "mem.h"
 #include "structs.h"
 #include <cstdio>
+#include <cstring>
 
 list_node* alloc_list(int type, size_t size, int length){
     if (length == 0) return NULL;
@@ -117,4 +118,19 @@ bool list_equals(list_node* a, list_node* b){
         ap = ap->next; bp = bp->next;
     }
     return true;
+}
+
+list_node* construct_string(char* str){
+    int len = strlen(str);
+    if (len == 0) return NULL;
+    list_node* head = cons(LITERAL, sizeof(char), NULL);
+    *((char*)head->elem) = str[0];
+    list_node* curr = head;
+    for (int i = 1; i < len; i++){
+        list_node* temp = cons(LITERAL, sizeof(char), NULL);
+        *((char*)head->elem) = str[i];
+        curr->next= temp;
+        curr = temp;
+    }
+    return head;
 }

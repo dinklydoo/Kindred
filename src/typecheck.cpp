@@ -50,6 +50,31 @@ bool is_arith(Type::Kind kind){
     }
 }
 
+bool is_string(type_ptr t){
+    if (t->kind != Type::Kind::List) return false;
+
+    std::shared_ptr<ListType> ltype = std::static_pointer_cast<ListType>(t);
+    type_ptr etype = ltype->elem;
+    return (etype->kind == Type::Kind::Char);
+}
+
+bool is_readable(type_ptr t){
+    if (is_string(t)) return true;
+    Type::Kind kind = t->kind;
+    switch (kind) {
+        case Type::Kind::Char :
+        case Type::Kind::Int :
+        case Type::Kind::Long :
+        case Type::Kind::Float :
+        case Type::Kind::Double : return true;
+        default: return false;
+    }
+}
+
+bool is_printable(type_ptr t){
+    return is_readable(t) || t->kind==Type::Kind::Enum;
+}
+
 bool is_error(type_ptr type){
     return (type->kind == Type::Kind::ERROR);
 }
@@ -114,7 +139,11 @@ void TypeChecker::visit( StructDecl& node){
 void TypeChecker::visit( VarDecl& node){
     if (!push_var_safe(node.name, node.type, node.location)) return;
     
+    // for read nodes
+    typeprop.prop_type(node.type);
     node.r_val->accept(*this);
+    typeprop.unprop_type();
+
     if (is_error(node.r_val->resolved_type)) return;
 
     if (!type_s.cast_fixed(node.type, node.r_val->resolved_type)){
@@ -528,13 +557,27 @@ void TypeChecker::visit(NominalNode& node){
 }
 
 void TypeChecker::visit( ReadNode& node){
-    node.resolved_type = type_s.generic_type();
+    node.resolved_type = typeprop.top_type();
+    if (!is_readable(node.resolved_type)){
+        errors.type_error(
+            "read operation can only read writeable value types instead got "
+            +type_to_string(node.resolved_type),
+            node);
+        return;
+    }
     return;
 }
 
 void TypeChecker::visit( PrintNode& node){
-    type_ptr print_type;
     node.msg->accept(*this);
+    type_ptr print_type = node.msg->resolved_type;
+    if (!is_printable(print_type)){
+        errors.type_error(
+            "print operation can only print printable value types instead got "
+            +type_to_string(print_type),
+            *node.msg);
+        return;
+    }
     if (is_error(node.msg->resolved_type)) return;
     print_type = node.msg->resolved_type;
 }
