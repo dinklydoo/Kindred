@@ -28,6 +28,7 @@ struct LiteralNode : ExpNode{
     public: 
         virtual ~LiteralNode() = default;
         bool is_literal() override { return true; }
+        bool is_constructor() override { return true; }
         virtual litval get_val() = 0;
 };
     
@@ -154,7 +155,11 @@ struct BinaryNode : ExpNode{
     BinaryOp op;
     expr_ptr l_exp;
     expr_ptr r_exp;
-    public: virtual void accept(Visitor& v) override;
+
+    bool constructive = false;
+    public: 
+    virtual void accept(Visitor& v) override;
+    bool is_constructor() override { return constructive; }
 };
 
 struct CallNode : ExpNode {

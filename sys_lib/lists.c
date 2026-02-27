@@ -26,7 +26,6 @@ list_node* cons(int type, size_t size, list_node* tail){
     n->type = type;
     n->next = tail;
 
-    if (tail) tail->ref++;
     return n;
 }
 
@@ -75,10 +74,8 @@ list_node* remove_at(list_node* list, int index){
 }
 
 list_node* list_concat(list_node* a, list_node* b){
-    if (!a) {
-        if (b) b->ref++;
-        return b;
-    }
+    if (!a) return b;
+    
     list_node* temp = a;
     while (temp->next) temp = temp->next;
     return cons(temp->type,temp->elem_size,b);

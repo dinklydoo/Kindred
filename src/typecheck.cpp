@@ -338,6 +338,8 @@ void TypeChecker::visit(BinaryNode& node){
                 errors.type_error("List concatenation requires at least one list operand", node);
                 return;
             }
+            node.constructive = node.l_exp->is_constructor();
+
             if (node.l_exp->resolved_type == node.r_exp->resolved_type){
                 node.resolved_type = node.l_exp->resolved_type;
                 return;

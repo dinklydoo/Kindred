@@ -63,11 +63,14 @@ movq %rdx, -16(%rbp)
 movq $0, %rdi
 movq -8(%rbp), %rsi
 call concat_list
-movq %rax, %rdi
+movq %rax, %rbx
+movq -8(%rbp), %rdi
+call incr_list
+movq %rbx, %rdi
 movq -16(%rbp), %rsi
 call concat_list
 movq %rax, %rbx
-movq %rbx, %rdi
+movq -16(%rbp), %rdi
 call incr_list
 movq -8(%rbp), %rdi
 call decr_list

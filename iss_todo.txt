@@ -19,11 +19,15 @@ TODO (in future probs not but if im so bored that i come back to this shit proje
     - Leaf function redzone optimization (pretty important for a functional language)
 
 KNOWN ISSUES:
-    - memory leaks WILL occur if you construct values like a fucking idiot
-example being:
-    var: [int] = [1,2,3] ++ [4,5,6]
+    - memory leaks occur on list concat/append/prepend
+    
 
-    acc: int = some_struct{ foo1, foo2, 45 }.field3
+
+    - memory leaks WILL occur (ref count will be increased on construction) if you construct values like a fucking idiot
+example being:
+    var: int = [1,2,3][0] ([1,2,3] refcount = 1 on construction -> never decr ref)
+
+    acc: int = some_struct{ foo1, foo2, 45 }.field3 (struct refcount = 1 on construction -> never decr ref)
 
 !!! IF YOU WRITE CODE LIKE THIS U DONT DESERVE GARBAGE COLLECTION !!!!
 

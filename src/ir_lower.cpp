@@ -772,12 +772,14 @@ void IR_Lowerer::visit( BinaryNode& node ){
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _lexp});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _rexp});
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "concat_list"});
+            if (!node.r_exp->is_constructor())
+                increase_ref(_rexp, node.r_exp->resolved_type);
             break;
         }
         case (BinaryOp::PREPEND): {
             auto ltype = std::static_pointer_cast<ListType>(node.resolved_type);
-            if (!node.l_exp->is_constructor())
-                increase_ref(_lexp, ltype->elem);
+            if (!node.r_exp->is_constructor())
+                increase_ref(_rexp, ltype->elem);
             generate_node(_lexp, ltype->elem, node.l_exp->resolved_type);
             _lexp = cons.pop_operand();
 
@@ -789,10 +791,10 @@ void IR_Lowerer::visit( BinaryNode& node ){
         }
         case (BinaryOp::APPEND): {
             auto ltype = std::static_pointer_cast<ListType>(node.resolved_type);
-            if (!node.r_exp->is_constructor())
-                increase_ref(_rexp, ltype->elem);
             generate_node(_rexp, ltype->elem, node.r_exp->resolved_type);
             _rexp = cons.pop_operand();
+            if (!node.r_exp->is_constructor())
+                increase_ref(_rexp, ltype->elem);
 
             cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
             cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _lexp});
