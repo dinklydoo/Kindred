@@ -257,7 +257,7 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
             break;
         }
         case (Operation::LOAD) : {
-            std::string src = '('+reg_string(ins.src1, type)+')';
+            std::string src = '('+reg_string(ins.src1, DataType::PTR)+')';
             if (ins.src1.type == Operand::RBP || ins.src1.type == Operand::RSP){
                 if (ins.src1.value) src = std::to_string(ins.src1.value)+src;
             }
@@ -265,7 +265,7 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
             break;
         }
         case (Operation::STORE) : {
-            std::string dst = '('+reg_string(ins.dst, type)+')';
+            std::string dst = '('+reg_string(ins.dst, DataType::PTR)+')';
             if (ins.dst.type == Operand::RBP || ins.dst.type == Operand::RSP){
                 if (ins.dst.value) dst = std::to_string(ins.dst.value)+dst;
             }
@@ -319,7 +319,7 @@ void X86_CodeGen::write_fp_ins(Instruction& ins){
             break;
         }
         case (Operation::LOAD) : {
-            std::string src = '('+reg_string(ins.src1, type)+')';
+            std::string src = '('+reg_string(ins.src1, DataType::PTR)+')';
             if (ins.src1.type == Operand::RBP || ins.src1.type == Operand::RSP){
                 if (ins.src1.value) src = std::to_string(ins.src1.value)+src;
             }
@@ -328,7 +328,7 @@ void X86_CodeGen::write_fp_ins(Instruction& ins){
             break;
         }
         case (Operation::STORE) : {
-            std::string dst = '('+reg_string(ins.dst, type)+')';
+            std::string dst = '('+reg_string(ins.dst, DataType::PTR)+')';
             if (ins.dst.type == Operand::RBP || ins.dst.type == Operand::RSP){
                 if (ins.dst.value) dst = std::to_string(ins.dst.value)+dst;
             }

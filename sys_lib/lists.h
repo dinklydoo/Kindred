@@ -13,6 +13,8 @@ typedef struct list_node {
 
 list_node* alloc_list(int type, size_t size, int length);
 list_node* cons(int type, size_t size, list_node* tail);
+list_node* access_node(list_node* list, int index);
+void* index_list(list_node* list, int index);
 void decr_list(list_node* n);
 void incr_list(list_node* n);
 list_node* remove_at(list_node* list, int index);

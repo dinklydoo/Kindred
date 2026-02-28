@@ -181,19 +181,20 @@ void IR_Lowerer::list_pattern_vars( LiteralNode& node){
     Operand _target = cons.pop_operand();
     ListPatternLit& lnode = static_cast<ListPatternLit&>(node);
 
+    Operand _t;
     auto ltype = std::static_pointer_cast<ListType>(node.resolved_type);
-    Operand _t = cons.get_register();
     type_ptr etype = ltype->elem;
-
+    
     for (int i = 0; i < lnode.patterns.size()-1; i++){
         identifier.push_ident(lnode.patterns[i], etype);
         identifier.get_var(lnode.patterns[i]);
         Operand _var = cons.pop_operand();
+        _t = cons.get_register();
 
         cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _target});
         cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(i)});
-        cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "access_index"});
+        cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "index_list"});
         cons.push_instruction({Operation::LOAD, type_to_dtype(etype->kind), _var, _t});
         increase_ref(_var, etype);
     }
@@ -201,12 +202,13 @@ void IR_Lowerer::list_pattern_vars( LiteralNode& node){
     identifier.push_ident(lnode.patterns[n-1], ltype);
     identifier.get_var(lnode.patterns[n-1]);
     Operand _var = cons.pop_operand();
+    _t = cons.get_register();
 
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _target});
     cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(n-1)});
-    cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "access_index"});
-    cons.push_instruction({Operation::MOV, type_to_dtype(etype->kind), _var, _t});
+    cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _t, VOID, VOID, "access_node"});
+    cons.push_instruction({Operation::MOV, type_to_dtype(ltype->kind), _var, _t});
     increase_ref(_var, ltype); // increase node ref count
 }
 

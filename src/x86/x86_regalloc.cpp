@@ -224,14 +224,20 @@ void RegAllocator::rewrite_spill(FunctionIR& func, Operand op, int spill){
 
             if (ins.dst == op){
                 Operand _t = func.get_register();
+                // dst register is a pointer
+                if (ins.op == Operation::STORE)
+                    b->ins.insert(it, {Operation::LOAD, ins.type, _t, _ebp});
                 ins.dst = _t;
                 it++;
-                b->ins.insert(it, {Operation::STORE, ins.type, _ebp, _t});
+
+                if (ins.op != Operation::STORE)
+                    b->ins.insert(it, {Operation::STORE, ins.type, _ebp, _t});
                 continue;
             }
 
             if (ins.src1 == op || ins.src2 == op){
                 Operand _t = func.get_register();
+        
                 if (ins.src1 == op) ins.src1 = _t;
                 if (ins.src2 == op) ins.src2 = _t;
                 b->ins.insert(it, {Operation::LOAD, ins.type, _t, _ebp});

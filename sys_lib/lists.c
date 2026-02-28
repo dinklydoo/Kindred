@@ -29,6 +29,22 @@ list_node* cons(int type, size_t size, list_node* tail){
     return n;
 }
 
+list_node* access_node(list_node* list, int index){
+    list_node* temp = list;
+    while (index > 0){
+        if (!temp){
+            fprintf(stderr, "Runtime Error: list index %d on an empty list\n", index);
+            exit(1);
+        }
+        temp = temp->next;
+    }
+    if (!temp){
+        fprintf(stderr, "Runtime Error: list index %d out of bounds\n", index);
+        exit(1);
+    }
+    return temp;
+}
+
 void* index_list(list_node* list, int index){
     list_node* temp = list;
     while (index > 0){
