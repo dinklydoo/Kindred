@@ -1,6 +1,8 @@
 #pragma once
 
+#include <unordered_set>
 #include <vector>
+#include <cassert>
 #include "tac_ir.hpp"
 
 struct IGNode {
@@ -17,30 +19,75 @@ struct IGNode {
     bool allocated() { return assigned > -1 || spill; }
 };
 
+struct NodeUnion {
+    std::unordered_map<Operand, int, Operand::OperandHash> virtual_map;
+    std::vector<int> dsu;
+
+    int get_node(Operand op){
+        return virtual_map[op] = find_node(virtual_map[op]);
+    }
+
+    void union_nodes(Operand op1, Operand op2){
+        int n1 = virtual_map[op1];
+        int n2 = virtual_map[op2];
+
+        int u1 = find_node(n1);
+        int u2 = find_node(n2);
+        if (u1 == u2) return;
+
+        // we union op2 into op1 -> wrapper function will handle precolor ordering
+        dsu[u2] = u1;
+    }
+
+    bool add_node(Operand op){
+        if (virtual_map.contains(op)) return false;
+
+        virtual_map.emplace(op, dsu.size());
+        dsu.push_back(dsu.size());
+        return true;
+    }
+
+    int find_node(int node){
+        if (dsu[node] == node) return node;
+        return dsu[node] = find_node(dsu[node]);
+    }
+};
+
 using movelist = std::vector<std::pair<Operand, Operand>>;
 struct InterferenceGraph {
-    std::unordered_map<Operand, int, Operand::OperandHash> virtual_map;
+    NodeUnion node_union;
     std::vector<IGNode> nodes;
 
     int spill_offset = 0;
 
     IGNode& add_node(Operand op, RType rtype){
-        if (!virtual_map.contains(op)){
+        if (node_union.add_node(op))
             nodes.push_back({op, rtype});
-            virtual_map[op] = nodes.size() - 1;
-        }
-        return nodes[virtual_map[op]];
+        return nodes[node_union.get_node(op)];
     }
-    IGNode& get_node(Operand op){ return nodes[virtual_map[op]]; }
+
+    IGNode& get_node(Operand op){ return nodes[node_union.get_node(op)]; }
 
     bool coalesced(Operand o1, Operand o2){
         if (!o1.is_register() || !o2.is_register()) return false;
-        return virtual_map[o1] == virtual_map[o2];
+        return node_union.get_node(o1) == node_union.get_node(o2);
+    }
+
+    bool interferes(IGNode& node, int idx){
+        int idx_p = node_union.find_node(idx);
+
+        std::unordered_set<int> interf;
+        for (int inf : node.interfere){
+            int p = node_union.find_node(inf);
+            interf.insert(p);
+        }
+        node.interfere = interf;
+        return node.interfere.contains(idx_p);
     }
 
     void add_edge(Operand o1, Operand o2){
-        int i = virtual_map[o1];
-        int j = virtual_map[o2];
+        int i = node_union.get_node(o1);
+        int j = node_union.get_node(o2);
         if (i == j) return;
         nodes[i].interfere.insert(j);
         nodes[j].interfere.insert(i);
@@ -60,14 +107,14 @@ struct InterferenceGraph {
     #define GEORGE 0
     #define FAIL -1
     int merge_type(Operand o1, Operand o2){
-        int i = virtual_map[o1];
-        int j = virtual_map[o2];
+        int i = node_union.get_node(o1);
+        int j = node_union.get_node(o2);
 
         IGNode& n1 = nodes[i];
         IGNode& n2 = nodes[j];
 
         // interference
-        if (n1.interfere.contains(j) || n2.interfere.contains(i) || n1.spill || n2.spill) return FAIL;
+        if (interferes(n1, j) || interferes(n2, i) || n1.spill || n2.spill) return FAIL;
 
         if (n1.allocated() || n2.allocated()) return GEORGE;
         return BRIGG;
@@ -78,32 +125,24 @@ struct InterferenceGraph {
         If a node is precoloured prefer merge into the precoloured one
     */
     void merge_nodes(Operand o1, Operand o2){
-        int i = virtual_map[o1];
-        int j = virtual_map[o2];
+        int i = node_union.get_node(o1);
+        int j = node_union.get_node(o2);
         if (i == j) return;
 
         IGNode& n1 = nodes[i];
         IGNode& n2 = nodes[j];
 
-        if (n2.allocated()){ // pre-coloured
-            std::set_union(
-                n1.interfere.begin(), n1.interfere.end(),
-                n2.interfere.begin(), n2.interfere.end(),
-                std::inserter(n2.interfere, n2.interfere.begin())
-            );
-            nodes[i].valid = false;
-            virtual_map[o1] = j;
-            nodes[j].uses += nodes[i].uses;
+        if (n2.allocated() || (!n1.allocated() && j < i)){
+            n1.interfere = smart_union(o1, o2);
+            n1.valid = false;
+            node_union.union_nodes(o2, o1);
+            n2.uses += n1.uses;    
         }
         else {
-            std::set_union(
-                n1.interfere.begin(), n1.interfere.end(),
-                n2.interfere.begin(), n2.interfere.end(),
-                std::inserter(n1.interfere, n1.interfere.begin())
-            );
-            nodes[j].valid = false;
-            virtual_map[o2] = i;
-            nodes[i].uses += nodes[j].uses;
+            n1.interfere = smart_union(o1, o2);
+            n2.valid = false;
+            node_union.union_nodes(o1, o2);
+            n1.uses += n2.uses;
         }
     }
 
@@ -112,8 +151,8 @@ struct InterferenceGraph {
         do we actually check validity of nodes (if they have been merged into)
     */
     std::unordered_set<int> smart_union(Operand o1, Operand o2){
-        int i = virtual_map[o1];
-        int j = virtual_map[o2];
+        int i = node_union.get_node(o1);
+        int j = node_union.get_node(o2);
 
         IGNode& n1 = nodes[i];
         IGNode& n2 = nodes[j];
@@ -124,31 +163,31 @@ struct InterferenceGraph {
             n2.interfere.begin(), n2.interfere.end(),
             std::inserter(set_union, set_union.begin())
         );
-        for (auto it = set_union.begin(); it != set_union.end();){
-            IGNode& temp = nodes[*it];
-            if (!temp.valid || temp.spill) it = set_union.erase(it);
-            else it++;
+        std::unordered_set<int> new_union;
+        for (int inf : set_union){
+            int p = node_union.find_node(inf);
+            IGNode& temp = nodes[p];
+            if (!temp.spill) new_union.insert(p);
         }
-        return set_union;
+        return new_union;
     }
 
     int get_interf_size(IGNode& node){
-        int res = 0;
-        for (auto it = node.interfere.begin(); it != node.interfere.end(); ){
-            IGNode& temp = nodes[*it];
-            if (!temp.valid || temp.spill){ 
-                it = node.interfere.erase(it);
-                continue;
-            }
-            if (!temp.simplified) res++;
-            it++;
+        std::unordered_set<int> interf;
+        for (int inf : node.interfere){
+            int p = node_union.find_node(inf);
+            IGNode& temp = nodes[p];
+            if (!temp.spill) interf.insert(p);
         }
-        return res;
+        node.interfere = interf;
+        return interf.size();
     }
 
     bool briggs_safe(std::unordered_set<int>& merge, int rcount){
         int hard_nodes = 0;
         for (int i : merge){
+            assert(i == node_union.find_node(i));
+
             IGNode& node = nodes[i];
             if (get_interf_size(node) >= rcount) hard_nodes++;
         }
@@ -163,16 +202,20 @@ struct InterferenceGraph {
         int uci = id2;
         if (nodes[id2].allocated()) std::swap(pci, uci);
 
+        assert(pci == node_union.find_node(pci));
+        assert(uci == node_union.find_node(uci));
+
         IGNode& pc = nodes[pci];
         IGNode& uc = nodes[uci];
 
         int colour = pc.assigned;
         for (int n : uc.interfere){
+            int p = node_union.find_node(n);
             IGNode& temp = nodes[n];
-            if (temp.simplified || !temp.valid || temp.spill) continue;
+            if (temp.simplified || temp.spill) continue;
 
             if (temp.assigned == colour) return false;
-            if (get_interf_size(temp) >= rcount && !temp.interfere.contains(pci)) return false;
+            if (get_interf_size(temp) >= rcount && !interferes(temp, pci)) return false;
         }
         return true;
     }

@@ -5,7 +5,7 @@
 #include "tac_ir.hpp"
 #include "x86_lower.hpp"
 
-void RegAllocator::allocate_prog(std::vector<FunctionIR>& prog){
+void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog){
     for (FunctionIR& func : prog){
         allocate_func(func);
     }
@@ -14,7 +14,7 @@ void RegAllocator::allocate_prog(std::vector<FunctionIR>& prog){
     write_ir(prog);
 }
 
-void RegAllocator::allocate_func(FunctionIR& func){
+void X86_RegAlloc::allocate_func(FunctionIR& func){
     X86_Lowerer& xl = X86_Lowerer::instance();
     ig = xl.lower_x86(func);
     
@@ -34,7 +34,7 @@ void RegAllocator::allocate_func(FunctionIR& func){
     //cleanup_reg(func); // cleanup any redundant instructions
 }
 
-void RegAllocator::add_nodes(FunctionIR& func){
+void X86_RegAlloc::add_nodes(FunctionIR& func){
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (Instruction& ins : b->ins){
@@ -50,7 +50,7 @@ void RegAllocator::add_nodes(FunctionIR& func){
     }
 }
 
-void RegAllocator::precolor_func(FunctionIR& func){
+void X86_RegAlloc::precolor_func(FunctionIR& func){
     precolor_locals(func);
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
@@ -116,7 +116,7 @@ void RegAllocator::precolor_func(FunctionIR& func){
     }
 }
 
-void RegAllocator::precolor_locals(FunctionIR& func){
+void X86_RegAlloc::precolor_locals(FunctionIR& func){
     int fp_param = -1;
     int gp_param = -1;
     int spilt_params = 0;
@@ -142,7 +142,7 @@ void RegAllocator::precolor_locals(FunctionIR& func){
     }
 }
 
-void RegAllocator::precolor_params(std::list<Instruction>::iterator it){
+void X86_RegAlloc::precolor_params(std::list<Instruction>::iterator it){
     int fp_param = -1;
     int gp_param = -1;
     while (true) {
@@ -215,7 +215,7 @@ IGNode& InterferenceGraph::spill_node(){
     Agressive spill handling, on single spill rewrite IR to include spill
     with short-lived temps
 */
-void RegAllocator::rewrite_spill(FunctionIR& func, Operand op, int spill){
+void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
     Operand _ebp = Operand::rbp(spill);
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
@@ -251,7 +251,7 @@ void RegAllocator::rewrite_spill(FunctionIR& func, Operand op, int spill){
     Rewrite for coalesced nodes, delete mov instances
     replace nodes with coalesce
 */
-void RegAllocator::rewrite_coalesce(FunctionIR& func){
+void X86_RegAlloc::rewrite_coalesce(FunctionIR& func){
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (auto it = b->ins.begin(); it != b->ins.end();){
@@ -272,7 +272,7 @@ void RegAllocator::rewrite_coalesce(FunctionIR& func){
     write_func(func);
 }
 
-bool RegAllocator::is_colourable(FunctionIR& func){
+bool X86_RegAlloc::is_colourable(FunctionIR& func){
     simplify_stack.clear();
     while (ig.is_uncoloured()){
         IGNode* node_ptr = ig.get_low_deg();
@@ -285,44 +285,44 @@ bool RegAllocator::is_colourable(FunctionIR& func){
             return false;
         }
         simplify_stack.push_back(node_ptr);
-        IGNode& node = *node_ptr;
-        node.simplified = true;
+        node_ptr->simplified = true;
     }
     return true;
 }
 
-void RegAllocator::allocate_reg(FunctionIR& func){
+void X86_RegAlloc::allocate_reg(FunctionIR& func){
     write_func(func);
     while (!simplify_stack.empty()){
         IGNode& node = *simplify_stack.back();
         simplify_stack.pop_back();
 
-        if (node.spill || node.allocated()) continue;
+        if (node.allocated()) continue;
 
-        int rcount = (node.type == GP)? GPR_count : FPR_count;
-        std::vector<bool> free_reg(rcount, true);
+        std::set<int> free_reg;
+        if (node.type == GP) free_reg = {
+            RAX, RBX, RCX, RDX, RDI, RSI, R8, 
+            R9, R10, R11, R12, R13, R14, R15
+        };
+        else free_reg = {
+            XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, 
+            XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15
+        };
         for (int inf : node.interfere){
-            IGNode& temp = ig.nodes[inf];
-            if (!temp.valid || temp.spill) continue;
-
-            if (temp.allocated()) free_reg[temp.assigned] = false;
+            IGNode& temp = ig.nodes[ig.node_union.find_node(inf)];
+            if (temp.allocated()) free_reg.erase(temp.assigned);
         }
-        for (int i = 0; i < rcount; i++){
-            if (free_reg[i]){ 
-                node.assigned = i;
-                break;
-            }
-        }
+        int assign = *free_reg.begin();
+        node.assigned = assign;
     }
 }
 
-Operand RegAllocator::get_phys_reg(Operand v){
+Operand X86_RegAlloc::get_phys_reg(Operand v){
     IGNode& node = ig.get_node(v);
     if (node.type == GP) return Operand::gpr(node.assigned);
     else return Operand::fpr(node.assigned);
 }
 
-void RegAllocator::convert_reg(FunctionIR& func){
+void X86_RegAlloc::convert_reg(FunctionIR& func){
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (Instruction& ins : b->ins){
@@ -333,7 +333,7 @@ void RegAllocator::convert_reg(FunctionIR& func){
     }
 }
 
-void RegAllocator::cleanup_reg(FunctionIR& func){
+void X86_RegAlloc::cleanup_reg(FunctionIR& func){
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (auto it = b->ins.begin(); it != b->ins.end(); ){

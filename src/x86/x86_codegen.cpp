@@ -25,7 +25,7 @@ void X86_CodeGen::write_header(){
     sfile<<".section .text\n";
 }
 
-bool is_caller_saved(Operand reg){
+bool is_callee_saved(Operand reg){
     return (reg.type == Operand::GPR && CALLEE_SAVE.contains(static_cast<GPReg>(reg.value)));
 }
 
@@ -34,19 +34,35 @@ void X86_CodeGen::generate_prologue(FunctionIR& func){
     for (auto it = func.blocks.begin(); it != func.blocks.end(); it++){
         Block* b = it->get();
         for (Instruction& ins : b->ins){
-            if (is_caller_saved(ins.dst)) preserved.insert(static_cast<GPReg>(ins.dst.value));
-            if (is_caller_saved(ins.src1)) preserved.insert(static_cast<GPReg>(ins.src1.value));
-            if (is_caller_saved(ins.src2)) preserved.insert(static_cast<GPReg>(ins.src2.value));
+            if (is_callee_saved(ins.dst)) preserved.insert(static_cast<GPReg>(ins.dst.value));
+            if (is_callee_saved(ins.src1)) preserved.insert(static_cast<GPReg>(ins.src1.value));
+            if (is_callee_saved(ins.src2)) preserved.insert(static_cast<GPReg>(ins.src2.value));
         }
     }
     sfile<<"pushq %rbp\n";
     sfile<<"movq %rsp, %rbp\n";
-    int rbp_offset = -func.spill_offset;
-    if (!(rbp_offset % 16)) rbp_offset += 8; // realign to 16B, push rbp offsets 8
+
+    // move all callee saved that are overwritten to stack slots
+    int rbp_offset = -func.spill_offset + 8*preserved.size();
+    if (rbp_offset % 16) rbp_offset += 8;
     sfile<<"subq "+reg_string(Operand::imm(rbp_offset), DataType::PTR)+", %rsp"<<'\n';
+    for (auto p : preserved){
+        func.spill_offset -= 8;
+        std::string rbp = std::to_string(func.spill_offset)+'('+reg_string(Operand::rbp(func.spill_offset), DataType::PTR)+')';
+        sfile<<"movq "+reg_string(Operand::gpr(p), DataType::PTR)+", "+rbp<<'\n';
+    }
 }
 
-void X86_CodeGen::generate_epilogue(){
+void X86_CodeGen::generate_epilogue(FunctionIR& func){
+    int rbp_offset = func.spill_offset;
+    for (auto it = preserved.rbegin(); it != preserved.rend(); it++){
+        GPReg p = *it;
+
+        std::string rbp = std::to_string(rbp_offset)+'('+reg_string(Operand::rbp(rbp_offset), DataType::PTR)+')';
+        sfile<<"movq "+rbp+", "+reg_string(Operand::gpr(p), DataType::PTR)<<'\n';
+
+        rbp_offset+=8;
+    }
     sfile<<"movq %rbp, %rsp\n";
     sfile<<"popq %rbp\n";
 }
@@ -56,7 +72,14 @@ void X86_CodeGen::write_func(FunctionIR& func){
     generate_prologue(func);
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
-        for (Instruction& ins : b->ins) write_ins(ins);
+        for (Instruction& ins : b->ins){ 
+            if (ins.op == Operation::RET){
+                generate_epilogue(func);
+                sfile<<"ret\n";
+                continue;
+            }
+            else write_ins(ins);
+        }
     }
     sfile << '\n';
 }
@@ -83,11 +106,7 @@ void X86_CodeGen::write_ins(Instruction& ins){
     switch (ins.op){
         // jump label is type independent
         case (Operation::LABEL) : 
-            sfile<<ins.target<<'\n'; return;
-        case (Operation::RET) : 
-            generate_epilogue();
-            sfile<<"ret\n";
-            return;
+            sfile<<ins.target<<":\n"; return;
         case (Operation::CALL) : {
             sfile<<"call *"<<reg_string(ins.src1, DataType::PTR)<<'\n';
             return;

@@ -20,14 +20,12 @@ TODO (in future probs not but if im so bored that i come back to this shit proje
 
 KNOWN ISSUES:
     - memory leaks WILL occur (ref count will be increased on construction) if you construct values like a fucking idiot
-example being:
-    var: int = [1,2,3][0] ([1,2,3] refcount = 1 on construction -> never decr ref)
+        example being:
+            var: int = [1,2,3][0] ([1,2,3] refcount = 1 on construction -> never decr ref)
+            acc: int = some_struct{ foo1, foo2, 45 }.field3 (struct refcount = 1 on construction -> never decr ref)
+        !!! IF YOU WRITE CODE LIKE THIS U DONT DESERVE GARBAGE COLLECTION !!!!
+        - NOTE THIS IS FIXABLE BY IMPLEMENTING CONSTANT FOLDING I JUST DONT HAVE TIME RN
 
-    acc: int = some_struct{ foo1, foo2, 45 }.field3 (struct refcount = 1 on construction -> never decr ref)
-
-!!! IF YOU WRITE CODE LIKE THIS U DONT DESERVE GARBAGE COLLECTION !!!!
-
-- NOTE THIS IS FIXABLE BY IMPLEMENTING CONSTANT FOLDING I JUST DONT HAVE TIME RN
-- a bandaid fix would be to manually set constructor flags in BinaryNode and AccessNode and maybe some others by checking
-  subnode constructor rules i.e if lexp is constructor and rexp is constructor and binop is concat/append/prepend etc..
-  but this is not ideal nor any less work than doing constant folding
+    - Constant compare operations will NOT compile on x86, this is also just bad coding if u need to compare two constants
+        - comparing constants not supported with x86: cmp src, dst format
+        - THIS IS ALSO FIXABLE BY IMPLEMENTING CONSTANT FOLDING HASDHAODHWAKLDJHD

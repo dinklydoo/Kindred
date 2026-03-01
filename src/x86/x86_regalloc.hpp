@@ -12,7 +12,7 @@ enum GPReg {
     R8, R9,
     R10, R11, 
     R12, R13, 
-    R14, R15,
+    R14, R15
 };
 enum FPReg {
     XMM0, XMM1, 
@@ -97,9 +97,9 @@ struct RegInfo {
     void add_mapping(Operand op, FPReg reg){ vr_phys_fpr[op] = reg;}
 };
 
-struct RegAllocator {
-    static RegAllocator& instance(){
-        static RegAllocator ra;
+struct X86_RegAlloc {
+    static X86_RegAlloc& instance(){
+        static X86_RegAlloc ra;
         return ra;
     }
 

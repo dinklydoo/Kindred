@@ -4,6 +4,7 @@
 #include "src/ir_lower.hpp"
 #include "src/closure.hpp"
 #include "src/cfg_builder.hpp"
+
 #include "x86/x86_regalloc.hpp"
 #include "x86/x86_codegen.hpp"
 
@@ -21,8 +22,12 @@ extern module_ptr module_node;
 std::vector<FunctionIR> IR_program;
 std::vector<InterferenceGraph> interf_graph;
 
-int main() {
-  yydebug = 1;
+int main(int argc, char** argv) {
+  
+  std::string compile_target = argv[1]; // X86, ARM, MIPS
+  std::string compile_name = argv[2]; // name of compiled .s
+  std::string compile_path = "./"+compile_name+".s";
+
   yy::parser parser;
   parser.parse();
 
@@ -50,13 +55,18 @@ int main() {
   cfg.build_cfg(IR_program);
   std::cout << "[Kindred Compiler] : CFG Constructed\n";
   
-  RegAllocator& ra = RegAllocator::instance();
-  ra.allocate_prog(IR_program);
-  std::cout << "[Kindred Compiler] : Registers Allocated\n";
-
-  X86_CodeGen& cgen = X86_CodeGen::instance("./compiled.s");
-  cgen.generate_asm(IR_program);
-  std::cout << "[Kindred Compiler] : Code Generated\n";
+  if (compile_target == "X86"){
+    X86_RegAlloc& ra = X86_RegAlloc::instance();
+    ra.allocate_prog(IR_program);
+    std::cout << "[Kindred Compiler] : Registers Allocated\n";
+  
+    X86_CodeGen& cgen = X86_CodeGen::instance(compile_path);
+    cgen.generate_asm(IR_program);
+    std::cout << "[Kindred Compiler] : Code Generated\n";
+  }
+  else if (compile_target == "ARM"){
+    std::cout << "arm compiler under construction\n";
+  }
 
   return 0;
 }

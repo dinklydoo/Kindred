@@ -91,7 +91,7 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
     int spilt_params = 0;
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
-        for (auto it = b->ins.begin(); it != b->ins.end(); it++){ // initialise all nodes
+        for (auto it = b->ins.begin(); it != b->ins.end(); ){ // initialise all nodes
             Instruction& ins = *it;
             switch (ins.op){
                 case (Operation::FLR) :
@@ -133,6 +133,7 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                     ins.src2 = _rcx;
                     ins.src1 = ins.dst;
 
+                    it++;
                     break;
                 }
                 case (Operation::PARAM) : {
@@ -154,6 +155,7 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                             ins.src1 = _param;
                         }
                     }
+                    it++;
                     break;
                 }
                 case (Operation::CALL) : {
@@ -172,7 +174,7 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                 }
                 case (Operation::CALL_EXT) : { // (syslib calls have no spilt params)
                     gp_param = -1, fp_param = -1; // reset param count
-                    if (ins.type == DataType::EMPTY) break;
+                    if (ins.type == DataType::EMPTY){ it++; break; }
 
                     if (is_fp(ins.type)){ // mov xmm0->dst
                         Operand _xmm0 = func.get_register();
@@ -205,9 +207,21 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                         b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
                         ins.src1 = _rax;
                     }
+                    it++;
                     break;
                 }
-                default : continue;
+                case (Operation::CLT) :
+                case (Operation::CGT) :
+                case (Operation::CLEQ) :
+                case (Operation::CGEQ) :
+                case (Operation::CEQ) :
+                case (Operation::CNEQ) : {
+                    if (ins.src2.type == Operand::IMM) 
+                        std::swap(ins.src1, ins.src2);
+                    it++;
+                    break;
+                }
+                default : {it++; break;}
             }
         }
     }

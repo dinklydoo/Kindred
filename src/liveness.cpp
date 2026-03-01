@@ -146,8 +146,8 @@ void LivenessAnalyzer::move_coalesce(InterferenceGraph& ig, movelist& mlist){
         fix = true;
         for (auto it = mlist.begin(); it != mlist.end(); ){
             auto& m = *it;
-            int idx1 = ig.virtual_map[m.first];
-            int idx2 = ig.virtual_map[m.second];
+            int idx1 = ig.node_union.get_node(m.first);
+            int idx2 = ig.node_union.get_node(m.second);
 
             if (idx1 == idx2){ // already merged
                 it = mlist.erase(it);

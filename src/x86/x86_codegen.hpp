@@ -3,7 +3,7 @@
 #include "tac_ir.hpp"
 #include "x86/x86_regalloc.hpp"
 
-using regset = std::unordered_set<GPReg>;
+using regset = std::set<GPReg>;
 static regset CALLEE_SAVE = {RBX, R12, R13, R14, R15};
 
 struct X86_CodeGen {
@@ -31,7 +31,7 @@ private:
     std::string reg_string(Operand op, DataType type);
 
     void generate_prologue(FunctionIR& func);
-    void generate_epilogue();
+    void generate_epilogue(FunctionIR& func);
 
     void write_header();
     void write_func(FunctionIR& func);
