@@ -1,21 +1,22 @@
 #include "x86_regalloc.hpp"
+#include "compile_flags.hpp"
 #include "interf_graph.hpp"
 #include "liveness.hpp"
 #include "cfg_builder.hpp"
 #include "tac_ir.hpp"
 #include "x86_lower.hpp"
 
-void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog){
+void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJECT_FORMAT){
     for (FunctionIR& func : prog){
-        allocate_func(func);
+        allocate_func(func, OBJECT_FORMAT);
     }
-    X86_Lowerer& xl = X86_Lowerer::instance();
+    X86_Lowerer& xl = X86_Lowerer::instance(OBJECT_FORMAT);
     xl.write_statics();
     write_ir(prog);
 }
 
-void X86_RegAlloc::allocate_func(FunctionIR& func){
-    X86_Lowerer& xl = X86_Lowerer::instance();
+void X86_RegAlloc::allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT){
+    X86_Lowerer& xl = X86_Lowerer::instance(OBJECT_FORMAT);
     ig = xl.lower_x86(func);
     
     LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);

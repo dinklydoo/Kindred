@@ -9,7 +9,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/kdc",
-            "args": ["X86", "compiled"],
+            "args": ["X86", "MACHO", "compiled"],
             "cwd": "${workspaceRoot}",
             "stdio": [
                     "${workspaceFolder}/samples/example.kd",
@@ -22,7 +22,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/kdc",
-            "args": [],
+            "args": ["X86", "MACHO", "compiled"],
             "cwd": "${workspaceRoot}",
             "stdio": [
                     "${workspaceFolder}/samples/register.kd",

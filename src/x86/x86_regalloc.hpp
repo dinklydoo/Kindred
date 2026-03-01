@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compile_flags.hpp"
 #include "tac_ir.hpp"
 #include "interf_graph.hpp"
 #include <string>
@@ -102,20 +103,19 @@ struct X86_RegAlloc {
         static X86_RegAlloc ra;
         return ra;
     }
+    void allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJECT_FORMAT);
 
+private:
     std::vector<IGNode*> simplify_stack;
     std::vector<bool> active; // active nodes
     int node_neighbours(); // get neighbour count during simplify phase
-
     InterferenceGraph ig;
-
     RegInfo reg_info;
 
-    void move_params(FunctionIR& func); // move params to virtuals (prevents rdx/rcx conflict)
+    void allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT);
 
+    void move_params(FunctionIR& func); // move params to virtuals (prevents rdx/rcx conflict)
     void add_nodes(FunctionIR& func);
-    void allocate_prog(std::vector<FunctionIR>& prog);
-    void allocate_func(FunctionIR& func);
 
     void precolor_locals(FunctionIR& func);
     void precolor_func(FunctionIR& func);

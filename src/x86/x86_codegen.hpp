@@ -1,14 +1,16 @@
 #pragma once
 #include <string>
 #include "tac_ir.hpp"
+#include "compile_flags.hpp"
 #include "x86/x86_regalloc.hpp"
 
 using regset = std::set<GPReg>;
 static regset CALLEE_SAVE = {RBX, R12, R13, R14, R15};
 
 struct X86_CodeGen {
-    static X86_CodeGen& instance(std::string path){
+    static X86_CodeGen& instance(std::string path, ObjectFormat OBJECT_FORMAT){
         static X86_CodeGen cg = X86_CodeGen(path);
+        cg.OBJECT_FORMAT = OBJECT_FORMAT;
         return cg;
     }
     std::string path;
@@ -27,6 +29,7 @@ private:
         sfile.close();
         sfile.open(path, std::ios::app);
     }
+    ObjectFormat OBJECT_FORMAT;
 
     std::string reg_string(Operand op, DataType type);
 

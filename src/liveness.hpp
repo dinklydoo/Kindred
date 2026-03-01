@@ -2,11 +2,8 @@
 
 #include "tac_ir.hpp"
 #include "interf_graph.hpp"
+#include "compile_flags.hpp"
 #include "x86/x86_regalloc.hpp"
-
-enum CompileTarget {
-    X86, ARM, MIPS // idk why mips is here
-};
 
 struct RegCount {
     int gp_rcount; // number of gp registers

@@ -309,18 +309,28 @@ void X86_Lowerer::write_statics(){
     sdata << '\n';
 
     // writeable data -- static closures
-    sdata << ".section .data\n" << ".align 8\n";
+    std::string data_name;
+    if (OBJECT_FORMAT == ELF) data_name = ".data";
+    if (OBJECT_FORMAT == MACHO) data_name = "__DATA,__data";
+
+    sdata<<".section "<<data_name<<'\n'<<".align 8\n";
 
     for (std::string fname : statics.closures){
         sdata<<fname<<".local:\n";
         sdata<<"\t.quad 0\n"; // NULL env
-        sdata<<"\t.quad "<<fname<<'\n'; // Function name
+        sdata<<"\t.quad ";
+        if (OBJECT_FORMAT == MACHO) sdata<<'_';
+        sdata<<fname<<'\n'; // Function name
         sdata<<"\t.long 1\n"; // ref count
     }
     sdata << '\n';
 
     // readable data -- float immediates
-    sdata << ".section .rodata\n" << ".align 8\n";
+    std::string rodata_name;
+    if (OBJECT_FORMAT == ELF) rodata_name = ".rodata";
+    if (OBJECT_FORMAT == MACHO) rodata_name = "__TEXT,__const";
+
+    sdata << ".section "<<rodata_name<<'\n'<< ".align 8\n";
     for (auto& p : statics.float_imms){
         sdata<<p.second<<":\n";
         if (p.first.kind == DataType::F32){ // float

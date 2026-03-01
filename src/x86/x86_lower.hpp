@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compile_flags.hpp"
 #include "interf_graph.hpp"
 #include "tac_ir.hpp"
 #include "x86_regalloc.hpp"
@@ -17,19 +18,22 @@ struct StaticData {
 };
 
 struct X86_Lowerer {
-    static X86_Lowerer& instance(){
+    static X86_Lowerer& instance(ObjectFormat OBJECT_FORMAT){
         static X86_Lowerer xl;
+        xl.OBJECT_FORMAT = OBJECT_FORMAT;
         return xl;
     }
+    ObjectFormat OBJECT_FORMAT;
+    InterferenceGraph lower_x86(FunctionIR& func);
+    void write_statics();
 
+private:
     StaticData statics;
     InterferenceGraph ig;
 
-    InterferenceGraph lower_x86(FunctionIR& func);
     void shift_params(FunctionIR& func);
     void lower_ins(FunctionIR& func);
     void assign_statics(FunctionIR& func);
     void fix_jumps(FunctionIR& func);
 
-    void write_statics();
 };

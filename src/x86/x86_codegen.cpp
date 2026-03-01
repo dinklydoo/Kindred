@@ -22,7 +22,10 @@ void X86_CodeGen::write_header(){
     sfile << hfile.rdbuf() << '\n';
     hfile.close();
 
-    sfile<<".section .text\n";
+    std::string text_name;
+    if (OBJECT_FORMAT == ELF) text_name = ".text";
+    if (OBJECT_FORMAT == ELF) text_name = "__TEXT,__text";
+    sfile<<".section "<<text_name<<'\n';
 }
 
 bool is_callee_saved(Operand reg){
@@ -68,6 +71,7 @@ void X86_CodeGen::generate_epilogue(FunctionIR& func){
 }
 
 void X86_CodeGen::write_func(FunctionIR& func){
+    if (OBJECT_FORMAT == MACHO) sfile << '_';
     sfile<<func.name<<':'<<'\n';
     generate_prologue(func);
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){

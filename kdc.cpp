@@ -5,6 +5,8 @@
 #include "src/closure.hpp"
 #include "src/cfg_builder.hpp"
 
+#include "src/compile_flags.hpp"
+
 #include "x86/x86_regalloc.hpp"
 #include "x86/x86_codegen.hpp"
 
@@ -25,8 +27,13 @@ std::vector<InterferenceGraph> interf_graph;
 int main(int argc, char** argv) {
   
   std::string compile_target = argv[1]; // X86, ARM, MIPS
-  std::string compile_name = argv[2]; // name of compiled .s
+  std::string object_format = argv[2]; // compile format
+  std::string compile_name = argv[3]; // name of compiled .s
   std::string compile_path = "./"+compile_name+".s";
+
+  ObjectFormat OBJECT_FORMAT;
+  if (object_format == "ELF") OBJECT_FORMAT = ELF;
+  if (object_format == "MACHO") OBJECT_FORMAT = MACHO;
 
   yy::parser parser;
   parser.parse();
@@ -45,11 +52,10 @@ int main(int argc, char** argv) {
   cg.generate(*module_node);
   std::cout << "[Kindred Compiler] : Closures Generated \n";
 
-  ir::IR_Lowerer& ir = ir::IR_Lowerer::instance();
+  ir::IR_Lowerer& ir = ir::IR_Lowerer::instance(OBJECT_FORMAT);  
   std::cout << "[Kindred Compiler] : IR Generated\n";
   IR_program = ir.lower(*module_node);
-  //print_ir(IR_program);
-  write_ir(IR_program);
+  //write_ir(IR_program);
 
   cfg::CFGBuilder& cfg = cfg::CFGBuilder::instance();
   cfg.build_cfg(IR_program);
@@ -57,10 +63,10 @@ int main(int argc, char** argv) {
   
   if (compile_target == "X86"){
     X86_RegAlloc& ra = X86_RegAlloc::instance();
-    ra.allocate_prog(IR_program);
+    ra.allocate_prog(IR_program, OBJECT_FORMAT);
     std::cout << "[Kindred Compiler] : Registers Allocated\n";
   
-    X86_CodeGen& cgen = X86_CodeGen::instance(compile_path);
+    X86_CodeGen& cgen = X86_CodeGen::instance(compile_path, OBJECT_FORMAT);
     cgen.generate_asm(IR_program);
     std::cout << "[Kindred Compiler] : Code Generated\n";
   }

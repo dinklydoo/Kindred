@@ -1,6 +1,7 @@
 #include "types.hpp"
 #include "visitor.hpp"
 #include "tac_ir.hpp"
+#include "compile_flags.hpp"
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -112,8 +113,6 @@ struct IDVarScope {
     std::vector<std::set<std::string>> locals;
     unsigned int ident_count = 0;
 
-    type_ptr get_var(std::string label); // pushes register with variable on stack
-
     void enter_function(Operand _env) { 
         locals.emplace_back();
         env_stack.push(_env);
@@ -141,8 +140,6 @@ struct IDVarScope {
         }
         stack.pop_back();
     };
-
-    void decr_locals();
 };
 
 struct ConsFunctionIR {
@@ -216,12 +213,14 @@ struct FunctionIRBuilder {
 };
 
 struct IR_Lowerer : Visitor {
-    static IR_Lowerer& instance() {
+    static IR_Lowerer& instance(ObjectFormat OBJECT_FORMAT) {
         static IR_Lowerer ir;
+        ir.OBJECT_FORMAT = OBJECT_FORMAT;
         return ir;
     }
 
     TypeSystem type_s = TypeSystem::instance();
+    ObjectFormat OBJECT_FORMAT;
 
     IDVarScope identifier;
     FunctionIRBuilder builder;
@@ -232,6 +231,9 @@ struct IR_Lowerer : Visitor {
     std::vector<FunctionIR> IRprogram;
 
     std::vector<FunctionIR> lower( ModuleNode& node );
+private:
+    std::string format_fname(std::string);
+
     void generate_layout_file();
     void generate_layout(std::vector<type_ptr>, int id, int kind);
     void close_layout_file();
@@ -240,10 +242,15 @@ struct IR_Lowerer : Visitor {
 
     void cast_operand( Operand target, type_ptr fix, type_ptr cast );
     void op_equals( Operand ptr1, Operand ptr2, type_ptr type);
+
     void list_equals( Operand ptr1, Operand ptr2, type_ptr type);
     void struct_equals( Operand ptr1, Operand ptr2, type_ptr type);
+
     void increase_ref( Operand _ptr, type_ptr type);
     void decrease_ref( Operand _ptr, type_ptr type);
+    void decrease_locals();
+
+    type_ptr get_var(std::string var);
     void generate_node( Operand elem, type_ptr ltype, type_ptr type);
 
     void short_and( BinaryNode& );
