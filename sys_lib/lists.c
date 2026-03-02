@@ -2,8 +2,8 @@
 
 #include "mem.h"
 #include "structs.h"
-#include <cstdio>
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 
 list_node* alloc_list(int type, size_t size, int length){
     if (length == 0) return NULL;
@@ -21,9 +21,9 @@ list_node* alloc_list(int type, size_t size, int length){
 list_node* cons(int type, size_t size, list_node* tail){
     list_node* n = (list_node*)malloc(sizeof(list_node));
     n->ref = 1;
+    n->type = type;
     n->elem_size = size;
     n->elem = malloc(size);
-    n->type = type;
     n->next = tail;
 
     return n;
@@ -33,13 +33,13 @@ list_node* access_node(list_node* list, int index){
     list_node* temp = list;
     while (index > 0){
         if (!temp){
-            fprintf(stderr, "Runtime Error: list index %d on an empty list\n", index);
+            fprintf(stderr, "Runtime Error: list index %d out of bounds\n", index);
             exit(1);
         }
         temp = temp->next;
     }
     if (!temp){
-        fprintf(stderr, "Runtime Error: list index %d out of bounds\n", index);
+        fprintf(stderr, "Runtime Error: list index %d on an empty list\n", index);
         exit(1);
     }
     return temp;
@@ -49,13 +49,13 @@ void* index_list(list_node* list, int index){
     list_node* temp = list;
     while (index > 0){
         if (!temp){
-            fprintf(stderr, "Runtime Error: list index %d on an empty list\n", index);
+            fprintf(stderr, "Runtime Error: list index %d out of bounds\n", index);
             exit(1);
         }
         temp = temp->next;
     }
     if (!temp){
-        fprintf(stderr, "Runtime Error: list index %d out of bounds\n", index);
+        fprintf(stderr, "Runtime Error: list index %d on an empty list\n", index);
         exit(1);
     }
     return temp->elem;
@@ -89,7 +89,7 @@ list_node* remove_at(list_node* list, int index){
     );
 }
 
-list_node* list_concat(list_node* a, list_node* b){
+list_node* concat_list(list_node* a, list_node* b){
     if (!a) return b;
     
     list_node* temp = a;

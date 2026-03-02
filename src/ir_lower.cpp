@@ -460,18 +460,22 @@ void IR_Lowerer::generate_layout_file(){
 
 void IR_Lowerer::close_layout_file(){
     std::ofstream struct_file("./sys_lib/struct_gen.c", std::ios::app);
-    struct_file << "static struct_layout STRUCT_DATA[] {\n";
+    struct_file 
+    << "struct_layout STRUCT_DATA["<<structInfo.struct_count()<<"];\n\n"
+    << "void init_struct_layout(){\n";
     for (int i = 0; i < structInfo.struct_count(); i++){
-        struct_file << "\tSTRUCT_"<<i<<"_LAYOUT,\n";
+        struct_file << "\tSTRUCT_DATA["<<i<<"] = STRUCT_"<<i<<"_LAYOUT;\n";
     }
-    struct_file << "};\n";
+    struct_file<<'}';
 
     std::ofstream env_file("./sys_lib/closure_gen.c", std::ios::app);
-    env_file << "static env_layout ENV_DATA[] {\n";
+    env_file
+    << "env_layout ENV_DATA["<<envInfo.env_count()<<"];\n\n"
+    << "void init_env_layout(){\n";
     for (int i = 0; i < envInfo.env_count(); i++){
-        env_file << "\tENV_"<<i<<"_LAYOUT,\n";
+        env_file << "\tENV_DATA["<<i<<"] = ENV_"<<i<<"_LAYOUT;\n";
     }
-    env_file << "};\n";
+    env_file<<'}';
 }
 
 /* ============================================================================================================================================================
@@ -536,6 +540,12 @@ void IR_Lowerer::visit( FuncDecl& node){
     }
 
     cons.push_instruction({Operation::BEGIN_FUNC, DataType::EMPTY});
+
+    if (node.name == "main"){
+        cons.push_instruction({Operation::CALL_EXT, DataType::EMPTY, VOID, VOID, VOID, format_fname("init_env_layout")});
+        cons.push_instruction({Operation::CALL_EXT, DataType::EMPTY, VOID, VOID, VOID, format_fname("init_struct_layout")});
+    }
+
     node.body->accept(*this);
 
     identifier.pop_scope();
@@ -1077,6 +1087,7 @@ void IR_Lowerer::visit( PrintNode& node ){
     Type::Kind kind = node.msg->resolved_type->kind;
     node.msg->accept(*this);
     Operand _t = cons.pop_operand();
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, type_to_dtype(kind), VOID, _t});
     std::string print_func = "";
     switch (kind){

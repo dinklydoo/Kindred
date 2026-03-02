@@ -23,7 +23,7 @@ typedef struct env_layout {
 typedef struct closure {
     env_node* env;
     void* function_ptr;
-    int ref = 1;
+    int ref;
 } closure;
 
 closure* allocate_closure(void* function_ptr, env_node* env);

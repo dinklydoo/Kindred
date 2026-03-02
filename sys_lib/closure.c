@@ -2,12 +2,13 @@
 #include "mem.h"
 #include "memory.h"
 
-extern const env_layout CLOSURE_DATA[];
+extern const env_layout ENV_DATA[];
 
 closure* allocate_closure(void* function_ptr, env_node* env){
     closure* c = (closure*)malloc(sizeof(closure));
     c->function_ptr = function_ptr;
     c->env = env;
+    c->ref = 1;
     return c;
 }
 
@@ -28,7 +29,7 @@ env_node* get_env(closure* c){
 }
 
 env_node* allocate_env(int env_id){
-    env_layout layout = CLOSURE_DATA[env_id];
+    env_layout layout = ENV_DATA[env_id];
     env_node* node = (env_node*)malloc(sizeof(env_node));
     node->env_id = env_id;
     node->payload = malloc(layout.payload_size);
@@ -39,7 +40,7 @@ env_node* allocate_env(int env_id){
 
 void free_env(env_node* ptr){
     // if struct is destroyed, decr all references to pointed objects
-    env_layout layout = CLOSURE_DATA[ptr->env_id];
+    env_layout layout = ENV_DATA[ptr->env_id];
 
     for (int i = 0; i < layout.var_count; i++){
         env_data ed = layout.vars[i];
@@ -52,7 +53,7 @@ void free_env(env_node* ptr){
 };
 
 void* access_var(env_node* ptr, int var_id){
-    env_layout layout = CLOSURE_DATA[ptr->env_id];
+    env_layout layout = ENV_DATA[ptr->env_id];
     env_data fd = layout.vars[var_id];
 
     char* payload_ptr = (char*)ptr->payload;

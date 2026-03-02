@@ -1,6 +1,6 @@
-#include <cstdint>
+#include <stdlib.h>
+#include <stdbool.h>
 #include "lists.h"
-// #include "structs.h"
 
 bool read_bool();
 char read_char();
@@ -10,7 +10,7 @@ float read_float();
 double read_double();
 
 void print_bool(bool);
-void print_char(bool);
+void print_char(char);
 void print_int(int32_t);
 void print_long(int64_t);
 void print_float(float);

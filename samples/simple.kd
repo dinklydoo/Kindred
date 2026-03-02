@@ -1,0 +1,4 @@
+func main(:): int
+    a: [char] = "Hello World"
+    print(a)
+    return 0

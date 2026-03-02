@@ -27,7 +27,7 @@ def pre_compilation():
     # compile kdc.cpp
     subprocess.run(['cmake', '-S', '.', '-B', build_dir], check=True)
     subprocess.run(['cmake', '--build', '.'], check=True)
-    
+
 def get_gcclang_args(obj_format, compile_target):
     if obj_format == "MACHO":
         if compile_target == "X86":
@@ -37,6 +37,23 @@ def get_gcclang_args(obj_format, compile_target):
     else:
         return ['gcc'] # for now just use native gcc if on linux
 
+def compile_library(lib_files, args):
+    lib_path = ".sys_lib"
+    if not os.path.exists(lib_path):
+        os.makedirs(lib_path)
+
+    for lib_file in lib_files:
+        source_path = 'sys_lib/'+lib_file+'.c'
+        object_path = lib_path+'/'+lib_file+'.o'
+        subprocess.run(args + ['-c', '-o', object_path, source_path])
+
+def library_obj(lib_files, dlib_files):
+    out = []
+    for file in lib_files:
+        out.append('.sys_lib/'+file+'.o')
+    for file in dlib_files:
+        out.append('.sys_lib/'+file+'.o')
+    return out
 
 def compile():
     parser = argparse.ArgumentParser(description='KDC Kindred Language Compiler')
@@ -54,7 +71,10 @@ def compile():
     pre_compilation() # compile kdc if it does not exist
 
     input_path = Path(args.path);
+
     output_name = args.output
+    object_name = output_name+'.o'
+    asm_name = output_name+'.s'
 
     if not input_path.exists():
         print(f"Error: file {input_path} not found")
@@ -68,12 +88,22 @@ def compile():
     
     gcclang_args = get_gcclang_args(obj_format, compile_target)
     
-    dyn_sys_lib_files = ['closure_gen.c', 'struct_gen.c'] # dynamic lib files, change on each compilation
-    sys_lib_files = ['closure.c', 'iofunc.c', 'lists.c', 'math.c', 'mem.c', 'structs.c'] # static lib files
-
+    dyn_sys_lib_files = ['closure_gen', 'struct_gen'] # dynamic lib files, change on each compilation
+    sys_lib_files = ['closure', 'iofunc', 'lists', 'math', 'mem', 'structs'] # static lib files
     
+    compile_library(sys_lib_files, gcclang_args)
+
+    with open(input_path, "rb") as f:
+        kdc_run = subprocess.run(
+            ['./kdc', compile_target, obj_format, output_name],
+            stdin=f,
+            capture_output=True,
+        )
+
+    compile_library(dyn_sys_lib_files, gcclang_args)
+    subprocess.run(gcclang_args + ['-c', '-o', object_name, asm_name]) # generate otuput file
+    subprocess.run(gcclang_args + ['-o', output_name, object_name] + library_obj(sys_lib_files, dyn_sys_lib_files))
 
 
 if __name__ == "__main__":
     compile();
-    

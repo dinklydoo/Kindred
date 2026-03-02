@@ -2,6 +2,7 @@
 #define STRUCTS_H
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <memory.h>
 
 typedef struct struct_node {

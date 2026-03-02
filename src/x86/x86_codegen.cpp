@@ -16,7 +16,9 @@ void X86_CodeGen::generate_asm(std::vector<FunctionIR>& prog){
 
 void X86_CodeGen::write_header(){
     sfile<<".att_syntax prefix\n";
-    sfile<<".global main\n";
+    std::string main_name = "main";
+    if (OBJECT_FORMAT == MACHO) main_name = '_'+main_name;
+    sfile<<".global "<<main_name<<"\n";
     sfile<<'\n';
     std::ifstream hfile("./.aux/static_data");
     sfile << hfile.rdbuf() << '\n';
@@ -24,7 +26,7 @@ void X86_CodeGen::write_header(){
 
     std::string text_name;
     if (OBJECT_FORMAT == ELF) text_name = ".text";
-    if (OBJECT_FORMAT == ELF) text_name = "__TEXT,__text";
+    if (OBJECT_FORMAT == MACHO) text_name = "__TEXT,__text";
     sfile<<".section "<<text_name<<'\n';
 }
 

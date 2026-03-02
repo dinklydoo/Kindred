@@ -181,7 +181,7 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                 }
                 case (Operation::CALL_EXT) : { // (syslib calls have no spilt params)
                     gp_param = -1, fp_param = -1; // reset param count
-                    if (ins.type == DataType::EMPTY){ it++; break; }
+                    if (ins.type == DataType::EMPTY) break;
 
                     if (is_fp(ins.type)){ // mov xmm0->dst
                         Operand _xmm0 = func.get_register();
@@ -327,6 +327,7 @@ void X86_Lowerer::write_statics(){
         if (OBJECT_FORMAT == MACHO) sdata<<'_';
         sdata<<fname<<'\n'; // Function name
         sdata<<"\t.long 1\n"; // ref count
+        sdata<<"\t.long 0\n"; // padding
     }
     sdata << '\n';
 
