@@ -16,7 +16,8 @@ struct IGNode {
     bool valid = true; // coalesced
     bool simplified = false; // during register allocation
 
-    bool allocated() { return assigned > -1 || spill; }
+    bool allocated() { return assigned > -1 || spill < 0; }
+    bool invalid() { return !valid || simplified; }
 };
 
 struct NodeUnion {
@@ -146,10 +147,7 @@ struct InterferenceGraph {
         }
     }
 
-    /*
-        Lazy propogation of merges, only when we touch the union set
-        do we actually check validity of nodes (if they have been merged into)
-    */
+
     std::unordered_set<int> smart_union(Operand o1, Operand o2){
         int i = node_union.get_node(o1);
         int j = node_union.get_node(o2);
@@ -177,17 +175,15 @@ struct InterferenceGraph {
         for (int inf : node.interfere){
             int p = node_union.find_node(inf);
             IGNode& temp = nodes[p];
-            if (!temp.spill) interf.insert(p);
+            if (temp.spill || temp.invalid()) continue; 
+            interf.insert(p);
         }
-        node.interfere = interf;
         return interf.size();
     }
 
     bool briggs_safe(std::unordered_set<int>& merge, int rcount){
         int hard_nodes = 0;
         for (int i : merge){
-            assert(i == node_union.find_node(i));
-
             IGNode& node = nodes[i];
             if (get_interf_size(node) >= rcount) hard_nodes++;
         }
@@ -202,17 +198,14 @@ struct InterferenceGraph {
         int uci = id2;
         if (nodes[id2].allocated()) std::swap(pci, uci);
 
-        assert(pci == node_union.find_node(pci));
-        assert(uci == node_union.find_node(uci));
-
         IGNode& pc = nodes[pci];
         IGNode& uc = nodes[uci];
 
         int colour = pc.assigned;
         for (int n : uc.interfere){
             int p = node_union.find_node(n);
-            IGNode& temp = nodes[n];
-            if (temp.simplified || temp.spill) continue;
+            IGNode& temp = nodes[p];
+            if (temp.invalid() || temp.spill) continue;
 
             if (temp.assigned == colour) return false;
             if (get_interf_size(temp) >= rcount && !interferes(temp, pci)) return false;

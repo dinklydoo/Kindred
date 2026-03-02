@@ -161,8 +161,8 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
             op += suf;
 
             // mov first operand to dst eg.) movq $5, %rax
-            if (ins.dst != ins.src1) 
-                sfile<<"mov"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
+            // if (ins.dst != ins.src1) 
+            //     sfile<<"mov"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
             sfile << op+" "+reg_string(ins.src2, type)+", "+reg_string(ins.dst, type)<<'\n';
             break;
         }
@@ -207,6 +207,7 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
             if (type == DataType::I32) sfile<<"movslq "+reg_string(ins.src1, type)+", "+reg_string(ins.src1, DataType::I64)<<'\n';
 
             sfile<<"cvtsi2sdq "+reg_string(ins.src1, DataType::I64)+", "+reg_string(ins.dst, DataType::F64)<<'\n';
+            break;
         }
         case (Operation::CST_F32) : {
             if (type == DataType::I8) sfile<<"movsbl "+reg_string(ins.src1, type)+", "+reg_string(ins.src1, DataType::I32)<<'\n';
@@ -320,8 +321,6 @@ void X86_CodeGen::write_fp_ins(Instruction& ins){
                 case (Operation::SUB) : op = "sub"; break;
                 default : break;
             }
-            if (ins.src1 != ins.dst)
-                sfile<<"mov"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, type)<<'\n';
             sfile<<op+suf+" "+reg_string(ins.src2, type)+", "+reg_string(ins.dst, type)<<'\n';
             break;
         }
@@ -347,7 +346,6 @@ void X86_CodeGen::write_fp_ins(Instruction& ins){
                 if (ins.src1.value) src = std::to_string(ins.src1.value)+src;
             }
             sfile<<"mov"+suf+" "+src+", "+reg_string(ins.dst, type)<<'\n';
-            break;
             break;
         }
         case (Operation::STORE) : {

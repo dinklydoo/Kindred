@@ -128,5 +128,4 @@ private:
 
     Operand get_phys_reg(Operand);
     void convert_reg(FunctionIR&);
-    void cleanup_reg(FunctionIR&);
 };

@@ -18,6 +18,19 @@
                 ]
         },
         {
+            "name": "Atoi",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/kdc",
+            "args": ["X86", "MACHO", "compiled"],
+            "cwd": "${workspaceRoot}",
+            "stdio": [
+                    "${workspaceFolder}/samples/atoi.kd",
+                    null,
+                    null
+                ]
+        },
+        {
             "name": "Regalloc",
             "type": "lldb",
             "request": "launch",

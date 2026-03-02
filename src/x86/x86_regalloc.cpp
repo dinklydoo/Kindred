@@ -18,7 +18,6 @@ void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJ
 void X86_RegAlloc::allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT){
     X86_Lowerer& xl = X86_Lowerer::instance(OBJECT_FORMAT);
     ig = xl.lower_x86(func);
-    
     LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
     while (true) {
         ig = InterferenceGraph();
@@ -172,7 +171,7 @@ void X86_RegAlloc::precolor_params(std::list<Instruction>::iterator it){
 */
 bool InterferenceGraph::is_uncoloured(){
     for (IGNode& node : nodes){
-        if (!node.valid || node.simplified) continue;
+        if (node.invalid()) continue;
 
         if (!node.allocated()) return true;
     }
@@ -181,7 +180,7 @@ bool InterferenceGraph::is_uncoloured(){
 
 IGNode* InterferenceGraph::get_low_deg(){
     for (IGNode& node : nodes){
-        if (!node.valid || node.simplified) continue;
+        if (node.invalid()) continue;
         if (node.allocated()) continue;
 
         int K = (node.type == GP)? GPR_count : FPR_count;
@@ -194,14 +193,18 @@ IGNode& InterferenceGraph::spill_node(){
     IGNode* candidate = nullptr;
     double candidate_cost = 0;
     for (IGNode& node : nodes){
-        if (!node.valid || node.simplified || node.allocated()) continue;
+        if (node.invalid() || node.allocated()) continue;
 
         int deg = get_interf_size(node);
         if (deg == 0) deg = 1;
 
         double cost = (double)node.uses / deg;
+        if (cost == 0) continue; // redundant nodes
 
-        if (!candidate) candidate = &node;
+        if (!candidate){
+            candidate = &node;
+            candidate_cost = cost;
+        }
         else if (cost < candidate_cost){
             candidate = &node;
             candidate_cost = cost;
@@ -233,7 +236,6 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
 
                 if (ins.op != Operation::STORE)
                     b->ins.insert(it, {Operation::STORE, ins.type, _ebp, _t});
-                continue;
             }
 
             if (ins.src1 == op || ins.src2 == op){
@@ -241,7 +243,11 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
         
                 if (ins.src1 == op) ins.src1 = _t;
                 if (ins.src2 == op) ins.src2 = _t;
-                b->ins.insert(it, {Operation::LOAD, ins.type, _t, _ebp});
+
+                if (ins.op == Operation::CALL || ins.op == Operation::LOAD)
+                    b->ins.insert(it, {Operation::LOAD, DataType::PTR, _t, _ebp});
+                else
+                    b->ins.insert(it, {Operation::LOAD, ins.type, _t, _ebp});
             }
             it++;
         }
@@ -280,6 +286,7 @@ bool X86_RegAlloc::is_colourable(FunctionIR& func){
         if (!node_ptr){
             IGNode& spilled = ig.spill_node();
             rewrite_spill(func, spilled.op, spilled.spill);
+            write_func(func);
             
             // restore state
             for (IGNode& node : ig.nodes) node.simplified = false;
@@ -296,8 +303,6 @@ void X86_RegAlloc::allocate_reg(FunctionIR& func){
     while (!simplify_stack.empty()){
         IGNode& node = *simplify_stack.back();
         simplify_stack.pop_back();
-
-        if (node.allocated()) continue;
 
         std::set<int> free_reg;
         if (node.type == GP) free_reg = {
@@ -330,21 +335,6 @@ void X86_RegAlloc::convert_reg(FunctionIR& func){
             if (ins.dst.is_register())ins.dst = get_phys_reg(ins.dst);
             if (ins.src1.is_register())ins.src1 = get_phys_reg(ins.src1);
             if (ins.src2.is_register())ins.src2 = get_phys_reg(ins.src2);
-        }
-    }
-}
-
-void X86_RegAlloc::cleanup_reg(FunctionIR& func){
-    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
-        Block* b = bit->get();
-        for (auto it = b->ins.begin(); it != b->ins.end(); ){
-            Instruction& ins = *it;
-            if (ins.op == Operation::MOV){
-                if (ins.dst == ins.src1){
-                    it = b->ins.erase(it);
-                    continue;
-                }
-            }
         }
     }
 }

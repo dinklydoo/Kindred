@@ -91,9 +91,18 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
     int spilt_params = 0;
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
-        for (auto it = b->ins.begin(); it != b->ins.end(); ){ // initialise all nodes
+        for (auto it = b->ins.begin(); it != b->ins.end(); it++){ // initialise all nodes
             Instruction& ins = *it;
             switch (ins.op){
+                case (Operation::ADD) :
+                case (Operation::SUB) :
+                case (Operation::MUL) :
+                case (Operation::XOR) : {
+                    b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, ins.src1});
+                    ins.src1 = ins.dst;
+
+                    break;
+                }
                 case (Operation::FLR) :
                 case (Operation::DIV) : 
                 //case (Operation::MUL) : 
@@ -106,7 +115,7 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                     ins.src1 = _rax;
                     
                     it++; // past ins
-                    b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _rax});
+                    b->ins.insert(it--, {Operation::MOV, ins.type, ins.dst, _rax});
                     ins.dst = _rax;
                     break;
                 }
@@ -118,7 +127,7 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                     Operand _rdx = func.get_register();
                     
                     it++; // past ins
-                    b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _rdx});
+                    b->ins.insert(it--, {Operation::MOV, ins.type, ins.dst, _rdx});
                     ins.dst = _rdx;
                     break;
                 }
@@ -133,7 +142,6 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                     ins.src2 = _rcx;
                     ins.src1 = ins.dst;
 
-                    it++;
                     break;
                 }
                 case (Operation::PARAM) : {
@@ -155,7 +163,6 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                             ins.src1 = _param;
                         }
                     }
-                    it++;
                     break;
                 }
                 case (Operation::CALL) : {
@@ -180,14 +187,14 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                         Operand _xmm0 = func.get_register();
 
                         it++;
-                        b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _xmm0});
+                        b->ins.insert(it--, {Operation::MOV, ins.type, ins.dst, _xmm0});
                         ins.dst = _xmm0;
                     }
                     else { // mov rax->dst
                         Operand _rax = func.get_register();
 
                         it++;
-                        b->ins.insert(it, {Operation::MOV, ins.type, ins.dst, _rax});
+                        b->ins.insert(it--, {Operation::MOV, ins.type, ins.dst, _rax});
                         ins.dst = _rax;
                     }
                     if (ins.op == Operation::CALL && spilt_params)
@@ -207,7 +214,6 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                         b->ins.insert(it, {Operation::MOV, ins.type, _rax, ins.src1});
                         ins.src1 = _rax;
                     }
-                    it++;
                     break;
                 }
                 case (Operation::CLT) :
@@ -218,10 +224,9 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                 case (Operation::CNEQ) : {
                     if (ins.src2.type == Operand::IMM) 
                         std::swap(ins.src1, ins.src2);
-                    it++;
                     break;
                 }
-                default : {it++; break;}
+                default :  break;
             }
         }
     }

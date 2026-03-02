@@ -80,7 +80,6 @@ movq -16(%rbp), %rdi
 call _decr_list
 movq %rbx, %rdi
 call _decr_list
-movl $0, %eax
 movq -24(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
@@ -91,14 +90,13 @@ pushq %rbp
 movq %rsp, %rbp
 subq $32, %rsp
 movq %rbx, -24(%rbp)
-movl %esi, -8(%rbp)
-movl -8(%rbp), %eax
+movl %esi, -16(%rbp)
 cmpl $1, %eax
 setgb %al
 xorb $1, %al
 testb %al, %al
 jnz .L_0
-movl -8(%rbp), %eax
+movl -16(%rbp), %eax
 cmpl $10, %eax
 setlb %al
 xorb $1, %al
@@ -114,18 +112,17 @@ jnz .L_F3_1_1_B1_case0_0
 jmp .L_F3_1_1_B1_case0_1
 .L_F3_1_1_B1_case0_0:
 leaq factorial.local(%rip), %rax
-movq %rax, -16(%rbp)
-movq -16(%rbp), %rdi
+movq %rax, -8(%rbp)
+movq -8(%rbp), %rdi
 call _get_env
 movq %rax, %rdi
-movl -8(%rbp), %eax
-movl %eax, %esi
+movl -16(%rbp), %esi
 subl $1, %esi
-movl -16(%rbp), %eax
+movq -8(%rbp), %rax
 call *%rax
-movl -8(%rbp), %ebx
-movl %ebx, %eax
-imull %eax, %eax
+movl %eax, %ebx
+movl -16(%rbp), %eax
+imull %ebx, %eax
 movq -24(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
@@ -140,11 +137,11 @@ ret
 _foo:
 pushq %rbp
 movq %rsp, %rbp
-subq $32, %rsp
-movq %rbx, -24(%rbp)
-movq %rdi, -8(%rbp)
-movl %esi, -16(%rbp)
-movq -8(%rbp), %rdi
+subq $16, %rsp
+movq %rbx, -16(%rbp)
+movq %rdi, %rbx
+movl %esi, -8(%rbp)
+movq %rbx, %rdi
 movl $0, %esi
 call _access_var
 movl (%rax), %eax
@@ -152,20 +149,20 @@ cmpb $1, %al
 je .L_F4_1_1_1_B1_case0_0
 jmp .L_F4_1_1_1_B1_case0_1
 .L_F4_1_1_1_B1_case0_0:
-movq -8(%rbp), %rdi
+movq %rbx, %rdi
 movl $1, %esi
 call _access_var
 movb (%rax), %bl
 movsbl %bl, %ebx
-movl -16(%rbp), %eax
+movl -8(%rbp), %eax
 addl %ebx, %eax
-movq -24(%rbp), %rbx
+movq -16(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
 ret
 .L_F4_1_1_1_B1_case0_1:
 movl $0, %eax
-movq -24(%rbp), %rbx
+movq -16(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
 ret
@@ -175,34 +172,33 @@ pushq %rbp
 movq %rsp, %rbp
 subq $32, %rsp
 movq %rbx, -32(%rbp)
-movl %esi, -8(%rbp)
-movb %dl, -16(%rbp)
+movl %esi, -16(%rbp)
+movb %dl, -8(%rbp)
 movl $0, %edi
 call _allocate_env
 movq %rax, -24(%rbp)
 movq -24(%rbp), %rdi
 movl $0, %esi
 call _access_var
-movl -8(%rbp), %eax
+movl -16(%rbp), %eax
 movl %eax, (%rax)
 movq -24(%rbp), %rdi
 movl $1, %esi
 call _access_var
-movb -16(%rbp), %al
+movb -8(%rbp), %al
 movb %al, (%rax)
 leaq _foo(%rip), %rdi
 movq -24(%rbp), %rsi
 call _allocate_closure
 movq %rax, %rdi
 call _incr_closure
-movq %rax, %rbx
-movq %rbx, %rdi
+movq %rax, %rax
+movq %rax, %rdi
 call _incr_closure
-movq %rbx, %rdi
+movq %rax, %rdi
 call _decr_closure
 movq %rax, %rdi
 call _decr_closure
-movq %rbx, %rax
 movq -32(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
@@ -223,7 +219,6 @@ jmp .L_F5_1_1_B1_case0_1
 .L_F5_1_1_B1_case0_0:
 movq -8(%rbp), %rdi
 call _decr_struct
-movl $0, %eax
 movq -16(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
@@ -232,10 +227,9 @@ ret
 movq -8(%rbp), %rdi
 movl $2, %esi
 call _access_field
-movl (%rax), %ebx
+movl (%rax), %eax
 movq -8(%rbp), %rdi
 call _decr_struct
-movl %ebx, %eax
 movq -16(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
@@ -262,89 +256,90 @@ _atoi:
 pushq %rbp
 movq %rsp, %rbp
 subq $48, %rsp
-movq %rbx, -40(%rbp)
-movq %rsi, -8(%rbp)
-movl %edx, -16(%rbp)
-movq -8(%rbp), %rdi
+movq %rbx, -48(%rbp)
+movq %rsi, -40(%rbp)
+movl %edx, %eax
+movq -40(%rbp), %rdi
 movq $0, %rsi
 call _list_equals
 movq %rax, %rbx
 testb %bl, %bl
 jnz .L_F7_1_1_B1_case0_0
-movq -8(%rbp), %rdi
+movq -40(%rbp), %rdi
 call _list_size
-cmpl $1, %eax
+movl %eax, %ebx
+cmpl $1, %ebx
 jge .L_F7_1_1_B1_case0_1
 .L_F7_1_1_B1_case0_0:
-movq -8(%rbp), %rdi
+movq -40(%rbp), %rdi
 call _decr_list
-movl -16(%rbp), %eax
-movq -40(%rbp), %rbx
+movq -48(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
 ret
 .L_F7_1_1_B1_case0_1:
-movq -8(%rbp), %rdi
+movq -40(%rbp), %rdi
 movl $0, %esi
 call _index_list
-movb (%rax), %al
-movb %al, -24(%rbp)
-movq -8(%rbp), %rdi
+movq %rax, %rbx
+movb (%rbx), %bl
+movb %bl, -16(%rbp)
+movq -40(%rbp), %rdi
 movl $1, %esi
 call _access_node
-movq %rax, %rdi
+movq %rax, %rbx
+movq %rbx, -32(%rbp)
+movq -32(%rbp), %rdi
 call _incr_list
-movb -24(%rbp), %bl
-cmpb $45, %bl
+movb -16(%rbp), %bl
+cmpb %bl, $45
 je .L_F7_1_1_B3_case1_0
 jmp .L_F7_1_1_B3_case1_1
 .L_F7_1_1_B3_case1_0:
 leaq atoi.local(%rip), %rbx
-movq %rbx, -32(%rbp)
-movq -32(%rbp), %rdi
+movq %rbx, -8(%rbp)
+movq -8(%rbp), %rdi
 call _get_env
 movq %rax, %rdi
-movq %rax, %rsi
-movl -16(%rbp), %edx
-movl -32(%rbp), %ebx
-call *%rbx
+movq -32(%rbp), %rsi
+movl %eax, %edx
+movq -8(%rbp), %rax
+call *%rax
 movl %eax, %ebx
-movl $0, %ebx
-subl %ebx, %ebx
-movq -8(%rbp), %rdi
+movl $0, %eax
+subl %ebx, %eax
+movq -40(%rbp), %rdi
 call _decr_list
-movq %rax, %rdi
+movq -32(%rbp), %rdi
 call _decr_list
-movl %ebx, %eax
-movq -40(%rbp), %rbx
+movq -48(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
 ret
 .L_F7_1_1_B3_case1_1:
 leaq atoi.local(%rip), %rbx
-movq %rbx, -32(%rbp)
-movq -32(%rbp), %rdi
+movq %rbx, -8(%rbp)
+movq -8(%rbp), %rdi
 call _get_env
 movq %rax, %rdi
-movq %rax, %rsi
+movq -32(%rbp), %rsi
 movb -24(%rbp), %bl
-movb %bl, %cl
-subb $48, %cl
-movl -16(%rbp), %ebx
+subb $48, %bl
+movb %bl, -16(%rbp)
+movb -16(%rbp), %bl
+movb %bl, -24(%rbp)
 movl $10, %ebx
-imull %ebx, %ebx
-movsbl %cl, %ecx
-movl %ecx, %edx
+imull %eax, %ebx
+movb -16(%rbp), %dl
+movsbl %dl, %edx
 addl %ebx, %edx
-movl -32(%rbp), %ebx
-call *%rbx
-movl %eax, %ebx
-movq -8(%rbp), %rdi
+movq -8(%rbp), %rax
+call *%rax
+movq -40(%rbp), %rdi
 call _decr_list
-movq %rax, %rdi
+movq -32(%rbp), %rdi
 call _decr_list
-movl %ebx, %eax
-movq -40(%rbp), %rbx
+movq -48(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
 ret
@@ -362,7 +357,7 @@ call _get_env
 movq %rax, %rdi
 movq %rax, %rsi
 movl $0, %edx
-movl -8(%rbp), %ebx
+movq -8(%rbp), %rbx
 call *%rbx
 leaq get_val.local(%rip), %rbx
 movq %rbx, -16(%rbp)
@@ -370,7 +365,7 @@ movq -16(%rbp), %rdi
 call _get_env
 movq %rax, %rdi
 movq $0, %rsi
-movl -16(%rbp), %ebx
+movq -16(%rbp), %rbx
 call *%rbx
 leaq factorial.local(%rip), %rbx
 movq %rbx, -24(%rbp)
@@ -378,7 +373,7 @@ movq -24(%rbp), %rdi
 call _get_env
 movq %rax, %rdi
 movl %eax, %esi
-movl -24(%rbp), %ebx
+movq -24(%rbp), %rbx
 call *%rbx
 call _print_int
 leaq nest_check.local(%rip), %rbx
@@ -396,12 +391,10 @@ movq -40(%rbp), %rdi
 call _get_env
 movq %rax, %rdi
 movl $2, %esi
-movl -40(%rbp), %ebx
+movq -40(%rbp), %rbx
 call *%rbx
-movl %eax, %ebx
 movq %rax, %rdi
 call _decr_list
-movl %ebx, %eax
 movq -48(%rbp), %rbx
 movq %rbp, %rsp
 popq %rbp
