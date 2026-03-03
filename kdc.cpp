@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   ir::IR_Lowerer& ir = ir::IR_Lowerer::instance(OBJECT_FORMAT);  
   std::cout << "[Kindred Compiler] : IR Generated\n";
   IR_program = ir.lower(*module_node);
-  //write_ir(IR_program);
+  write_ir(IR_program);
 
   cfg::CFGBuilder& cfg = cfg::CFGBuilder::instance();
   cfg.build_cfg(IR_program);

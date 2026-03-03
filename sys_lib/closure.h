@@ -30,6 +30,7 @@ closure* allocate_closure(void* function_ptr, env_node* env);
 void incr_closure(closure* c);
 void decr_closure(closure* c);
 env_node* get_env(closure* c);
+void* get_function(closure* c);
 
 env_node* allocate_env(int env_id);
 void free_env(env_node* ptr);

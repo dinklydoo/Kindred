@@ -121,6 +121,8 @@ private:
     void precolor_func(FunctionIR& func);
     void precolor_params(std::list<Instruction>::iterator it);
 
+    IGNode& spill_node(FunctionIR& func);
+
     void rewrite_coalesce(FunctionIR&);
     void rewrite_spill(FunctionIR&, Operand, int);
     bool is_colourable(FunctionIR&);

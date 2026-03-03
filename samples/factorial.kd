@@ -1,0 +1,10 @@
+func factorial(n: int): int
+    case of:
+        | (n <= 0) => return 1,
+        | else => return n * factorial(n-1)
+    ;
+
+func main(:): int
+    res: int = factorial(10)
+    print(res)
+    return 0

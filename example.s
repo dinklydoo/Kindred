@@ -28,7 +28,7 @@ call _init_env_layout
 call _init_struct_layout
 movl $0, %edi
 movq $1, %rsi
-movl $11, %edx
+movl $12, %edx
 call _alloc_list
 movq %rax, -8(%rbp)
 movq -8(%rbp), %rdi
@@ -75,6 +75,10 @@ movq -8(%rbp), %rdi
 movl $10, %esi
 call _index_list
 movb $100, (%rax)
+movq -8(%rbp), %rdi
+movl $11, %esi
+call _index_list
+movb $10, (%rax)
 movq -8(%rbp), %rdi
 call _print_string
 movq -8(%rbp), %rdi

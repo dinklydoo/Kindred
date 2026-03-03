@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 #include "x86_lower.hpp"
 
@@ -219,11 +220,20 @@ void X86_Lowerer::lower_ins(FunctionIR& func){
                 case (Operation::CLT) :
                 case (Operation::CGT) :
                 case (Operation::CLEQ) :
-                case (Operation::CGEQ) :
+                case (Operation::CGEQ) : 
                 case (Operation::CEQ) :
                 case (Operation::CNEQ) : {
-                    if (ins.src2.type == Operand::IMM) 
+                    if (ins.src1.type == Operand::IMM){
                         std::swap(ins.src1, ins.src2);
+                        
+                        switch (ins.op) {
+                            case (Operation::CLT) : ins.op = Operation::CGT; break;
+                            case (Operation::CGT) : ins.op = Operation::CLT; break;
+                            case (Operation::CLEQ) : ins.op = Operation::CGEQ; break;
+                            case (Operation::CGEQ) : ins.op = Operation::CLEQ; break;
+                            default : break;
+                        }
+                    }
                     break;
                 }
                 default :  break;

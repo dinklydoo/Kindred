@@ -12,6 +12,10 @@ closure* allocate_closure(void* function_ptr, env_node* env){
     return c;
 }
 
+void* get_function(closure* c){
+    return c->function_ptr;
+}
+
 void incr_closure(closure* ptr){
     ptr->ref++;
 };

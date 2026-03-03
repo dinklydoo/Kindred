@@ -541,6 +541,11 @@ void IR_Lowerer::visit( FuncDecl& node){
 
     cons.push_instruction({Operation::BEGIN_FUNC, DataType::EMPTY});
 
+    for (auto& p : node.params){
+        get_var(p.name);
+        increase_ref(cons.pop_operand(), p.type);
+    }
+
     if (node.name == "main"){
         cons.push_instruction({Operation::CALL_EXT, DataType::EMPTY, VOID, VOID, VOID, format_fname("init_env_layout")});
         cons.push_instruction({Operation::CALL_EXT, DataType::EMPTY, VOID, VOID, VOID, format_fname("init_struct_layout")});
@@ -836,11 +841,14 @@ void IR_Lowerer::visit( BinaryNode& node ){
 
 void IR_Lowerer::visit( CallNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    Operand _hof;
-    
-    _hof = cons.get_register();
+
     node.f_exp->accept(*this);
-    _hof = cons.pop_operand(); // returns a closure ptr
+    Operand _hof = cons.pop_operand(); // returns a closure ptr
+
+    Operand _fptr = cons.get_register();
+    cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
+    cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _hof});
+    cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _fptr, VOID, VOID, format_fname("get_function")});
 
     Operand _env = cons.get_register();
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
@@ -849,7 +857,6 @@ void IR_Lowerer::visit( CallNode& node ){
     
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _env}); // implicitly pass environment in first param of function   
-
     for (int i = 0; i < node.params.size(); i++){
         node.params[i]->accept(*this);
         Operand _t = cons.pop_operand();
@@ -859,10 +866,11 @@ void IR_Lowerer::visit( CallNode& node ){
         DataType dtype = type_to_dtype(node.ptypes[i]->kind);
         cons.push_instruction({Operation::PARAM, dtype, VOID, _cast});
     }
+
     Operand _t = cons.get_register();
     DataType rtype = type_to_dtype(node.resolved_type->kind);
 
-    cons.push_instruction({Operation::CALL, rtype, _t, _hof});
+    cons.push_instruction({Operation::CALL, rtype, _t, _fptr});
     cons.push_operand(_t);
 };
 

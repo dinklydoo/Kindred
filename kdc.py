@@ -37,7 +37,12 @@ def get_gcclang_args(obj_format, compile_target):
     else:
         return ['gcc'] # for now just use native gcc if on linux
 
-def compile_library(lib_files, args):
+def compile_flags(debug):
+    if debug:
+        return ['-c', '-g', '-o']
+    return ['-c', '-o']
+
+def compile_library(lib_files, args, flags):
     lib_path = ".sys_lib"
     if not os.path.exists(lib_path):
         os.makedirs(lib_path)
@@ -45,7 +50,7 @@ def compile_library(lib_files, args):
     for lib_file in lib_files:
         source_path = 'sys_lib/'+lib_file+'.c'
         object_path = lib_path+'/'+lib_file+'.o'
-        subprocess.run(args + ['-c', '-o', object_path, source_path])
+        subprocess.run(args + flags + [object_path, source_path])
 
 def library_obj(lib_files, dlib_files):
     out = []
@@ -66,6 +71,9 @@ def compile():
                         choices=['X86', 'ARM', 'MIPS'],
                         default=None,
                         help='compile target, selected from X86, ARM or MIPS')
+    parser.add_argument('-d', '--debug',
+                        action="store_true",
+                        help='set debug flags in the ASM file')
     args = parser.parse_args()
 
     pre_compilation() # compile kdc if it does not exist
@@ -91,7 +99,9 @@ def compile():
     dyn_sys_lib_files = ['closure_gen', 'struct_gen'] # dynamic lib files, change on each compilation
     sys_lib_files = ['closure', 'iofunc', 'lists', 'math', 'mem', 'structs'] # static lib files
     
-    compile_library(sys_lib_files, gcclang_args)
+    flags = compile_flags(args.debug)
+
+    compile_library(sys_lib_files, gcclang_args, flags)
 
     with open(input_path, "rb") as f:
         kdc_run = subprocess.run(
@@ -100,8 +110,8 @@ def compile():
             capture_output=True,
         )
 
-    compile_library(dyn_sys_lib_files, gcclang_args)
-    subprocess.run(gcclang_args + ['-c', '-o', object_name, asm_name]) # generate otuput file
+    compile_library(dyn_sys_lib_files, gcclang_args, flags)
+    subprocess.run(gcclang_args + flags + [object_name, asm_name]) # generate otuput file
     subprocess.run(gcclang_args + ['-o', output_name, object_name] + library_obj(sys_lib_files, dyn_sys_lib_files))
 
 

@@ -1,4 +1,4 @@
 func main(:): int
-    a: [char] = "Hello World"
+    a: [char] = "Hello World\n"
     print(a)
     return 0

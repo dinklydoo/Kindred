@@ -37,10 +37,7 @@ list_node* access_node(list_node* list, int index){
             exit(1);
         }
         temp = temp->next;
-    }
-    if (!temp){
-        fprintf(stderr, "Runtime Error: list index %d on an empty list\n", index);
-        exit(1);
+        index--;
     }
     return temp;
 }
@@ -53,6 +50,7 @@ void* index_list(list_node* list, int index){
             exit(1);
         }
         temp = temp->next;
+        index--;
     }
     if (!temp){
         fprintf(stderr, "Runtime Error: list index %d on an empty list\n", index);
@@ -91,10 +89,14 @@ list_node* remove_at(list_node* list, int index){
 
 list_node* concat_list(list_node* a, list_node* b){
     if (!a) return b;
-    
-    list_node* temp = a;
-    while (temp->next) temp = temp->next;
-    return cons(temp->type,temp->elem_size,b);
+
+    list_node* a_copy = cons(
+        a->type, a->elem_size,
+        concat_list(a->next, b)
+    );
+
+    memcpy(a_copy->elem, a->elem, a->elem_size);
+    return a_copy;
 }
 
 int list_size(list_node* a){
@@ -134,15 +136,15 @@ bool list_equals(list_node* a, list_node* b){
 }
 
 list_node* construct_string(char* str){
-    int len = strlen(str);
-    if (len == 0) return NULL;
+    if (!str || *str == '\0') return NULL;
     list_node* head = cons(LITERAL, sizeof(char), NULL);
-    *((char*)head->elem) = str[0];
+    *(char*)head->elem = str[0];
     list_node* curr = head;
-    for (int i = 1; i < len; i++){
+
+    for (int i = 1; str[i] != '\0'; i++){
         list_node* temp = cons(LITERAL, sizeof(char), NULL);
-        *((char*)head->elem) = str[i];
-        curr->next= temp;
+        *(char*)temp->elem = str[i];
+        curr->next = temp;
         curr = temp;
     }
     return head;

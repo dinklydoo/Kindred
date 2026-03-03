@@ -1,0 +1,8 @@
+func add(a: int, b: int): int
+    result: int = a + b
+    return result
+
+func main(:): int
+    temp: int = add(2,3)
+    print(temp * 4)
+    return 0

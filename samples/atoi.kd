@@ -4,7 +4,7 @@ func atoi(r: [char], n: int): int
         x:xs =>
             mark x of:
                 '-' => return -atoi(xs, n),
-                default => return atoi(xs, (x - '0') + 10*n)
+                default => return atoi(xs, (x-'0') + 10*n)
             ;
         ;
 
@@ -12,4 +12,4 @@ func main(:): int
     r:[char] = read()
     n:int = atoi(r, 0)
     print(n)
-    return 1
+    return 0

@@ -7,8 +7,13 @@
 #include <unordered_map>
 #include <unordered_set>
 
+// param registers
 static std::vector<GPReg> gp_params = {RDI, RSI, RDX, RCX, R8, R9};
 static std::vector<FPReg> fp_params = {XMM0, XMM1, XMM2, XMM3, XMM4, XMM5};
+
+// define a set of three scratch registers, optimal as an instruction can have at most 3 spilled registers
+static std::vector<GPReg> gp_scratch = {R9, R10, R11};
+static std::vector<FPReg> fp_scratch = {XMM10, XMM11, XMM12};
 
 struct StaticData {
     std::unordered_set<std::string> closures;

@@ -221,12 +221,12 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
             break;
         }
         case (Operation::CST_I32) : {
-            sfile<<"movsbl "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, DataType::I32)<<'\n';
+            sfile<<"movzbl "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, DataType::I32)<<'\n';
             break;
         }
         case (Operation::CST_I64) : {
             if (type == DataType::I8) 
-                sfile<<"movsbq "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, DataType::I64)<<'\n';
+                sfile<<"movzbq "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, DataType::I64)<<'\n';
             else 
                 sfile<<"movslq "+reg_string(ins.src1, type)+", "+reg_string(ins.dst, DataType::I64)<<'\n';
             break;
@@ -238,7 +238,7 @@ void X86_CodeGen::write_gp_ins(Instruction& ins){
         case (Operation::CEQ) :
         case (Operation::CNEQ) :
         {
-            sfile<<"cmp"+suf+" "+reg_string(ins.src1, type)+", "+reg_string(ins.src2, type)<<'\n';
+            sfile<<"cmp"+suf+" "+reg_string(ins.src2, type)+", "+reg_string(ins.src1, type)<<'\n';
             if (ins.dst == VOID){
                 jump_flag = ins.op;
                 break; // only sets flag

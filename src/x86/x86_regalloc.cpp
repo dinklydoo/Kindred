@@ -5,6 +5,7 @@
 #include "cfg_builder.hpp"
 #include "tac_ir.hpp"
 #include "x86_lower.hpp"
+#include <unordered_map>
 
 void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJECT_FORMAT){
     for (FunctionIR& func : prog){
@@ -12,12 +13,12 @@ void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJ
     }
     X86_Lowerer& xl = X86_Lowerer::instance(OBJECT_FORMAT);
     xl.write_statics();
-    write_ir(prog);
 }
 
 void X86_RegAlloc::allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT){
     X86_Lowerer& xl = X86_Lowerer::instance(OBJECT_FORMAT);
     ig = xl.lower_x86(func);
+    write_func(func);
     LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
     while (true) {
         ig = InterferenceGraph();
@@ -25,9 +26,8 @@ void X86_RegAlloc::allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT){
         precolor_func(func);
         la.gen_interference(func, ig);
         rewrite_coalesce(func);
-        ig.spill_offset = func.spill_offset; // retain stack offset
         if (is_colourable(func)) break;
-        func.spill_offset = ig.spill_offset;
+        write_func(func);
     }
     allocate_reg(func);
     convert_reg(func);
@@ -189,29 +189,52 @@ IGNode* InterferenceGraph::get_low_deg(){
     return nullptr;
 }
 
-IGNode& InterferenceGraph::spill_node(){
-    IGNode* candidate = nullptr;
-    double candidate_cost = 0;
-    for (IGNode& node : nodes){
-        if (node.invalid() || node.allocated()) continue;
+IGNode& X86_RegAlloc::spill_node(FunctionIR& func){
+    std::unordered_map<Operand, int, Operand::OperandHash> first_encounter;
+    std::unordered_map<Operand, int, Operand::OperandHash> last_encounter;
+    std::unordered_map<Operand, double, Operand::OperandHash> costs;
 
-        int deg = get_interf_size(node);
-        if (deg == 0) deg = 1;
-
-        double cost = (double)node.uses / deg;
-        if (cost == 0) continue; // redundant nodes
-
-        if (!candidate){
-            candidate = &node;
-            candidate_cost = cost;
-        }
-        else if (cost < candidate_cost){
-            candidate = &node;
-            candidate_cost = cost;
+    int i = 0;
+    for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
+        Block* b = bit->get();
+        for (Instruction& ins : b->ins){
+            i++;
+            if (ins.dst.is_register()){
+                if (!first_encounter.contains(ins.dst)) first_encounter[ins.dst] = i;
+                last_encounter[ins.dst] = std::max(last_encounter[ins.dst], i);
+            }
+            if (ins.src1.is_register()){
+                if (!first_encounter.contains(ins.src1)) first_encounter[ins.src1] = i;
+                last_encounter[ins.src1] = std::max(last_encounter[ins.src1], i);
+            }
+            if (ins.src2.is_register()){
+                if (!first_encounter.contains(ins.src2)) first_encounter[ins.src2] = i;
+                last_encounter[ins.src2] = std::max(last_encounter[ins.src2], i);
+            }
         }
     }
-    spill_offset -= 8;
-    candidate->spill = spill_offset;
+    for (auto& p : first_encounter){
+        Operand op = p.first;
+        IGNode& node = ig.get_node(op);
+        if (costs.contains(op) || node.uses == 0) continue;
+
+        costs[op] = (double)node.uses / ig.get_interf_size(node);
+    }
+    IGNode* candidate = nullptr;
+    double cand_priority = 0;
+
+    for (auto& p : costs){
+        Operand op = p.first;
+        int lifespan = last_encounter[op] - first_encounter[op];
+        double sp_priority = (double)lifespan / p.second;
+
+        if (!candidate || sp_priority > cand_priority){
+            candidate = &ig.get_node(op);
+            cand_priority = sp_priority;
+        }
+    }
+    func.spill_offset -= 8;
+    candidate->spill = func.spill_offset;
     return *candidate;
 }
 
@@ -226,8 +249,9 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
         for (auto it = b->ins.begin(); it != b->ins.end(); ){
             Instruction& ins = *it;
 
+            Operand _t = VOID;
             if (ins.dst == op){
-                Operand _t = func.get_register();
+                _t = func.get_register();
                 // dst register is a pointer
                 if (ins.op == Operation::STORE)
                     b->ins.insert(it, {Operation::LOAD, ins.type, _t, _ebp});
@@ -236,10 +260,11 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
 
                 if (ins.op != Operation::STORE)
                     b->ins.insert(it, {Operation::STORE, ins.type, _ebp, _t});
+                it--;
             }
 
             if (ins.src1 == op || ins.src2 == op){
-                Operand _t = func.get_register();
+                if (_t == VOID) _t = func.get_register();
         
                 if (ins.src1 == op) ins.src1 = _t;
                 if (ins.src2 == op) ins.src2 = _t;
@@ -284,7 +309,7 @@ bool X86_RegAlloc::is_colourable(FunctionIR& func){
     while (ig.is_uncoloured()){
         IGNode* node_ptr = ig.get_low_deg();
         if (!node_ptr){
-            IGNode& spilled = ig.spill_node();
+            IGNode& spilled = spill_node(func);
             rewrite_spill(func, spilled.op, spilled.spill);
             write_func(func);
             

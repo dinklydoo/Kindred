@@ -59,8 +59,6 @@ struct InterferenceGraph {
     NodeUnion node_union;
     std::vector<IGNode> nodes;
 
-    int spill_offset = 0;
-
     IGNode& add_node(Operand op, RType rtype){
         if (node_union.add_node(op))
             nodes.push_back({op, rtype});
@@ -82,8 +80,7 @@ struct InterferenceGraph {
             int p = node_union.find_node(inf);
             interf.insert(p);
         }
-        node.interfere = interf;
-        return node.interfere.contains(idx_p);
+        return interf.contains(idx_p);
     }
 
     void add_edge(Operand o1, Operand o2){
@@ -134,7 +131,7 @@ struct InterferenceGraph {
         IGNode& n2 = nodes[j];
 
         if (n2.allocated() || (!n1.allocated() && j < i)){
-            n1.interfere = smart_union(o1, o2);
+            n2.interfere = smart_union(o1, o2);
             n1.valid = false;
             node_union.union_nodes(o2, o1);
             n2.uses += n1.uses;    
@@ -215,5 +212,4 @@ struct InterferenceGraph {
 
     bool is_uncoloured();
     IGNode* get_low_deg();
-    IGNode& spill_node();
 };

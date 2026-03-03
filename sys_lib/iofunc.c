@@ -32,10 +32,9 @@ double read_double(){
     return temp;
 }
 list_node* read_string(){
-    char* buf;
+    char buf[1024];
     scanf("%s", buf);
-    list_node* str = construct_string(buf);
-    return str;
+    return construct_string(buf);
 }
 
 void print_bool(bool val){
