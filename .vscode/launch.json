@@ -55,6 +55,19 @@
                     null,
                     null
                 ]
+        },
+        {
+            "name": "Tree",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/kdc",
+            "args": ["X86", "MACHO", "compiled"],
+            "cwd": "${workspaceRoot}",
+            "stdio": [
+                    "${workspaceFolder}/samples/tree.kd",
+                    null,
+                    null
+                ]
         }
     ]
 }

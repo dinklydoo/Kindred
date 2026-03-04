@@ -135,9 +135,8 @@ struct TypeSystem {
 
     type_ptr declare_struct(const std::string& name, std::vector<Field>& fields){
         nominal_ptr t = nominal_type(name); // forward declare regardless
-        if (t->defined){
-            // defined -> error
-        }
+        if (t->defined) return nullptr;
+        
         t->kind = Type::Kind::Struct;
         t->children = fields;
         t->defined = true;
@@ -146,9 +145,8 @@ struct TypeSystem {
 
     type_ptr declare_enum(const std::string& name, std::vector<Enumerable>& enumerable){
         nominal_ptr t = nominal_type(name); // forward declare regardless
-        if (t->defined){
-            // defined -> error
-        }
+        if (t->defined) return nullptr;
+
         t->kind = Type::Kind::Enum;
         t->children = enumerable;
         t->defined = true;

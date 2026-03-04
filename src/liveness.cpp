@@ -63,7 +63,14 @@ void LivenessAnalyzer::add_interference_edges(Instruction& ins, virtual_varset& 
 
     if (target == X86) X86_interference(ins, defines, graph);
 
-    if (ins.dst.is_register()) defines.insert({ins.dst, rtype});
+    if (ins.dst.is_register()){
+        // STORE INSTRUCTION DOESNT DEFINE JACKSHIT WTF HAHAHAH KMS
+        if (ins.op == Operation::STORE){
+            uses.insert({ins.dst, rtype});
+            graph.incr_uses(ins.dst, rtype);
+        }
+        else defines.insert({ins.dst, rtype});
+    }
     if (ins.src1.is_register()){ 
         uses.insert({ins.src1, rtype});
         graph.incr_uses(ins.src1, rtype);

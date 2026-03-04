@@ -11,5 +11,5 @@ func atoi(r: [char], n: int): int
 func main(:): int
     r:[char] = read()
     n:int = atoi(r, 0)
-    print(n)
+    print(n + 7)
     return 0

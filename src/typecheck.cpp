@@ -126,14 +126,21 @@ void TypeChecker::visit( EnumDecl& node){
         enumerables.push_back({ev, numerable++});
     }
     type_ptr etype = type_s.declare_enum(node.name, enumerables);
+    if (!etype){
+        type_ptr predecl = type_s.find_nominal(node.name);
+        errors.redef_error(node.name, predecl, node.location);
+    }
     for (auto& ev : node.evar){
         if (!push_var_safe(ev, etype, node.location)) return;
     }
 }
 
 void TypeChecker::visit( StructDecl& node){
-    // define structure type only
     type_ptr stype = type_s.declare_struct(node.name, node.fields);
+    if (!stype){
+        type_ptr predecl = type_s.find_nominal(node.name);
+        errors.redef_error(node.name, predecl, node.location);
+    }
 }
 
 void TypeChecker::visit( VarDecl& node){
@@ -416,7 +423,7 @@ void TypeChecker::visit(ListNode& node){
 }
 
 void TypeChecker::visit(StructNode& node){
-    type_ptr defn = definitions.find_var(node.name);
+    type_ptr defn = type_s.find_nominal(node.name);
     if (!defn){
         errors.undef_error("Reference to struct " + node.name + " is undefined", node);
         return;

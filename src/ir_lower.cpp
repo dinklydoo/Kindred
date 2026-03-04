@@ -842,6 +842,15 @@ void IR_Lowerer::visit( BinaryNode& node ){
 void IR_Lowerer::visit( CallNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
 
+    std::vector<Operand> op_params;
+    for (int i = 0; i < node.params.size(); i++){
+        node.params[i]->accept(*this);
+        Operand _t = cons.pop_operand();
+        cast_operand(_t, node.ptypes[i], node.params[i]->resolved_type);
+        _t = cons.pop_operand();
+        
+        op_params.push_back(_t);
+    }
     node.f_exp->accept(*this);
     Operand _hof = cons.pop_operand(); // returns a closure ptr
 
@@ -849,27 +858,21 @@ void IR_Lowerer::visit( CallNode& node ){
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _hof});
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _fptr, VOID, VOID, format_fname("get_function")});
-
+    
     Operand _env = cons.get_register();
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _hof});
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _env, VOID, VOID, format_fname("get_env")});
     
+    DataType rtype = type_to_dtype(node.resolved_type->kind);
+    
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _env}); // implicitly pass environment in first param of function   
-    for (int i = 0; i < node.params.size(); i++){
-        node.params[i]->accept(*this);
-        Operand _t = cons.pop_operand();
-        cast_operand(_t, node.ptypes[i], node.params[i]->resolved_type);
-        Operand _cast = cons.pop_operand();
-
-        DataType dtype = type_to_dtype(node.ptypes[i]->kind);
-        cons.push_instruction({Operation::PARAM, dtype, VOID, _cast});
+    for (int i = 0; i < op_params.size(); i++){
+        DataType ptype = type_to_dtype(node.ptypes[i]->kind);
+        cons.push_instruction({Operation::PARAM, ptype, VOID, op_params[i]}); // implicitly pass environment in first param of function   
     }
-
     Operand _t = cons.get_register();
-    DataType rtype = type_to_dtype(node.resolved_type->kind);
-
     cons.push_instruction({Operation::CALL, rtype, _t, _fptr});
     cons.push_operand(_t);
 };
@@ -878,28 +881,33 @@ void IR_Lowerer::visit( StructNode& node ){
     ConsFunctionIR& cons = builder.top_constructor();
 
     unsigned int id = structInfo.get_struct_id(node.name);
+
+    std::vector<Operand> struct_ops;
+    for (int i = 0; i < node.fields.size(); i++){
+        node.fields[i]->accept(*this);
+        Operand _t = cons.pop_operand();
+        cast_operand(_t, node.ftypes[i], node.fields[i]->resolved_type);
+        _t = cons.pop_operand();
+
+        if (!node.fields[i]->is_constructor())
+            increase_ref(_t, node.ftypes[i]);
+        
+        struct_ops.push_back(_t);
+    }
     cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
     cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(id)});
     Operand _ptr = cons.get_register();
     cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _ptr, VOID, VOID, format_fname("allocate_struct")});
-    for (int i = 0; i < node.fields.size(); i++){
-        node.fields[i]->accept(*this);
-        Operand _t = cons.pop_operand();
-        
-        if (!node.fields[i]->is_constructor())
-            increase_ref(_t, node.ftypes[i]);
-    
-        cast_operand(_t, node.ftypes[i], node.fields[i]->resolved_type);
-        _t = cons.pop_operand();
-        
+
+    for (int i = 0; i < struct_ops.size(); i++){
         DataType dtype = type_to_dtype(node.ftypes[i]->kind);
         cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
-        cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, VOID, _ptr});
-        cons.push_instruction({Operation::PARAM, DataType::I32, VOID, VOID, Operand::imm(i)});
+        cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
+        cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(i)});
 
         Operand _fptr = cons.get_register();
         cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _fptr, VOID, VOID, format_fname("access_field")});
-        cons.push_instruction({Operation::STORE, dtype, _fptr, _t});
+        cons.push_instruction({Operation::STORE, dtype, _fptr, struct_ops[i]});
     }
     cons.push_operand(_ptr);
 }

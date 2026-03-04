@@ -20,7 +20,7 @@ typedef struct field_data {
 typedef struct struct_layout {
     size_t payload_size;
     int field_count;
-    field_data fields[];
+    field_data fields[10]; // FIX THIS
 } struct_layout;
 
 struct_node* allocate_struct(int struct_id);

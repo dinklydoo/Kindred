@@ -1,0 +1,39 @@
+struct Tree (
+    left : Tree,
+    right : Tree,
+    val : int
+)
+
+func preorder(t: Tree): int
+    mark t of:
+        nil => return 0,
+        default => 
+            a: int = preorder(t.left)
+            print(t.val)
+            print('\n')
+            b: int = preorder(t.right)
+
+            return 0
+    ;
+
+func main(:): int
+    sample: Tree =
+        Tree{
+            nil,
+            Tree{
+                Tree{
+                    nil, 
+                    nil,
+                    13 
+                },
+                Tree{
+                    nil,
+                    nil,
+                    17
+                },
+                88
+            },
+            14
+        }
+    c: int = preorder(sample)
+    return 0

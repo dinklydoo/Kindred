@@ -246,23 +246,10 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
     Operand _ebp = Operand::rbp(spill);
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
-        for (auto it = b->ins.begin(); it != b->ins.end(); ){
+        for (auto it = b->ins.begin(); it != b->ins.end(); it++){
             Instruction& ins = *it;
 
             Operand _t = VOID;
-            if (ins.dst == op){
-                _t = func.get_register();
-                // dst register is a pointer
-                if (ins.op == Operation::STORE)
-                    b->ins.insert(it, {Operation::LOAD, ins.type, _t, _ebp});
-                ins.dst = _t;
-                it++;
-
-                if (ins.op != Operation::STORE)
-                    b->ins.insert(it, {Operation::STORE, ins.type, _ebp, _t});
-                it--;
-            }
-
             if (ins.src1 == op || ins.src2 == op){
                 if (_t == VOID) _t = func.get_register();
         
@@ -274,7 +261,29 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
                 else
                     b->ins.insert(it, {Operation::LOAD, ins.type, _t, _ebp});
             }
-            it++;
+
+
+            if (ins.dst == op){
+                if (ins.op == Operation::STORE){
+                    if (_t == VOID) _t = func.get_register();
+                    ins.dst = _t;
+                    b->ins.insert(it, {Operation::LOAD, DataType::PTR, _t, _ebp});
+                    continue;
+                }
+                _t = func.get_register();
+                ins.dst = _t;
+                    
+                it++;
+                DataType dtype = ins.type;
+                switch (ins.op){
+                    case (Operation::CST_F64) : dtype = DataType::F64; break;
+                    case (Operation::CST_F32) : dtype = DataType::F32; break;
+                    case (Operation::CST_I64) : dtype = DataType::I64; break;
+                    case (Operation::CST_I32) : dtype = DataType::I32; break;
+                    default : break;
+                }
+                b->ins.insert(it--, {Operation::STORE, dtype, _ebp, _t});
+            }
         }
     }
 }
