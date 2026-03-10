@@ -259,10 +259,8 @@ void X86_Lowerer::fix_jumps(FunctionIR& func){
             it--;
             Instruction& prior = *(it++);
 
-            if (!cmp_op(prior.op)){ // depends on an external boolean register
-                // b->ins.insert(it, {Operation::CEQ, DataType::EMPTY, VOID, ins.src1, Operand::imm(1)});
-                continue;
-            }
+            if (!cmp_op(prior.op)) continue;
+            
             // now prior is a compare that affects the jump condition
             // don't require jmp condition register as cmp will provide the flag
             ins.src1 = VOID;
@@ -348,7 +346,6 @@ void X86_Lowerer::write_statics(){
 
     sdata << ".section "<<rodata_name<<'\n'<< ".align 8\n";
     for (auto& p : statics.float_imms){
-        sdata<<p.second<<":\n";
         if (p.first.kind == DataType::F32){ // float
             int32_t temp = static_cast<int32_t>(p.first.value);
             float f;
@@ -359,7 +356,7 @@ void X86_Lowerer::write_statics(){
         else {
             double d;
             std::memcpy(&d, &p.first.value, sizeof(p.first.value));
-
+            
             sdata <<'\t'<<p.second<<':'<<" .double "<<d<<'\n';
         }
     }

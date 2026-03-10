@@ -27,7 +27,7 @@ std::vector<InterferenceGraph> interf_graph;
 int main(int argc, char** argv) {
   
   std::string compile_target = argv[1]; // X86, ARM, MIPS
-  std::string object_format = argv[2]; // compile format
+  std::string object_format = argv[2]; // compile format (MACHO ELF)
   std::string compile_name = argv[3]; // name of compiled .s
   std::string compile_path = "./"+compile_name+".s";
 
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   ir::IR_Lowerer& ir = ir::IR_Lowerer::instance(OBJECT_FORMAT);  
   std::cout << "[Kindred Compiler] : IR Generated\n";
   IR_program = ir.lower(*module_node);
-  write_ir(IR_program);
+  //write_ir(IR_program);
 
   cfg::CFGBuilder& cfg = cfg::CFGBuilder::instance();
   cfg.build_cfg(IR_program);

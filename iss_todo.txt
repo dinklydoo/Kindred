@@ -1,5 +1,6 @@
 TODO (realistic)
     - better docs
+    - Optimize register spill offsets
     - I/O operations (idk if i want to support object printing ?? if not then its pretty trivial)
     - Function Currying (literally just closures with extra steps, but also not)
     - Inline optimization

@@ -114,11 +114,11 @@ void LivenessAnalyzer::X86_interference(Instruction& ins, virtual_varset& define
             node.assigned = RDX;
         }
     }
-    else { // FP (might do this in ir lower though, ensure R11 is free during a flr ins)
+    else { // FP (might do this in ir lower though, ensure RCX is free during a flr ins)
         if (ins.op == Operation::FLR){
-            defines.insert({Operand::gpr(R11), GP});
-            IGNode& node = graph.add_node(Operand::gpr(R11), GP);
-            node.assigned = R11;
+            defines.insert({Operand::gpr(RCX), GP});
+            IGNode& node = graph.add_node(Operand::gpr(RCX), GP);
+            node.assigned = RCX;
         }
     }
 }

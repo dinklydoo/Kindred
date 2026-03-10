@@ -69,13 +69,11 @@ static std::string x86_fpr_string(FPReg gpr){
     return "xmm"+std::to_string(static_cast<int>(gpr));
 }
 
-/*
-    As param registers are 1-indexed in our interf graph,
-    we can create a mapping from these forms to the actual register names
-*/
+static std::vector<GPReg> GPR_scratch = {R10, R11};
+static std::vector<FPReg> FPR_scratch = {XMM14, XMM15};
 
-static int GPR_count = 14;
-static int FPR_count = 16;
+static int GPR_count = 14 - GPR_scratch.size();
+static int FPR_count = 16 - FPR_scratch.size();
 
 struct GPRegInfo {
     enum Status {
@@ -129,5 +127,6 @@ private:
     void allocate_reg(FunctionIR&);
 
     Operand get_phys_reg(Operand);
+    Operand get_scratch_reg(Instruction&, RType);
     void convert_reg(FunctionIR&);
 };

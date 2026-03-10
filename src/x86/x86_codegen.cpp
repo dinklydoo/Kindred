@@ -359,7 +359,7 @@ void X86_CodeGen::write_fp_ins(Instruction& ins){
             break;
         }
         case (Operation::ADDR) : { // floating point address -> static value
-            sfile<<"mov"+suf+" "+ins.target+", "+reg_string(ins.dst, type)<<'\n';
+            sfile<<"mov"+suf+" "+ins.target+"(%rip), "+reg_string(ins.dst, type)<<'\n';
             break;
         }
         default : return;

@@ -6,6 +6,7 @@
 #include "tac_ir.hpp"
 #include "x86_lower.hpp"
 #include <unordered_map>
+#include <vector>
 
 void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJECT_FORMAT){
     for (FunctionIR& func : prog){
@@ -18,7 +19,7 @@ void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJ
 void X86_RegAlloc::allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT){
     X86_Lowerer& xl = X86_Lowerer::instance(OBJECT_FORMAT);
     ig = xl.lower_x86(func);
-    write_func(func);
+    //write_func(func);
     LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
     while (true) {
         ig = InterferenceGraph();
@@ -38,14 +39,15 @@ void X86_RegAlloc::add_nodes(FunctionIR& func){
     for (auto bit = func.blocks.begin(); bit != func.blocks.end(); bit++){
         Block* b = bit->get();
         for (Instruction& ins : b->ins){
-            RType rtype = dtype_to_rtype(ins.type);
+            RType src_type = dtype_to_rtype(ins.type);
+            RType dst_type = src_type;
 
             // special case for cast float operations, ins type represents src type not resultant
-            if (ins.op == Operation::CST_F32 || ins.op == Operation::CST_F64) rtype = FP;
+            if (ins.op == Operation::CST_F32 || ins.op == Operation::CST_F64) dst_type = FP;
 
-            if (ins.dst.is_register()) ig.add_node(ins.dst, rtype);
-            if (ins.src1.is_register()) ig.add_node(ins.src1, rtype);
-            if (ins.src2.is_register()) ig.add_node(ins.src2, rtype);
+            if (ins.dst.is_register()) ig.add_node(ins.dst, dst_type);
+            if (ins.src1.is_register()) ig.add_node(ins.src1, src_type);
+            if (ins.src2.is_register()) ig.add_node(ins.src2, src_type);
         }
     }
 }
@@ -251,8 +253,11 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
 
             Operand _t = VOID;
             if (ins.src1 == op || ins.src2 == op){
-                if (_t == VOID) _t = func.get_register();
-        
+                RType src_type = dtype_to_rtype(ins.type);
+                if (ins.op == Operation::CALL || ins.op == Operation::LOAD) src_type = GP;
+
+                if (_t == VOID) _t = get_scratch_reg(ins, src_type);
+            
                 if (ins.src1 == op) ins.src1 = _t;
                 if (ins.src2 == op) ins.src2 = _t;
 
@@ -264,13 +269,16 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
 
 
             if (ins.dst == op){
+                RType dst_type = dtype_to_rtype(ins.type);
+                if (ins.op == Operation::CST_F32 || ins.op == Operation::CST_F64) dst_type = FP;
+
                 if (ins.op == Operation::STORE){
-                    if (_t == VOID) _t = func.get_register();
+                    if (_t == VOID) _t = get_scratch_reg(ins, GP);
                     ins.dst = _t;
                     b->ins.insert(it, {Operation::LOAD, DataType::PTR, _t, _ebp});
                     continue;
                 }
-                _t = func.get_register();
+                _t = get_scratch_reg(ins, dst_type);
                 ins.dst = _t;
                     
                 it++;
@@ -341,11 +349,11 @@ void X86_RegAlloc::allocate_reg(FunctionIR& func){
         std::set<int> free_reg;
         if (node.type == GP) free_reg = {
             RAX, RBX, RCX, RDX, RDI, RSI, R8, 
-            R9, R10, R11, R12, R13, R14, R15
+            R9, R12, R13, R14, R15, //R10, R11
         };
         else free_reg = {
             XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7, XMM8, 
-            XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15
+            XMM9, XMM10, XMM11, XMM12, XMM13, //XMM14, XMM15
         };
         for (int inf : node.interfere){
             IGNode& temp = ig.nodes[ig.node_union.find_node(inf)];
@@ -360,6 +368,20 @@ Operand X86_RegAlloc::get_phys_reg(Operand v){
     IGNode& node = ig.get_node(v);
     if (node.type == GP) return Operand::gpr(node.assigned);
     else return Operand::fpr(node.assigned);
+}
+
+Operand X86_RegAlloc::get_scratch_reg(Instruction& ins, RType rtype){
+    std::set<GPReg> free_gps = {R10, R11};
+    std::set<FPReg> free_fps = {XMM14, XMM15};
+
+    std::vector<Operand> ops = {ins.dst, ins.src1, ins.src2};
+    for (Operand op : ops){
+        if (op.type == Operand::Type::GPR) free_gps.erase(static_cast<GPReg>(op.value));
+        if (op.type == Operand::Type::FPR) free_fps.erase(static_cast<FPReg>(op.value));
+    }
+    return (rtype == GP)? 
+        Operand::gpr(*free_gps.begin()) :
+        Operand::fpr(*free_fps.begin()) ;
 }
 
 void X86_RegAlloc::convert_reg(FunctionIR& func){

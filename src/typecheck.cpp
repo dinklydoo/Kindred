@@ -398,6 +398,7 @@ void TypeChecker::visit(BinaryNode& node){
             node.resolved_type = internal;
             return;
         }
+        default : return;
     }
 }
 
