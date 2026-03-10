@@ -611,7 +611,7 @@ int_lit
 float_lit
     : FLOAT 
         {
-            auto temp = std::make_unique<IntLit>();
+            auto temp = std::make_unique<FloatLit>();
             temp->value = $1;
             $$ = std::move(temp);
 

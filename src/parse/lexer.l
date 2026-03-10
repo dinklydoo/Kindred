@@ -117,7 +117,7 @@ ESCAPE \\([\\'"?tn]|HEX)
 "read"       { return yy::parser::make_READ(make_location(yyleng)); }
 "print"       { return yy::parser::make_PRINT(make_location(yyleng)); }
 
-[0-9]+\.[0-9]+  { return yy::parser::make_FLOAT(std::stod(yytext), make_location(yyleng)); }
+([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)([eE][-+]?[0-9]+)? { return yy::parser::make_FLOAT(std::stod(yytext), make_location(yyleng)); }
 [0-9]+          { return yy::parser::make_INT(std::stol(yytext), make_location(yyleng)); }
 
 [a-zA-Z_][a-zA-Z0-9_]* {

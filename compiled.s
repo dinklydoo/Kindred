@@ -22,26 +22,26 @@ register.local:
 
 .section __TEXT,__const
 .align 8
-	.fp_imm_17: .double 8
-	.fp_imm_15: .double 6
-	.fp_imm_19: .float 10
-	.fp_imm_14: .double 5
-	.fp_imm_18: .float 9
-	.fp_imm_13: .double 4
-	.fp_imm_12: .double 3
-	.fp_imm_11: .double 2
-	.fp_imm_5: .double 0.6
-	.fp_imm_10: .double 1
-	.fp_imm_9: .double 0
-	.fp_imm_7: .float 0.8
-	.fp_imm_4: .double 0.5
-	.fp_imm_2: .double 0.3
-	.fp_imm_3: .double 0.4
-	.fp_imm_1: .double 0.2
-	.fp_imm_8: .float 0.9
-	.fp_imm_6: .double 0.7
-	.fp_imm_16: .double 7
+	.fp_imm_18: .double 4.44659e-323
+	.fp_imm_17: .double 3.95253e-323
+	.fp_imm_14: .double 2.47033e-323
+	.fp_imm_13: .double 1.97626e-323
+	.fp_imm_12: .double 1.4822e-323
 	.fp_imm_0: .double 0.1
+	.fp_imm_10: .double 4.94066e-324
+	.fp_imm_15: .double 2.96439e-323
+	.fp_imm_8: .double 5.25526e-315
+	.fp_imm_3: .double 0.4
+	.fp_imm_7: .double 5.24697e-315
+	.fp_imm_16: .double 3.45846e-323
+	.fp_imm_5: .double 0.6
+	.fp_imm_4: .double 0.5
+	.fp_imm_9: .double 0
+	.fp_imm_6: .double 0.7
+	.fp_imm_19: .double 4.94066e-323
+	.fp_imm_2: .double 0.3
+	.fp_imm_11: .double 9.88131e-324
+	.fp_imm_1: .double 0.2
 
 .section __TEXT,__text
 _register:

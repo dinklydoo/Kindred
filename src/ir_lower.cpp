@@ -954,28 +954,42 @@ void IR_Lowerer::visit( CharLit& node ){
     cons.push_operand(Operand::imm(node.value));
 }
 
+int64_t reformat_float_val(double val, Type::Kind kind){
+    int64_t bitval;
+    if (kind == Type::Kind::Double){
+        double d = val;
+        std::memcpy(&bitval, &d, sizeof(bitval));
+    }
+    else {
+        int32_t _temp;
+        float f = (float)val;
+        std::memcpy(&_temp, &f, sizeof(_temp));
+        bitval = static_cast<int64_t>(_temp);
+    }
+    return bitval;
+}
+
 void IR_Lowerer::visit( IntLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    cons.push_operand(Operand::imm(node.value));
+    if (node.resolved_type->kind != Type::Kind::Float && node.resolved_type->kind != Type::Kind::Double){
+        cons.push_operand(Operand::imm(node.value));
+    }
+
+    int64_t _bitval = reformat_float_val((double)node.value, node.resolved_type->kind);
+    Operand _t = Operand::imm(_bitval);
+    _t.kind = 
+        (node.resolved_type->kind == Type::Kind::Double)? DataType::F64 : DataType::F32;
+    cons.push_operand(_t);
 }
 
 void IR_Lowerer::visit( FloatLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
-    int64_t _bitval;
-    if (node.resolved_type->kind == Type::Kind::Double){
-        double d = node.value;
-        std::memcpy(&_bitval, &d, sizeof(_bitval));
-    }
-    else {
-        int32_t _temp;
-        float f = (float)node.value;
-        std::memcpy(&_temp, &f, sizeof(_temp));
-        _bitval = static_cast<int64_t>(_temp);
-    }
+    int64_t _bitval = reformat_float_val(node.value, node.resolved_type->kind);
+
     Operand _t = Operand::imm(_bitval);
     _t.kind = 
         (node.resolved_type->kind == Type::Kind::Double)? DataType::F64 : DataType::F32;
-    cons.push_operand(Operand::imm(_bitval));
+    cons.push_operand(_t);
 }
 
 void IR_Lowerer::visit( BoolLit& node ){
