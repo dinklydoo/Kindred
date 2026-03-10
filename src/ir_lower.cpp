@@ -973,6 +973,7 @@ void IR_Lowerer::visit( IntLit& node ){
     ConsFunctionIR& cons = builder.top_constructor();
     if (node.resolved_type->kind != Type::Kind::Float && node.resolved_type->kind != Type::Kind::Double){
         cons.push_operand(Operand::imm(node.value));
+        return;
     }
 
     int64_t _bitval = reformat_float_val((double)node.value, node.resolved_type->kind);
