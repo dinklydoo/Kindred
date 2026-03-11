@@ -296,7 +296,7 @@ private:
         ConsFunctionIR& cons = builder.top_constructor();
         cons.push_block();
         cons.function_ir.blocks.back()->label = label;
-        cons.push_instruction({Operation::LABEL, DataType::EMPTY, {}, {}, {}, label});
+        cons.push_instruction({Operation::LABEL, DataType::EMPTY, VOID, VOID, VOID, label});
     }
 };
 

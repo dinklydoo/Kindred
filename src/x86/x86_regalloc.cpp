@@ -19,7 +19,7 @@ void X86_RegAlloc::allocate_prog(std::vector<FunctionIR>& prog, ObjectFormat OBJ
 void X86_RegAlloc::allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT){
     X86_Lowerer& xl = X86_Lowerer::instance(OBJECT_FORMAT);
     ig = xl.lower_x86(func);
-    //write_func(func);
+    // write_func(func);
     LivenessAnalyzer& la = LivenessAnalyzer::instance(X86);
     while (true) {
         ig = InterferenceGraph();
@@ -28,11 +28,10 @@ void X86_RegAlloc::allocate_func(FunctionIR& func, ObjectFormat OBJECT_FORMAT){
         la.gen_interference(func, ig);
         rewrite_coalesce(func);
         if (is_colourable(func)) break;
-        write_func(func);
+        // write_func(func);
     }
     allocate_reg(func);
     convert_reg(func);
-    //cleanup_reg(func); // cleanup any redundant instructions
 }
 
 void X86_RegAlloc::add_nodes(FunctionIR& func){
@@ -256,7 +255,7 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
                 RType src_type = dtype_to_rtype(ins.type);
                 if (ins.op == Operation::CALL || ins.op == Operation::LOAD) src_type = GP;
 
-                if (_t == VOID) _t = get_scratch_reg(ins, src_type);
+                _t = get_scratch_reg(ins, src_type);
             
                 if (ins.src1 == op) ins.src1 = _t;
                 if (ins.src2 == op) ins.src2 = _t;
@@ -274,11 +273,12 @@ void X86_RegAlloc::rewrite_spill(FunctionIR& func, Operand op, int spill){
 
                 if (ins.op == Operation::STORE){
                     if (_t == VOID) _t = get_scratch_reg(ins, GP);
+                    // if src and dst are the same spilled operand 
                     ins.dst = _t;
                     b->ins.insert(it, {Operation::LOAD, DataType::PTR, _t, _ebp});
                     continue;
                 }
-                _t = get_scratch_reg(ins, dst_type);
+                if (_t == VOID) _t = get_scratch_reg(ins, dst_type);
                 ins.dst = _t;
                     
                 it++;
@@ -318,7 +318,7 @@ void X86_RegAlloc::rewrite_coalesce(FunctionIR& func){
             it++;
         }
     }
-    write_func(func);
+    //write_func(func);
 }
 
 bool X86_RegAlloc::is_colourable(FunctionIR& func){

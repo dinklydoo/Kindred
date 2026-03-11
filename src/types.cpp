@@ -1,4 +1,5 @@
 #include "types.hpp"
+#include "tac_ir.hpp"
 #include <memory>
 
 // Binding strengths for castable numeric values
@@ -23,19 +24,24 @@ int binding_strength(type_ptr tp){
 
 // If a cast is impossible returns nullptr
 type_ptr TypeSystem::cast_strongest(type_ptr a, type_ptr b){
+    if (a->kind == Type::Kind::GENERIC) return b;
+    if (b->kind == Type::Kind::GENERIC) return a;
+
+    if (type_equal(a, b)) return a;
+
     if (a->kind == Type::Kind::Nil && b->kind == Type::Kind::Struct) return b;
     if (b->kind == Type::Kind::Nil && a->kind == Type::Kind::Struct) return a;
 
     // recursively cast for list types (UNUSED)
-    if (a->kind == Type::Kind::List && b->kind == Type::Kind::List){
-        auto al = std::static_pointer_cast<ListType>(a);
-        auto bl = std::static_pointer_cast<ListType>(b);
+    // if (a->kind == Type::Kind::List && b->kind == Type::Kind::List){
+    //     auto al = std::static_pointer_cast<ListType>(a);
+    //     auto bl = std::static_pointer_cast<ListType>(b);
 
-        auto elem = cast_strongest(al->elem, bl->elem);
-        if (!elem) return nullptr;
+    //     auto elem = cast_strongest(al->elem, bl->elem);
+    //     if (!elem) return nullptr;
         
-        return list_type(elem);
-    }
+    //     return list_type(elem);
+    // }
     int bind_a = binding_strength(a);
     int bind_b = binding_strength(b);
 

@@ -5,14 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Example",
+            "name": "Nested",
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/kdc",
-            "args": ["X86", "MACHO", "compiled"],
+            "args": ["X86", "MACHO", "example"],
             "cwd": "${workspaceRoot}",
             "stdio": [
-                    "${workspaceFolder}/samples/example.kd",
+                    "${workspaceFolder}/samples/nested_call.kd",
                     null,
                     null
                 ]
@@ -22,7 +22,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/kdc",
-            "args": ["X86", "MACHO", "compiled"],
+            "args": ["X86", "MACHO", "example"],
             "cwd": "${workspaceRoot}",
             "stdio": [
                     "${workspaceFolder}/samples/atoi.kd",
@@ -35,7 +35,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/kdc",
-            "args": ["X86", "MACHO", "compiled"],
+            "args": ["X86", "MACHO", "example"],
             "cwd": "${workspaceRoot}",
             "stdio": [
                     "${workspaceFolder}/samples/register.kd",
@@ -48,7 +48,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/kdc",
-            "args": ["X86", "MACHO", "compiled"],
+            "args": ["X86", "MACHO", "example"],
             "cwd": "${workspaceRoot}",
             "stdio": [
                     "${workspaceFolder}/samples/factorial.kd",
@@ -61,7 +61,7 @@
             "type": "lldb",
             "request": "launch",
             "program": "${workspaceRoot}/kdc",
-            "args": ["X86", "MACHO", "compiled"],
+            "args": ["X86", "MACHO", "example"],
             "cwd": "${workspaceRoot}",
             "stdio": [
                     "${workspaceFolder}/samples/tree.kd",

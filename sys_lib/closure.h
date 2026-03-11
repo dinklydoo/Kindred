@@ -17,7 +17,7 @@ typedef struct env_data {
 typedef struct env_layout {
     size_t payload_size;
     int var_count;
-    env_data vars[];
+    env_data vars[1024];
 } env_layout;
 
 typedef struct closure {

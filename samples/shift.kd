@@ -1,0 +1,10 @@
+@ this breaks without constant folding
+
+func main(:): int
+    x: int = 1 << 2
+    y: int = 32 >> 2
+    print(x)
+    print('\n')
+    print(y)
+    print('\n')
+    return 0

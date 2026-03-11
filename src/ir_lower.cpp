@@ -392,7 +392,7 @@ void IR_Lowerer::construct_env(std::string fn, type_ptr ftype, varset& enc){
     Operand _ptr = cons.get_register();
     Operand _func_ptr = cons.get_register();
     if (enc.empty()){
-        cons.push_instruction({Operation::ADDR, DataType::PTR, _func_ptr, VOID, VOID, fn});
+        cons.push_instruction({Operation::ADDR, DataType::PTR, _func_ptr, VOID, VOID, format_fname(fn)});
         cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _func_ptr});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, NULL_PTR});
@@ -833,6 +833,7 @@ void IR_Lowerer::visit( BinaryNode& node ){
             cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _ptr, VOID, VOID, format_fname("index_list")});
 
             cons.push_instruction({Operation::LOAD, type_to_dtype(ltype->elem->kind), _t, _ptr});
+            break;
         }
         default : return;
     }
@@ -1068,7 +1069,7 @@ void IR_Lowerer::visit( ReturnNode& node ){
     cast_operand(_exp, node.resolved_type, node.rexp->resolved_type);
     Operand _t = cons.pop_operand();
     if (!node.rexp->is_constructor())
-        increase_ref(_t, node.resolved_type);
+        increase_ref(_t, node.resolved_type); // preserve return
     decrease_locals();
     cons.push_instruction({Operation::RET, type_to_dtype(node.resolved_type->kind), VOID, _t});
 }
@@ -1097,13 +1098,12 @@ void IR_Lowerer::visit( ListNode& node ){
         node.elems[i]->accept(*this);
         Operand _elem = cons.pop_operand();
 
+        cast_operand(_elem, etype, node.elems[i]->resolved_type);
+        _elem = cons.pop_operand();
         // increase ref counts to objects
         if (!node.elems[i]->is_constructor())
             increase_ref(_elem, etype);
-        else {
-            cast_operand(_elem, etype, node.elems[i]->resolved_type);
-            _elem = cons.pop_operand();
-        }
+        
         cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
         cons.push_instruction({Operation::PARAM, DataType::I32, VOID, Operand::imm(i)});

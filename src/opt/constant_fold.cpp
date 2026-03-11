@@ -3,6 +3,7 @@
 
 void ConstantFolder::constant_fold(ModuleNode& node){
     node.accept(*this);
+    
 }
 
 void ConstantFolder::visit(ModuleNode& node){

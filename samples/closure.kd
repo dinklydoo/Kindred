@@ -1,0 +1,13 @@
+func outer(x: int, y: int): () -> int
+    generate: (:) -> int (
+        return x+y
+    )
+    return generate
+
+func main(:): int
+    x: int = 3
+    y: int = 7
+    generator: () -> int = outer(x, y)
+    z: int = generator()
+    print(z)
+    return 0

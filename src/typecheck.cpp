@@ -414,8 +414,8 @@ void TypeChecker::visit(ListNode& node){
         }
         if (!(type = type_s.cast_strongest(type, elem->resolved_type))){
             errors.type_error(
-                "List constructor element has conflicting type\
-                 with container at index " + std::to_string(i),node
+                "List constructor element has conflicting type"
+                "with container at index " + std::to_string(i),node
             );
             return;
         }

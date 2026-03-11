@@ -1,0 +1,24 @@
+func factory(i: int): (int, int) -> int
+    operator1: (a: int, b: int) -> int (
+        return a + b
+    )
+    operator2: (a: int, b: int) -> int (
+        return a * b
+    )
+    operator3: (a: int, b: int) -> int (
+        return a - b
+    )
+    operatorList: [(int, int) -> int] = [operator1, operator2, operator3]
+    
+    return operatorList[i]
+
+func main(:): int
+    i: int = 1
+    a: int = 6
+    b: int = 9
+    
+    operator: (int, int) -> int = factory(i)
+    x: int = operator(a, b)
+    print(x)
+    
+    return 0

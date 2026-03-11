@@ -8,10 +8,10 @@ func preorder(t: Tree): int
     mark t of:
         nil => return 0,
         default => 
-            a: int = preorder(t.left)
+            void1: int = preorder(t.left) @ on the agenda is to add void functions, not yet ready
             print(t.val)
             print('\n')
-            b: int = preorder(t.right)
+            void2: int = preorder(t.right)
 
             return 0
     ;
