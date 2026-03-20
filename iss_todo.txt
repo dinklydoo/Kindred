@@ -30,3 +30,18 @@ KNOWN ISSUES:
     - Constant compare operations will NOT compile on x86, this is also just bad coding if u need to compare two constants
         - comparing constants not supported with x86: cmp src, dst format
         - THIS IS ALSO FIXABLE BY IMPLEMENTING CONSTANT FOLDING HASDHAODHWAKLDJHD
+    
+    - In Extension to above ^^ lots of operations will break on double constant/immediate ie shift operations etc..
+        - All of these issues WILL be fixed by constant folding so if i work on this again it will be on constant folding
+
+    - CONSTANT FOLDING
+    - CONSTANT FOLDING
+    - CONSTANT FOLDING
+    - CONSTANT FOLDING
+    - CONSTANT FOLDING
+    - CONSTANT FOLDING
+    - CONSTANT FOLDING
+
+    - CONSTANT FOLDING
+
+    - its all fixable with CONSTANT FOLDING
