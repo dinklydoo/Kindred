@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <iostream>
 
 using namespace tc;
 
@@ -202,8 +203,7 @@ void TypeChecker::visit(CaseBranchNode& node){
     
     node.pattern->accept(*this);
 
-    if (is_error(node.pattern->resolved_type)){ /*do nothing*/}
-
+    if (is_error(node.pattern->resolved_type)){ /*do nothing*/ }
     else if (!type_s.cast_fixed(exp, node.pattern->resolved_type)){
         errors.type_error("Pattern matching requires pattern to share a type with match value", *node.pattern);
     }
@@ -640,10 +640,10 @@ void TypeChecker::visit(ListPatternLit& node){
 }
 
 void TypeChecker::visit(StructPatternLit& node){
-    type_ptr type = definitions.find_var(node.name);
+    type_ptr type = typeprop.top_type();
     nominal_ptr stype = std::static_pointer_cast<NominalType>(type);
     std::vector<Field>& exp = stype->get_fields();
-
+    
     if (node.patterns.size() != exp.size()){
         errors.access_error(
             "struct '" + node.name + "' expects "+ 
@@ -653,9 +653,8 @@ void TypeChecker::visit(StructPatternLit& node){
         );
         return;
     }
-
     for (int i = 0; i < node.patterns.size(); i++){
-        if (node.patterns[i] == ""){
+        if (node.patterns[i] == "@nil"){
             if (exp[i].type->kind != Type::Kind::Struct){
                 errors.type_error(
                     "nil value in field "+exp[i].name+" which expects\

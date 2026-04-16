@@ -16,6 +16,15 @@ func preorder(t: Tree): int
             return 0
     ;
 
+func match(t: Tree): [char]
+    mark t of:
+        nil => return "empty\n",
+        Tree{nil, nil, v} => return "no children\n",
+        Tree{nil, r, v} => return "has right child\n",
+        Tree{l, nil, v} => return "has left child\n",
+        default => return "full tree\n"
+    ;
+
 func main(:): int
     sample: Tree =
         Tree{
@@ -36,4 +45,8 @@ func main(:): int
             14
         }
     c: int = preorder(sample)
+
+    str: [char] = match(sample)
+    print(str)
+
     return 0

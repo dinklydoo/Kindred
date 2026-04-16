@@ -24,7 +24,7 @@ def pre_compilation():
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
-    # compile kdc.cpp
+    # compile kdc.cpp -- cmake will cache build for us
     subprocess.run(['cmake', '-S', '.', '-B', build_dir], check=True)
     subprocess.run(['cmake', '--build', '.'], check=True)
 
@@ -42,7 +42,7 @@ def compile_flags(debug):
         return ['-c', '-g', '-o']
     return ['-c', '-o']
 
-def compile_library(lib_files, args, flags):
+def compile_library(lib_files, args, flags, force=False):
     lib_path = ".sys_lib"
     if not os.path.exists(lib_path):
         os.makedirs(lib_path)
@@ -50,7 +50,11 @@ def compile_library(lib_files, args, flags):
     for lib_file in lib_files:
         source_path = 'sys_lib/'+lib_file+'.c'
         object_path = lib_path+'/'+lib_file+'.o'
-        subprocess.run(args + flags + [object_path, source_path])
+
+         # compile library if it does not exist already, if dynamic then force recompile
+        if not os.path.exists(object_path) or force:
+            subprocess.run(args + flags + [object_path, source_path])
+
 
 def library_obj(lib_files, dlib_files):
     out = []
@@ -107,12 +111,11 @@ def compile():
         kdc_run = subprocess.run(
             ['./kdc', compile_target, obj_format, output_name],
             stdin=f,
-            capture_output=True,
         )
 
-    compile_library(dyn_sys_lib_files, gcclang_args, flags)
-    subprocess.run(gcclang_args + flags + [object_name, asm_name]) # generate otuput file
-    subprocess.run(gcclang_args + ['-o', output_name, object_name] + library_obj(sys_lib_files, dyn_sys_lib_files))
+    compile_library(dyn_sys_lib_files, gcclang_args, flags, force=True)
+    subprocess.run(gcclang_args + flags + [object_name, asm_name]) # generate output file
+    subprocess.run(gcclang_args + ['-o', output_name, object_name] + library_obj(sys_lib_files, dyn_sys_lib_files)) # link with runtime lib
 
 
 if __name__ == "__main__":

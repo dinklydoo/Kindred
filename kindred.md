@@ -2,6 +2,12 @@
 
 ### Function Definitions
 ~~~
+@ function which takes no parameters
+func foo(:): T (
+    ...
+)
+
+
 @ Defined as a function taking three parameters returning a value of type T
 
 func foo(x1 : T1, x2 : T2, x3: T3):T (
@@ -11,7 +17,7 @@ func foo(x1 : T1, x2 : T2, x3: T3):T (
     return V
 )
 
-@ No declaration of void functions as we have no store (duh)
+@ No declaration of void functions as of yet
 ~~~
 #### Functions as arguments (Typing):
 ~~~
@@ -30,11 +36,11 @@ func foo(b: bool): (T1, T2, T1) -> T1 (
         return x1 - foo2(x2) + x3*x3
     )
     case b of:
-        true => return bar1
-        false => return bar2
+        | true => return bar1,
+        | false => return bar2
 )
 ~~~
-alternatively
+alternatively (when lambda's are implemented LMAO)
 ~~~
 func foo(): (T1, T2, T3) -> T4
     return (lamb x : T =>
@@ -53,7 +59,7 @@ func foo(x: int): int (
 ### Conditionals
 Pattern Matching
 ~~~
-case X of:
+mark X of:
     X_1 => E_1,
     X_2 => E_2,
     X_3 => E_3,
@@ -61,9 +67,35 @@ case X of:
     default => E_d
 ;
 ~~~
+Pattern matching with constructive types works based on the
+size of element for lists and existence of fields for structs
+~~~
+@ pattern match over length of a list
+
+mark X of:
+    x:xz:xs => E_1,
+    x:xs => E_2,
+    default => E_3
+
+@ pattern match structurally on recursive struct types, if a field is a struct instance then we can check if it's nil or non-nil, note a value x in a field spot will subsume a nil check later i.e
+
+    mark X of:
+        tree{x, l, nil} => E_1, @ this pattern will subsume tree{x, nil, nil}
+        tree{x, nil, nil} => E_2,
+        default => E_3
+    ;
+
+mark X of:
+    nil => E_1,
+    tree{x, nil, nil} => E_2
+    tree{x, nil, r} => E_3
+    tree{x, l, r} => E_4
+    default => E_5
+
+~~~
 Guarded Statements
 ~~~
-mark X:
+case X of:
     | foo(X) => E_1,
     | X == Z =>
         E_2,
@@ -71,9 +103,7 @@ mark X:
 ;
 ~~~
 
-To use guarded as an if block just denote X as a boolean and pattern match with true and default (default as else expression)
-
-### Lambda Abstraction
+### Lambda Abstraction (WIP)
 ~~~
 (lamb x : T => E)
 
@@ -107,16 +137,20 @@ long - 8B
 float - 4B
 double - 8B
 ~~~
+Numeric types are implicitly casted and expressions mixing numeric types will bind to the strongest type according to precedence:
+~~~
+(weakest binding) char <: int <: long <: float <: double (strongest binding)
+~~~
 
 ### Lists
 ~~~
+@Typing: defined as a list of elements with the typing Type
+[Type] 
 
 @ list initialization
 list : [int] = [1,2,3,4];
 
 [] @ empty list
-[Type]
-@ defined as a list of elements with the typing Type
 
 @ Pattern matching on number of list elements
 @ [] - 0 elements (empty)
@@ -126,8 +160,8 @@ list : [int] = [1,2,3,4];
 
 case list of:
     [] => E_1;
-    l:ls => E_2;
-    l:ls:lt => E_3
+    l:ls:lt => E_2
+    l:ls => E_3;
     default => E_4;
 ~~~
 
@@ -141,10 +175,10 @@ case list of:
 // @ floor division (only on float/double)
 ** @ power
 
-& @ logical bitwise and
-| @ logical bitwise or
-^ @ logical bitwise xor
-! @ logical bitwise not (1 if 0, 0 elsewise)
+& @ bitwise and
+| @ bitwise or
+^ @ bitwise xor
+! @ bitwise not (1 if 0, 0 elsewise)
 >> @ bitwise shift right
 << @ bitwise shift left
 
@@ -160,10 +194,10 @@ case list of:
 ~~~
 && @ logical and
 || @ logical or
+!  @ logical not
 ~~~
 
 ### Operations (Lists)
-Need memory allocation with garbage collection
 ~~~
 @ define strings as char lists
 ++ @ list concatenation (can be defined between two lists and singular element either [T]->[T]->[T] or [T]->T->[T] vice versa)
@@ -180,7 +214,7 @@ struct foo (
 )
 
 @Constructor definition
-foo(bar1, bar2, bar3)
+foo{bar1, bar2, bar3}
 
 @ Accessing structure variables
 foo.bar1

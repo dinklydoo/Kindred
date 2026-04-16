@@ -165,7 +165,7 @@ void IR_Lowerer::struct_pattern_vars( LiteralNode& node){
     Operand _t = cons.get_register();
     auto& fields = sptr->get_fields();
     for (int i = 0; i < fields.size(); i++){
-        if (snode.patterns[i].empty()) continue; // nil pattern
+        if (snode.patterns[i] == "@nil") continue; // nil pattern
 
         identifier.push_ident(snode.patterns[i], fields[i].type);
         get_var(snode.patterns[i]);
@@ -1029,6 +1029,7 @@ void IR_Lowerer::visit( StructPatternLit& node ){
     unsigned int size = node.patterns.size() - 1;
     Operand _ptr = cons.pop_operand();
 
+    Operand _fptr = cons.get_register();
     Operand _field = cons.get_register();
     Operand _neq = cons.get_register();
 
@@ -1036,14 +1037,16 @@ void IR_Lowerer::visit( StructPatternLit& node ){
     std::string L_end = builder.get_scratch_label();
 
     for (int i = 0; i < node.patterns.size(); i++){
-        if (!node.patterns[i].empty()) continue; // non-nil
+        if (node.patterns[i] != "@nil") continue;
 
         cons.push_instruction({Operation::BEGIN_CALL, DataType::EMPTY});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, _ptr});
         cons.push_instruction({Operation::PARAM, DataType::PTR, VOID, Operand::imm(i)});
-        cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _field, VOID, VOID, format_fname("access_field")});
-        // null pointer check
-        cons.push_instruction({Operation::CEQ, DataType::PTR, _neq, _field, NULL_PTR});
+        cons.push_instruction({Operation::CALL_EXT, DataType::PTR, _fptr, VOID, VOID, format_fname("access_field")});
+        // this returns the pointer to the field payload -> need to access the contents through a load
+
+        cons.push_instruction({Operation::LOAD, DataType::PTR, _field, _fptr});
+        cons.push_instruction({Operation::CNEQ, DataType::PTR, _neq, _field, NULL_PTR});
         cons.push_instruction({Operation::JMP_IF, DataType::BOOL, VOID, _neq, VOID, L_false});
     }
     Operand _t = cons.get_register();

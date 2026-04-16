@@ -528,9 +528,9 @@ struct_size_pattern
 
 struct_vars
     : LABEL{ $$ = std::vector<std::string>{}; $$.push_back(std::move($1));}
-    | NIL{ $$ = std::vector<std::string>{}; $$.push_back("");}
+    | NIL{ $$ = std::vector<std::string>{}; $$.push_back("@nil");}
     | struct_vars COMMA LABEL { $1.push_back(std::move($3)); $$ = std::move($1); }
-    | struct_vars COMMA NIL { $1.push_back(std::move("")); $$ = std::move($1); }
+    | struct_vars COMMA NIL { $1.push_back("@nil"); $$ = std::move($1); }
     ;
 
 return_expr

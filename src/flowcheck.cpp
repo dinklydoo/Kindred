@@ -184,13 +184,13 @@ void FlowChecker::visit(StructPatternLit& node){
     std::vector<bool> pattern;
     bool full = true;
     for (auto& p : node.patterns){
-        if (p.empty()){
-            pattern.push_back(false);
+        if (p == "@nil"){
+            pattern.push_back(false); // false indicates a nil value required
             full = false;
         }
         else pattern.push_back(true);
     }
-    if (full){
+    if (full){ // if no nil values -> default
         if (struct_block.full_case) struct_block.contained = true;
         else struct_block.full_case = true;
     }

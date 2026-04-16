@@ -38,6 +38,8 @@ int main(int argc, char** argv) {
   yy::parser parser;
   parser.parse();
 
+  std::cout << "[Kindred Compiler] : Parsing Passed\n";
+
   tc::TypeChecker& tc = tc::TypeChecker::instance();
   tc.typecheck(*module_node);
 
